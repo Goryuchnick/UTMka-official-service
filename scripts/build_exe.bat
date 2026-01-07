@@ -1,11 +1,11 @@
 @echo off
 chcp 65001 >nul
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 echo ========================================
 echo Сборка UTMka.exe
 echo ========================================
 echo.
-python build.py
+python scripts\build.py
 echo.
 if exist "dist\UTMka.exe" (
     echo ✓ Сборка успешна! Файл: dist\UTMka.exe

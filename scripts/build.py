@@ -3,18 +3,20 @@ import os
 import shutil
 import sys
 
-# Define paths - ensure we're in the right directory
+# Define paths - ensure we're in the project root directory
 if getattr(sys, 'frozen', False):
     base_path = os.path.dirname(sys.executable)
 else:
-    # Get the directory where this script is located
+    # Get the directory where this script is located (scripts/)
     if __file__:
-        base_path = os.path.dirname(os.path.abspath(__file__))
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Go up one level to get project root
+        base_path = os.path.dirname(script_dir)
     else:
         # Fallback: use current working directory
         base_path = os.getcwd()
 
-# Change to the script directory
+# Change to the project root directory
 try:
     os.chdir(base_path)
     print(f"Working directory: {os.getcwd()}")

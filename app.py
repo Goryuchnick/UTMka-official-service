@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 # Lazy imports for GUI to avoid crashes in headless mode
 webview = None
 tk = None

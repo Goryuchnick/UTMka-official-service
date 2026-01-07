@@ -1,8 +1,8 @@
 @echo off
 chcp 65001 >nul
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 echo Компиляция установочного файла...
-"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" config\setup.iss
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo Установочный файл успешно создан!
@@ -10,6 +10,8 @@ if %ERRORLEVEL% EQU 0 (
 ) else (
     echo.
     echo Ошибка при компиляции установщика!
+    echo Убедитесь, что Inno Setup установлен по пути:
+    echo C:\Program Files (x86)\Inno Setup 6\ISCC.exe
 )
 pause
 
