@@ -1,0 +1,8 @@
+pywebview==4.4.1
+flask==2.3.3
+pyinstaller==6.0.0
+requests==2.31.0
+pytest==7.4.3
+jaraco.text==3.11.1
+PyQt6==6.7.0
+PyQt6-WebEngine==6.7.0

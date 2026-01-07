@@ -1,0 +1,54 @@
+[
+  {
+    "name": "ВКонтакте - Автоматический",
+    "utm_source": "vkontakte",
+    "utm_medium": "cpc",
+    "utm_campaign": "{campaign_id}",
+    "utm_content": "{ad_id}",
+    "utm_term": "free, -30%, registration",
+    "tag_name": "Социальные сети",
+    "tag_color": "#3b82f6"
+  },
+  {
+    "name": "Яндекс.Директ - Динамический",
+    "utm_source": "yandex",
+    "utm_medium": "cpc",
+    "utm_campaign": "{campaign_id}",
+    "utm_content": "{ad_id}",
+    "utm_term": "{keyword}",
+    "tag_name": "Контекстная реклама",
+    "tag_color": "#ef4444"
+  },
+  {
+    "name": "Google Ads - Динамический",
+    "utm_source": "google",
+    "utm_medium": "cpc",
+    "utm_campaign": "{network}",
+    "utm_content": "{creative}",
+    "utm_term": "{keyword}",
+    "tag_name": "Контекстная реклама",
+    "tag_color": "#ef4444"
+  },
+  {
+    "name": "TikTok Ads - Видео",
+    "utm_source": "tiktok",
+    "utm_medium": "video",
+    "utm_campaign": "{campaign_id}",
+    "utm_content": "{ad_id}",
+    "utm_term": "{creative_id}",
+    "tag_name": "Социальные сети",
+    "tag_color": "#3b82f6"
+  },
+  {
+    "name": "Telegram Ads - Официальный",
+    "utm_source": "telegram",
+    "utm_medium": "cpc",
+    "utm_campaign": "{channel_id}",
+    "utm_content": "ad_variant",
+    "utm_term": "-",
+    "tag_name": "Мессенджеры",
+    "tag_color": "#3b82f6"
+  }
+]
+
+

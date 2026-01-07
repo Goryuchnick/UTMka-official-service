@@ -1,0 +1,3345 @@
+<html lang="ru" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTMka - сервис для бизнеса и маркетологов</title>
+    <!-- Favicon загружается динамически после инициализации, чтобы не блокировать -->
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com" async defer onerror="console.warn('Tailwind CDN failed to load')"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest" async defer onerror="console.warn('Lucide CDN failed to load')"></script>
+
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ru.js" defer></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            bg: '#0F172A', // Slate 900
+                            card: '#1E293B', // Slate 800
+                            border: '#334155' // Slate 700
+                        },
+                        brand: {
+                            500: '#6366f1', // Indigo 500
+                            600: '#4f46e5', // Indigo 600
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.8);
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .dark .glass {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(203, 213, 225, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+            outline: none;
+        }
+
+        .dark .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(71, 85, 105, 0.6);
+            color: white;
+        }
+
+        .dark .glass-input:focus {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #818cf8;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* View Management */
+        [data-view]:not(.active) {
+            display: none !important;
+        }
+
+        [data-view].active {
+            display: flex !important;
+        }
+
+        /* Interactive Elements */
+        .btn-hover-effect {
+            transition: all 0.2s;
+        }
+
+        .btn-hover-effect:active {
+            transform: scale(0.98);
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #6366f1;
+            transition: all 0.3s;
+            transform: translateX(-50%);
+        }
+
+        .nav-link.active::after {
+            width: 80%;
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        /* Color Dot Selection */
+        .color-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-dot:hover {
+            transform: scale(1.1);
+        }
+
+        .color-dot.selected {
+            border-color: #6366f1;
+            transform: scale(1.15);
+        }
+
+        /* Loader */
+        .loader-spinner {
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #6366f1;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-100 dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 font-sans h-full transition-colors duration-500 overflow-hidden selection:bg-indigo-500/30">
+
+    <!-- Background Ambiance -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/20 rounded-full blur-[100px] animate-float"
+            style="animation-delay: 0s;"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px] animate-float"
+            style="animation-delay: -2s;"></div>
+        <div class="absolute top-[40%] left-[40%] w-[30%] h-[30%] bg-cyan-500/10 rounded-full blur-[80px] animate-float"
+            style="animation-delay: -4s;"></div>
+    </div>
+
+    <div id="app" class="relative z-10 flex flex-col h-full">
+
+        <!-- NAVBAR -->
+        <nav id="navbar"
+            class="hidden glass sticky top-4 mx-4 md:mx-6 lg:mx-8 rounded-2xl z-50 mb-6 transition-all duration-300">
+            <div class="px-4 sm:px-6">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="bg-white p-1 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                            <img src="logo/logoutm.png" alt="UTMka Logo" class="w-8 h-8 object-contain">
+                        </div>
+                        <span
+                            class="font-display font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
+                            UTMka
+                        </span>
+                    </div>
+
+                    <!-- Desktop Nav -->
+                    <div class="hidden md:flex items-center gap-1 bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-xl">
+                        <a href="#generator"
+                            class="nav-link px-4 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white"
+                            data-target="generator">Генератор</a>
+                        <a href="#history"
+                            class="nav-link px-4 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white"
+                            data-target="history">История</a>
+                        <a href="#templates"
+                            class="nav-link px-4 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white"
+                            data-target="templates">Шаблоны</a>
+                        <a href="#help"
+                            class="nav-link px-4 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white"
+                            data-target="help">Помощь</a>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-3">
+                        <!-- Help Button -->
+                        <button id="help-btn"
+                            class="p-2.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors text-slate-500 dark:text-slate-400"
+                            title="Помощь">
+                            <i data-lucide="help-circle" class="w-5 h-5"></i>
+                        </button>
+                        <!-- Language Toggle -->
+                        <button id="lang-toggle"
+                            class="px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors">
+                            <span id="lang-toggle-label">RU</span>
+                        </button>
+                        <!-- Theme Toggle -->
+                        <button id="theme-toggle"
+                            class="p-2.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors text-slate-500 dark:text-slate-400">
+                            <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
+                            <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Mobile Nav (Simple bottom bar replacement for mobile feel) -->
+            <div class="md:hidden flex border-t border-slate-200/50 dark:border-slate-700/50">
+                <a href="#generator"
+                    class="flex-1 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400"
+                    data-target="generator">Генератор</a>
+                <a href="#history"
+                    class="flex-1 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400"
+                    data-target="history">История</a>
+                <a href="#templates"
+                    class="flex-1 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400"
+                    data-target="templates">Шаблоны</a>
+                <a href="#help"
+                    class="flex-1 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400"
+                    data-target="help">Помощь</a>
+            </div>
+        </nav>
+
+        <main class="flex-grow flex flex-col w-full h-full overflow-hidden">
+
+            <!-- LOADER -->
+            <div id="loader" class="flex flex-col items-center justify-center h-[80vh]">
+                <div class="loader-spinner mb-4"></div>
+                <p class="text-sm text-slate-500 font-medium animate-pulse">Загрузка системы...</p>
+            </div>
+
+            <div id="main-content"
+                class="hidden w-full h-full flex flex-col gap-6 overflow-y-auto px-4 md:px-6 lg:px-8 py-4 pb-32 no-scrollbar">
+
+                <!-- === GENERATOR VIEW === -->
+                <div data-view="generator" class="active fade-in h-full flex flex-col">
+                    <div class="flex flex-col lg:flex-row gap-6 h-full items-start">
+
+                        <!-- Input Section -->
+                        <div class="lg:w-[480px] flex-shrink-0">
+                            <div class="glass-card p-6 md:p-8 rounded-3xl">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                        <i data-lucide="link" class="w-5 h-5"></i>
+                                    </div>
+                                    <h2 id="generatorTitle" class="text-xl font-display font-semibold">Параметры ссылки</h2>
+                                </div>
+
+                                <form id="utmForm" class="space-y-5">
+                                    <!-- Base URL -->
+                                    <div class="group">
+                                        <label
+                                            class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">URL
+                                            адрес *</label>
+                                        <div class="relative flex items-center">
+                                            <div
+                                                class="absolute left-0 top-0 bottom-0 px-3 flex items-center bg-slate-100/50 dark:bg-slate-800/50 border border-r-0 border-slate-200 dark:border-slate-700 rounded-l-xl text-slate-500 text-sm">
+                                                https://
+                                            </div>
+                                            <input type="text" id="url" required placeholder="example.com/page"
+                                                class="glass-input w-full pl-[5.5rem] pr-4 py-2.5 rounded-xl text-sm transition-all">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label
+                                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Источник</label>
+                                            <input type="text" id="utm_source" placeholder="google, yandex"
+                                                class="glass-input w-full px-4 py-2.5 rounded-xl text-sm transition-all">
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Канал</label>
+                                            <input type="text" id="utm_medium" placeholder="cpc, banner"
+                                                class="glass-input w-full px-4 py-2.5 rounded-xl text-sm transition-all">
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label
+                                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Кампания</label>
+                                            <div class="relative">
+                                                <input type="text" id="utm_campaign" placeholder="summer_sale"
+                                                    class="glass-input w-full px-4 py-2.5 rounded-xl text-sm transition-all pr-10">
+                                                <button type="button"
+                                                    class="date-picker-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-indigo-500 transition-colors">
+                                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Содержание</label>
+                                            <div class="relative">
+                                                <input type="text" id="utm_content" placeholder="link_bottom"
+                                                    class="glass-input w-full px-4 py-2.5 rounded-xl text-sm transition-all pr-10">
+                                                <button type="button"
+                                                    class="date-picker-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-indigo-500 transition-colors">
+                                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Ключевое
+                                                слово</label>
+                                            <div class="relative">
+                                                <input type="text" id="utm_term" placeholder="running shoes"
+                                                    class="glass-input w-full px-4 py-2.5 rounded-xl text-sm transition-all pr-10">
+                                                <button type="button"
+                                                    class="date-picker-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-indigo-500 transition-colors">
+                                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-3 pt-2">
+                                        <button type="submit"
+                                            class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium py-3 rounded-xl shadow-lg shadow-indigo-500/25 btn-hover-effect flex items-center justify-center gap-2">
+                                            <i data-lucide="zap" class="w-4 h-4"></i>
+                                            <span id="generateBtn">Создать UTM‑ссылку</span>
+                                        </button>
+                                        <button type="button" id="clearFormButton"
+                                            class="px-4 py-3 rounded-xl glass-input text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium flex items-center justify-center">
+                                            <i data-lucide="eraser" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Result & Helper Section -->
+                        <div class="flex-grow flex flex-col gap-6">
+                            <!-- Result Card -->
+                            <div class="glass-card p-6 rounded-3xl relative overflow-hidden">
+                                <h3 id="resultTitle" class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Результат
+                                </h3>
+
+                                <div class="relative group">
+                                    <textarea id="resultUrl" readonly
+                                        class="w-full h-28 bg-slate-50/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-sm font-mono text-slate-700 dark:text-slate-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 selection:bg-indigo-500/40"></textarea>
+                                    <button id="copyButton"
+                                        class="absolute top-3 right-3 p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-indigo-600 transition-colors btn-hover-effect">
+                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+
+                                <button id="addToTemplateBtn" disabled
+                                    class="mt-4 w-full py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                    <span id="saveAsTemplateBtn">Сохранить как шаблон</span>
+                                </button>
+                            </div>
+
+                            <!-- Templates Quick Access -->
+                            <div class="glass-card flex-grow p-6 rounded-3xl flex flex-col justify-between">
+                                <div>
+                                    <h3 id="quickStartTitle"
+                                        class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4">
+                                        Быстрый старт</h3>
+                                    <div id="recentTemplatesContainer" class="flex flex-wrap gap-2">
+                                        <!-- Dynamic content -->
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex justify-end">
+                                    <button id="showAllTemplatesBtn"
+                                        class="text-xs font-medium text-indigo-600 hover:text-indigo-500 transition-colors">Открыть
+                                        все</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === HISTORY VIEW === -->
+                <div data-view="history" class="fade-in h-full flex flex-col">
+                    <div class="glass-card p-6 md:p-8 rounded-3xl flex-grow flex flex-col min-h-0">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                            <h2 id="historyTitle" class="text-2xl font-display font-bold">История</h2>
+
+                            <!-- Search & Controls -->
+                            <div class="flex flex-wrap gap-2 items-center w-full md:w-auto">
+                                <div class="relative flex-grow md:flex-grow-0 md:w-64">
+                                    <i data-lucide="search"
+                                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                                    <input type="search" id="historySearch" placeholder="Поиск..."
+                                        class="glass-input pl-9 pr-4 py-2 rounded-xl text-sm w-full">
+                                </div>
+                                <input type="text" id="historyDateRange" placeholder="Дата"
+                                    class="glass-input px-3 py-2 rounded-xl text-sm w-32 text-center">
+
+                                <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                    <button data-view-mode="list"
+                                        class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all"><i
+                                            data-lucide="list" class="w-4 h-4"></i></button>
+                                    <button data-view-mode="grid"
+                                        class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all active"><i
+                                            data-lucide="layout-grid" class="w-4 h-4"></i></button>
+                                    <button data-view-mode="table"
+                                        class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all"><i
+                                            data-lucide="table" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions Bar -->
+                        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                            <button id="importHistoryBtn"
+                                class="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors whitespace-nowrap"><i
+                                    data-lucide="upload" class="w-4 h-4"></i> Импорт</button>
+                            <button id="exportHistoryJsonBtn"
+                                class="px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap"><i
+                                    data-lucide="file-json" class="w-4 h-4"></i> JSON</button>
+                            <button id="exportHistoryCsvBtn"
+                                class="px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap"><i
+                                    data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV</button>
+                            <input type="file" id="importHistoryFileInput" class="hidden" accept=".json,.csv">
+                        </div>
+
+                        <div id="historyContainer" class="w-full flex-grow overflow-y-auto px-1 pr-3 custom-scrollbar">
+                            <!-- Content injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === TEMPLATES VIEW === -->
+                <div data-view="templates" class="fade-in h-full flex flex-col">
+                    <div class="flex flex-col xl:flex-row gap-6 h-full items-start">
+
+                        <!-- Create Template Sidebar -->
+                        <div class="xl:w-[400px] flex-shrink-0">
+                            <div class="glass-card p-6 md:p-8 rounded-3xl sticky top-20">
+                                <h2 id="newTemplateTitle" class="text-xl font-display font-bold mb-6">Новый шаблон</h2>
+                                <form id="templateForm" class="space-y-4">
+                                    <input type="hidden" id="template_id">
+                                    <input type="text" id="template_name" required
+                                        placeholder="Название шаблона (обязательно)"
+                                        class="glass-input w-full px-4 py-2.5 rounded-xl text-sm font-medium">
+
+                                    <div
+                                        class="bg-indigo-50/50 dark:bg-indigo-900/10 p-4 rounded-xl space-y-3 border border-indigo-100 dark:border-indigo-500/10">
+                                        <label id="templateTagLabel"
+                                            class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Тег
+                                            и Цвет</label>
+                                        <input type="text" id="template_tag_name" placeholder="Название тега"
+                                            class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                                        <input type="hidden" id="template_tag_color">
+                                        <div id="templateColorPalette" class="flex flex-wrap gap-2 pt-1"></div>
+                                    </div>
+
+                                    <div class="space-y-3 pt-2">
+                                        <input type="text" id="template_utm_source" placeholder="utm_source"
+                                            class="glass-input w-full px-4 py-2 rounded-xl text-sm">
+                                        <input type="text" id="template_utm_medium" placeholder="utm_medium"
+                                            class="glass-input w-full px-4 py-2 rounded-xl text-sm">
+                                        <input type="text" id="template_utm_campaign" placeholder="utm_campaign"
+                                            class="glass-input w-full px-4 py-2 rounded-xl text-sm">
+                                        <input type="text" id="template_utm_content" placeholder="utm_content"
+                                            class="glass-input w-full px-4 py-2 rounded-xl text-sm">
+                                        <input type="text" id="template_utm_term" placeholder="utm_term"
+                                            class="glass-input w-full px-4 py-2 rounded-xl text-sm">
+                                    </div>
+
+                                    <button type="submit"
+                                        class="w-full mt-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-3 rounded-xl shadow-lg shadow-indigo-500/25 btn-hover-effect flex items-center justify-center gap-2">
+                                        <i data-lucide="plus" class="w-4 h-4"></i> Создать шаблон
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Templates List -->
+                        <div class="flex-grow">
+                            <div class="glass-card p-6 md:p-8 rounded-3xl flex-grow flex flex-col min-h-0">
+                                <div
+                                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                    <h2 id="templatesLibraryTitle" class="text-2xl font-display font-bold">Библиотека</h2>
+                                    <div class="flex gap-2 items-center w-full sm:w-auto">
+                                        <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
+                                            <i data-lucide="search"
+                                                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                                            <input type="search" id="templatesSearch" placeholder="Поиск по шаблонам..."
+                                                class="glass-input pl-9 pr-4 py-2 rounded-xl text-sm w-full">
+                                        </div>
+                                        <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                            <button data-view-mode="list"
+                                                class="templates-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 active"><i
+                                                    data-lucide="list" class="w-4 h-4"></i></button>
+                                            <button data-view-mode="grid"
+                                                class="templates-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600"><i
+                                                    data-lucide="layout-grid" class="w-4 h-4"></i></button>
+                                            <button data-view-mode="table"
+                                                class="templates-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600"><i
+                                                    data-lucide="table" class="w-4 h-4"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 mb-6">
+                                    <button id="importTemplatesBtn"
+                                        class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"><i
+                                            data-lucide="upload" class="w-4 h-4"></i> Импорт</button>
+                                    <button id="exportJsonBtn"
+                                        class="px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><i
+                                            data-lucide="file-json" class="w-4 h-4"></i> JSON</button>
+                                    <button id="exportCsvBtn"
+                                        class="px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><i
+                                            data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV</button>
+                                    <input type="file" id="importFileInput" class="hidden" accept=".json,.csv">
+                                </div>
+
+                                <div id="templatesContainer"
+                                    class="flex-grow w-full overflow-y-auto px-1 pr-3 custom-scrollbar">
+                                    <!-- Templates injected by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === HELP VIEW === -->
+                <div data-view="help" class="fade-in h-full flex flex-col">
+                    <div class="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+                        <div class="glass-card w-full max-w-md rounded-2xl shadow-2xl">
+                            <div class="p-6 border-b border-white/10">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                        <i data-lucide="help-circle" class="w-5 h-5"></i>
+                                    </div>
+                                    <h3 id="helpViewTitle" class="text-xl font-bold text-slate-900 dark:text-white">Помощь</h3>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <button id="openOnboardingFromHelp"
+                                    class="w-full px-4 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors flex items-center justify-center gap-2 font-medium">
+                                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                    <span id="helpOnboardingBtn">Пройти обучение</span>
+                                </button>
+                                <div class="space-y-2">
+                                    <a href="https://t.me/pronin_marketing" target="_blank"
+                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium">
+                                        <i data-lucide="send" class="w-5 h-5"></i>
+                                        <span id="helpTelegramBtn">Telegram канал</span>
+                                    </a>
+                                    <a href="https://alex-pronin.ru/projects/utmka" target="_blank"
+                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium">
+                                        <i data-lucide="globe" class="w-5 h-5"></i>
+                                        <span id="helpWebsiteBtn">Сайт проекта</span>
+                                    </a>
+                                    <a href="https://github.com/Goryuchnick/utmKA-2.0/issues" target="_blank"
+                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium">
+                                        <i data-lucide="github" class="w-5 h-5"></i>
+                                        <span id="helpGithubBtn">GitHub Issues</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <footer class="mt-auto py-2 px-4 md:px-6 lg:px-8 glass border-t border-slate-200/50 dark:border-slate-700/50 z-30">
+                <div class="w-full flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+                    <div class="flex items-center gap-4">
+                        <span>Подпишись на полезное</span>
+                        <span class="hidden sm:inline text-slate-300 dark:text-slate-700">|</span>
+                        <a href="https://t.me/pronin_marketing" target="_blank"
+                            class="hover:text-indigo-500 transition-colors flex items-center gap-1">
+                            <i data-lucide="send" class="w-3 h-3"></i> Telegram
+                        </a>
+                    </div>
+                    <a href="https://alex-pronin.ru" target="_blank"
+                        class="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded hover:bg-indigo-100 transition-colors">alex-pronin.ru</a>
+                </div>
+            </footer>
+        </main>
+
+        <!-- ONBOARDING OVERLAY -->
+        <div id="onboardingOverlay"
+            class="fixed inset-0 bg-black/70 hidden z-[150]">
+            <!-- Dark overlay with cutout for highlighted element -->
+            <div id="onboardingSpotlight" class="absolute inset-0 bg-black/70 transition-all duration-500"></div>
+            
+            <!-- Highlighted element border (visible border around element) -->
+            <div id="onboardingHighlight" class="absolute border-4 border-indigo-500 rounded-2xl shadow-2xl shadow-indigo-500/50 transition-all duration-500 pointer-events-none z-10 bg-transparent"></div>
+            
+            <!-- Modal content -->
+            <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none z-20">
+                <div
+                    class="glass-card w-full max-w-xl rounded-3xl shadow-2xl border border-white/10 bg-white/95 dark:bg-slate-900/95 pointer-events-auto">
+                    <div class="p-6 border-b border-white/10 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-9 h-9 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+                                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h2 id="onboardingTitle"
+                                    class="text-lg md:text-xl font-display font-semibold text-slate-900 dark:text-white">
+                                    Добро пожаловать в UTMka</h2>
+                                <p id="onboardingStepIndicator" class="text-xs text-slate-500 mt-0.5">1 / 5</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <!-- Language Toggle in Onboarding -->
+                            <button id="onboardingLangToggle"
+                                class="px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors">
+                                <span id="onboardingLangLabel">RU</span>
+                            </button>
+                            <button id="onboardingSkip"
+                                class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors">
+                                Пропустить
+                            </button>
+                        </div>
+                    </div>
+                <div class="p-6 space-y-4">
+                    <p id="onboardingText" class="text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Это короткий тур по приложению: генератор UTM‑ссылок, история и библиотека шаблонов.
+                    </p>
+                    <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                        <li class="flex gap-2">
+                            <span class="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                            <span id="onboardingBullet1">Создавайте чистые UTM‑ссылки и копируйте их одним кликом.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                            <span id="onboardingBullet2">Сохраняйте историю и шаблоны локально без аккаунта и оплат.</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="px-6 pb-5 pt-3 flex items-center justify-between gap-3 border-t border-white/10">
+                    <button id="onboardingBack"
+                        class="px-3 py-2 text-xs md:text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        Назад
+                    </button>
+                    <div class="flex gap-2">
+                        <button id="onboardingDone"
+                            class="hidden px-4 py-2 rounded-lg bg-slate-900 text-white text-xs md:text-sm font-medium hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-500 shadow-lg shadow-slate-900/20 dark:shadow-indigo-500/20 transition-colors">
+                            Готово
+                        </button>
+                        <button id="onboardingNext"
+                            class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs md:text-sm font-medium hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 transition-colors flex items-center gap-2">
+                            <span>Далее</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODALS (Re-styled) -->
+    <!-- URL Detail Modal -->
+    <div id="urlDetailModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+        <div class="glass-card w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
+            <div class="p-6 border-b border-white/10">
+                <h3 class="text-xl font-bold dark:text-white">Детали ссылки</h3>
+            </div>
+            <div class="p-6">
+                <textarea id="fullUrlText" readonly
+                    class="w-full text-sm font-mono p-4 rounded-xl bg-slate-50 dark:bg-[#0B1120] border border-slate-200 dark:border-white/10 h-32 resize-y focus:ring-2 focus:ring-indigo-500/50 outline-none"></textarea>
+            </div>
+            <div class="p-4 bg-slate-50/50 dark:bg-[#0B1120]/50 flex justify-end gap-3 rounded-b-lg">
+                <button id="closeUrlDetailModal"
+                    class="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Закрыть</button>
+                <div class="flex gap-2">
+                    <button id="deleteUrlBtn"
+                        class="px-4 py-2 bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors">Удалить</button>
+                    <button id="copyFullUrlBtn"
+                        class="px-4 py-2 bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 rounded-lg text-sm font-medium transition-colors">Копировать</button>
+                    <button id="applyFromModalBtn"
+                        class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-500 rounded-lg text-sm font-medium shadow-lg shadow-indigo-500/20 transition-colors">Использовать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Templates Modal -->
+    <div id="allTemplatesModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+        <div class="glass-card w-full max-w-xl max-h-[85vh] flex flex-col rounded-2xl shadow-2xl animate-fade-in">
+            <div class="p-5 border-b border-white/10">
+                <h3 class="text-lg font-bold">Все шаблоны</h3>
+            </div>
+            <div class="p-4">
+                <input type="search" id="modalTemplateSearch" placeholder="Поиск..."
+                    class="glass-input w-full px-4 py-2 rounded-xl text-sm">
+            </div>
+            <div id="modalTemplatesList" class="flex-grow overflow-y-auto px-4 pb-4 space-y-2 custom-scrollbar">
+                <!-- Items -->
+            </div>
+            <div class="p-4 border-t border-white/10 text-right">
+                <button id="closeModalBtn"
+                    class="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Template Modal -->
+    <div id="saveTemplateModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+        <div class="glass-card w-full max-w-md rounded-2xl shadow-2xl animate-fade-in">
+            <div class="p-6">
+                <h3 class="text-xl font-bold mb-4">Сохранить как шаблон</h3>
+                <div class="space-y-4">
+                    <input type="text" id="newTemplateNameInput" placeholder="Название шаблона *" required
+                        class="glass-input w-full px-4 py-2.5 rounded-xl text-sm">
+
+                    <div class="bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-xl">
+                        <input type="text" id="newTemplateTagNameInput" placeholder="Тег (опционально)"
+                            class="glass-input w-full px-3 py-2 rounded-lg text-sm mb-2">
+                        <input type="hidden" id="newTemplateTagColorInput">
+                        <div id="newTemplateColorPalette" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50/50 dark:bg-[#0B1120]/50 flex justify-end gap-3">
+                <button id="cancelSaveTemplate"
+                    class="px-4 py-2 rounded-lg text-sm border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Отмена</button>
+                <button id="confirmSaveTemplate"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-colors">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importTemplatesModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+        <div class="glass-card w-full max-w-md rounded-2xl shadow-2xl animate-fade-in">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4 text-indigo-600 dark:text-indigo-400">
+                    <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">Импорт</h3>
+                </div>
+                <p class="text-sm text-slate-500 mb-6">Поддерживаются JSON и CSV файлы. Выберите файл для загрузки ваших
+                    шаблонов.</p>
+
+                <div class="flex gap-4 mb-6">
+                    <button id="downloadJsonTemplate"
+                        class="text-xs text-indigo-500 hover:text-indigo-400 hover:underline">Скачать пример
+                        JSON</button>
+                    <button id="downloadCsvTemplate"
+                        class="text-xs text-indigo-500 hover:text-indigo-400 hover:underline">Скачать пример
+                        CSV</button>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button id="closeImportModal"
+                        class="px-4 py-2 rounded-lg text-sm border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Отмена</button>
+                    <button id="triggerImportFile"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-colors">Выбрать
+                        файл</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Detail Modal -->
+    <div id="templateDetailModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+        <div class="glass-card w-full max-w-lg rounded-2xl shadow-2xl animate-fade-in">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 id="templateDetailName" class="text-xl font-bold truncate pr-4"></h3>
+                    <div id="templateDetailTag" class="flex-shrink-0"></div>
+                </div>
+                <div class="space-y-3 text-sm bg-slate-50/50 dark:bg-black/20 p-4 rounded-xl border border-white/5">
+                    <div class="grid grid-cols-[100px_1fr] gap-2 items-center"><span
+                            class="text-slate-500 font-medium">Source:</span> <span id="templateDetailSource"
+                            class="font-mono text-indigo-600 dark:text-indigo-400 truncate"></span></div>
+                    <div class="grid grid-cols-[100px_1fr] gap-2 items-center"><span
+                            class="text-slate-500 font-medium">Medium:</span> <span id="templateDetailMedium"
+                            class="font-mono text-indigo-600 dark:text-indigo-400 truncate"></span></div>
+                    <div class="grid grid-cols-[100px_1fr] gap-2 items-center"><span
+                            class="text-slate-500 font-medium">Campaign:</span> <span id="templateDetailCampaign"
+                            class="font-mono text-slate-700 dark:text-slate-300 truncate"></span></div>
+                    <div class="grid grid-cols-[100px_1fr] gap-2 items-center"><span
+                            class="text-slate-500 font-medium">Content:</span> <span id="templateDetailContent"
+                            class="font-mono text-slate-700 dark:text-slate-300 truncate"></span></div>
+                    <div class="grid grid-cols-[100px_1fr] gap-2 items-center"><span
+                            class="text-slate-500 font-medium">Term:</span> <span id="templateDetailTerm"
+                            class="font-mono text-slate-700 dark:text-slate-300 truncate"></span></div>
+                    <div class="h-px bg-slate-200 dark:bg-white/10 my-2"></div>
+                    <div class="grid grid-cols-[100px_1fr] gap-2 items-center"><span id="templateDetailCreatedLabel"
+                            class="text-slate-500 font-medium">Создан:</span> <span id="templateDetailCreated"
+                            class="text-slate-400"></span></div>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50/50 dark:bg-[#0B1120]/50 flex justify-end gap-3">
+                <button id="closeTemplateDetailModal"
+                    class="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Закрыть</button>
+                <button id="applyTemplateBtn"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-colors">Применить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-6 right-6 z-[200] transform transition-all duration-300 translate-x-[150%]">
+        <div class="glass flex items-center gap-3 px-4 py-3 rounded-xl border-l-4 border-green-500 shadow-2xl">
+            <i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>
+            <p id="toast-message" class="text-sm font-medium pr-2"></p>
+        </div>
+    </div>
+    <script>
+        // Логирование для отладки
+        console.log('Script started at:', new Date().toISOString());
+        console.log('Document readyState:', document.readyState);
+        
+        // Глобальная обработка ошибок
+        window.addEventListener('error', (e) => {
+            console.error('Глобальная ошибка:', e.message, e.filename, e.lineno);
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Необработанное обещание отклонено:', e.reason);
+        });
+        
+        // Проверка готовности ресурсов
+        window.addEventListener('load', () => {
+            console.log('Window loaded at:', new Date().toISOString());
+            console.log('Tailwind available:', typeof tailwind !== 'undefined' || window.tailwind);
+            console.log('Lucide available:', typeof lucide !== 'undefined');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded at:', new Date().toISOString());
+            
+            try {
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                console.error('Error initializing lucide icons:', e);
+            }
+
+            // --- Theme toggle ---
+            const themeToggle = document.getElementById('theme-toggle');
+            const htmlEl = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            htmlEl.classList.toggle('dark', savedTheme === 'dark');
+            themeToggle.addEventListener('click', () => {
+                htmlEl.classList.toggle('dark');
+                localStorage.setItem('theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
+            });
+
+            // --- I18n (RU / EN) ---
+            const translations = {
+                ru: {
+                    nav_generator: 'Генератор',
+                    nav_history: 'История',
+                    nav_templates: 'Шаблоны',
+                    nav_help: 'Помощь',
+                    loader_text: 'Загрузка системы...',
+                    generator_title: 'Параметры ссылки',
+                    label_url: 'URL адрес *',
+                    label_source: 'Источник',
+                    label_medium: 'Канал',
+                    label_campaign: 'Кампания',
+                    label_content: 'Содержание',
+                    label_term: 'Ключевое слово',
+                    btn_generate: 'Создать UTM‑ссылку',
+                    result_title: 'Результат',
+                    save_as_template: 'Сохранить как шаблон',
+                    quick_start: 'Быстрый старт',
+                    section_history: 'История',
+                    section_templates: 'Новый шаблон',
+                    history_search_ph: 'Поиск...',
+                    history_date_ph: 'Дата',
+                    btn_open_all: 'Открыть все',
+                    btn_import: 'Импорт',
+                    template_name_ph: 'Название шаблона (обязательно)',
+                    template_tag_label: 'Тег и Цвет',
+                    template_tag_name_ph: 'Название тега',
+                    btn_create_template: 'Создать шаблон',
+                    templates_library: 'Библиотека',
+                    templates_search_ph: 'Поиск по шаблонам...',
+                    footer_subscribe: 'Подпишись на полезное',
+                    modal_url_details: 'Детали ссылки',
+                    btn_close: 'Закрыть',
+                    btn_delete: 'Удалить',
+                    btn_copy: 'Копировать',
+                    btn_use: 'Использовать',
+                    modal_all_templates: 'Все шаблоны',
+                    modal_save_template: 'Сохранить как шаблон',
+                    template_name_required_ph: 'Название шаблона *',
+                    template_tag_optional_ph: 'Тег (опционально)',
+                    btn_cancel: 'Отмена',
+                    btn_save: 'Сохранить',
+                    modal_import: 'Импорт',
+                    import_description: 'Поддерживаются JSON и CSV файлы. Выберите файл для загрузки ваших шаблонов.',
+                    btn_download_json: 'Скачать пример JSON',
+                    btn_download_csv: 'Скачать пример CSV',
+                    btn_select_file: 'Выбрать файл',
+                    template_created: 'Создан:',
+                    btn_apply: 'Применить',
+                    btn_apply_template: 'Применить шаблон',
+                    btn_view_template: 'Просмотр шаблона',
+                    btn_delete_template: 'Удалить шаблон',
+                    table_name: 'Название',
+                    table_tag: 'Тег',
+                    table_source: 'Источник',
+                    table_medium: 'Канал',
+                    table_campaign: 'Кампания',
+                    table_created: 'Дата создания',
+                    grid_source: 'Источник:',
+                    grid_medium: 'Канал:',
+                    grid_campaign: 'Кампания:',
+                    nothing_found: 'Ничего не найдено.',
+                    history_date: 'Дата',
+                    btn_apply_utm: 'Применить UTM-параметры',
+                    btn_copy_link: 'Копировать ссылку',
+                    // Help View
+                    help_view_title: 'Помощь',
+                    help_onboarding_btn: 'Пройти обучение',
+                    help_telegram_btn: 'Telegram канал',
+                    help_website_btn: 'Сайт проекта',
+                    help_github_btn: 'GitHub Issues',
+                    // Onboarding
+                    onboarding_step1_title: 'Добро пожаловать в UTMka',
+                    onboarding_step1_text: 'Короткий тур расскажет, где генерировать ссылки, смотреть историю и работать с шаблонами. Все данные хранятся локально.',
+                    onboarding_step1_bullet1: 'Создавайте чистые UTM‑ссылки и копируйте их одним кликом.',
+                    onboarding_step1_bullet2: 'Переключайтесь между RU / EN и светлой / тёмной темой.',
+                    onboarding_step2_title: 'Генератор UTM‑ссылок',
+                    onboarding_step2_text: 'На этой вкладке вы заполняете URL и UTM‑параметры. Результат сразу появляется справа, готовый к копированию.',
+                    onboarding_step2_bullet1: 'URL обязателен, UTM‑поля — опциональны.',
+                    onboarding_step2_bullet2: 'Готовую ссылку можно сохранить в историю и использовать позже.',
+                    onboarding_step3_title: 'История ссылок',
+                    onboarding_step3_text: 'Здесь хранится история всех сгенерированных ссылок. Можно искать, фильтровать по дате и повторно применять UTM‑параметры.',
+                    onboarding_step3_bullet1: 'История хранится локально в базе SQLite, без облака.',
+                    onboarding_step3_bullet2: 'Любую запись можно скопировать, применить или удалить.',
+                    onboarding_step4_title: 'Шаблоны кампаний',
+                    onboarding_step4_text: 'Создавайте и импортируйте шаблоны под разные каналы и рынки (RU / EN), чтобы не заполнять UTM‑параметры вручную.',
+                    onboarding_step4_bullet1: 'Слева создаёте шаблон, справа — библиотека с поиском и фильтрами.',
+                    onboarding_step4_bullet2: 'Импортируйте готовые файлы JSON / CSV из примеров в репозитории.',
+                    onboarding_step5_title: 'Локальное приложение',
+                    onboarding_step5_text: 'UTMka — локальное приложение: без регистрации, без подписки, все данные только у вас.',
+                    onboarding_step5_bullet1: 'Можно работать офлайн, пока приложение запущено.',
+                    onboarding_step5_bullet2: 'Экспортируйте историю и шаблоны, чтобы переносить их между устройствами.',
+                    onboarding_btn_skip: 'Пропустить',
+                    onboarding_btn_back: 'Назад',
+                    onboarding_btn_next: 'Далее',
+                    onboarding_btn_done: 'Готово',
+                },
+                en: {
+                    nav_generator: 'Generator',
+                    nav_history: 'History',
+                    nav_templates: 'Templates',
+                    nav_help: 'Help',
+                    loader_text: 'Loading system...',
+                    generator_title: 'Link parameters',
+                    label_url: 'URL address *',
+                    label_source: 'Source',
+                    label_medium: 'Medium',
+                    label_campaign: 'Campaign',
+                    label_content: 'Content',
+                    label_term: 'Keyword',
+                    btn_generate: 'Generate UTM link',
+                    result_title: 'Result',
+                    save_as_template: 'Save as template',
+                    quick_start: 'Quick start',
+                    section_history: 'History',
+                    section_templates: 'New template',
+                    history_search_ph: 'Search...',
+                    history_date_ph: 'Date',
+                    btn_open_all: 'Open all',
+                    btn_import: 'Import',
+                    template_name_ph: 'Template name (required)',
+                    template_tag_label: 'Tag and Color',
+                    template_tag_name_ph: 'Tag name',
+                    btn_create_template: 'Create template',
+                    templates_library: 'Library',
+                    templates_search_ph: 'Search templates...',
+                    footer_subscribe: 'Subscribe to useful content',
+                    modal_url_details: 'Link details',
+                    btn_close: 'Close',
+                    btn_delete: 'Delete',
+                    btn_copy: 'Copy',
+                    btn_use: 'Use',
+                    modal_all_templates: 'All templates',
+                    modal_save_template: 'Save as template',
+                    template_name_required_ph: 'Template name *',
+                    template_tag_optional_ph: 'Tag (optional)',
+                    btn_cancel: 'Cancel',
+                    btn_save: 'Save',
+                    modal_import: 'Import',
+                    import_description: 'JSON and CSV files are supported. Select a file to upload your templates.',
+                    btn_download_json: 'Download JSON example',
+                    btn_download_csv: 'Download CSV example',
+                    btn_select_file: 'Select file',
+                    template_created: 'Created:',
+                    btn_apply: 'Apply',
+                    btn_apply_template: 'Apply template',
+                    btn_view_template: 'View template',
+                    btn_delete_template: 'Delete template',
+                    table_name: 'Name',
+                    table_tag: 'Tag',
+                    table_source: 'Source',
+                    table_medium: 'Medium',
+                    table_campaign: 'Campaign',
+                    table_created: 'Date created',
+                    grid_source: 'Source:',
+                    grid_medium: 'Medium:',
+                    grid_campaign: 'Campaign:',
+                    nothing_found: 'Nothing found.',
+                    history_date: 'Date',
+                    btn_apply_utm: 'Apply UTM parameters',
+                    btn_copy_link: 'Copy link',
+                    // Help View
+                    help_view_title: 'Help',
+                    help_onboarding_btn: 'Take tutorial',
+                    help_telegram_btn: 'Telegram channel',
+                    help_website_btn: 'Project website',
+                    help_github_btn: 'GitHub Issues',
+                    // Onboarding
+                    onboarding_step1_title: 'Welcome to UTMka',
+                    onboarding_step1_text: 'A short tour will show you where to generate links, view history and work with templates. All data is stored locally.',
+                    onboarding_step1_bullet1: 'Create clean UTM links and copy them with one click.',
+                    onboarding_step1_bullet2: 'Switch between RU / EN and light / dark theme.',
+                    onboarding_step2_title: 'UTM link generator',
+                    onboarding_step2_text: 'On this tab you fill in the URL and UTM parameters. The result appears on the right, ready to copy.',
+                    onboarding_step2_bullet1: 'URL is required, UTM fields are optional.',
+                    onboarding_step2_bullet2: 'You can save the final link to history and reuse it later.',
+                    onboarding_step3_title: 'Link history',
+                    onboarding_step3_text: 'Here you see all generated links. You can search, filter by date and re‑apply UTM parameters.',
+                    onboarding_step3_bullet1: 'History is stored locally in SQLite, no cloud.',
+                    onboarding_step3_bullet2: 'Any record can be copied, applied or deleted.',
+                    onboarding_step4_title: 'Campaign templates',
+                    onboarding_step4_text: 'Create and import templates for different channels and markets (RU / EN), so you don’t have to fill UTM parameters manually.',
+                    onboarding_step4_bullet1: 'On the left you create a template, on the right you have a searchable library.',
+                    onboarding_step4_bullet2: 'Import ready JSON / CSV example files from the repository.',
+                    onboarding_step5_title: 'Local app',
+                    onboarding_step5_text: 'UTMka is a local app: no accounts, no subscriptions, all data stays with you.',
+                    onboarding_step5_bullet1: 'You can work offline while the app is running.',
+                    onboarding_step5_bullet2: 'Export history and templates to move them between devices.',
+                    onboarding_btn_skip: 'Skip',
+                    onboarding_btn_back: 'Back',
+                    onboarding_btn_next: 'Next',
+                    onboarding_btn_done: 'Done',
+                }
+            };
+
+            let currentLang = localStorage.getItem('utmka_lang') || 'ru';
+            const langToggle = document.getElementById('lang-toggle');
+            const langToggleLabel = document.getElementById('lang-toggle-label');
+
+            // Onboarding steps (связаны с вкладками)
+            const ONBOARDING_KEY = 'utmka_onboarding_done_v1';
+            const onboardingSteps = {
+                ru: [
+                    { key: 1, view: 'generator', highlight: null },
+                    { key: 2, view: 'generator', highlight: '[data-view="generator"] .glass-card' },
+                    { key: 3, view: 'history', highlight: '[data-view="history"] .glass-card' },
+                    { key: 4, view: 'templates', highlight: '[data-view="templates"] .glass-card' },
+                    { key: 5, view: 'generator', highlight: null },
+                ],
+                en: [
+                    { key: 1, view: 'generator', highlight: null },
+                    { key: 2, view: 'generator', highlight: '[data-view="generator"] .glass-card' },
+                    { key: 3, view: 'history', highlight: '[data-view="history"] .glass-card' },
+                    { key: 4, view: 'templates', highlight: '[data-view="templates"] .glass-card' },
+                    { key: 5, view: 'generator', highlight: null },
+                ],
+            };
+            let onboardingIndex = 0;
+
+            function applyTranslations(lang) {
+                const dict = translations[lang] || translations.ru;
+
+                const map = [
+                    ['[data-target=\"generator\"]', 'nav_generator', true],
+                    ['[data-target=\"history\"]', 'nav_history', true],
+                    ['[data-target=\"templates\"]', 'nav_templates', true],
+                    ['[data-target=\"help\"]', 'nav_help', true],
+                    ['#loader p', 'loader_text', false],
+                    ['#generatorTitle', 'generator_title', false],
+                    ['label[data-i18n=\"label_url\"]', 'label_url', false],
+                    ['label[data-i18n=\"label_source\"]', 'label_source', false],
+                    ['label[data-i18n=\"label_medium\"]', 'label_medium', false],
+                    ['label[data-i18n=\"label_campaign\"]', 'label_campaign', false],
+                    ['label[data-i18n=\"label_content\"]', 'label_content', false],
+                    ['label[data-i18n=\"label_term\"]', 'label_term', false],
+                    ['#generateBtn', 'btn_generate', false],
+                    ['#resultTitle', 'result_title', false],
+                    ['#saveAsTemplateBtn', 'save_as_template', false],
+                    ['#quickStartTitle', 'quick_start', false],
+                    ['#historyTitle', 'section_history', false],
+                    ['#newTemplateTitle', 'section_templates', false],
+                ];
+
+                map.forEach(([selector, key]) => {
+                    const el = document.querySelector(selector);
+                    if (el && dict[key]) {
+                        el.textContent = dict[key];
+                    }
+                });
+
+                // Placeholders
+                const historySearch = document.getElementById('historySearch');
+                if (historySearch && dict.history_search_ph) {
+                    historySearch.placeholder = dict.history_search_ph;
+                }
+                const historyDate = document.getElementById('historyDateRange');
+                if (historyDate && dict.history_date_ph) {
+                    historyDate.placeholder = dict.history_date_ph;
+                }
+                const templatesSearch = document.getElementById('templatesSearch');
+                if (templatesSearch && dict.templates_search_ph) {
+                    templatesSearch.placeholder = dict.templates_search_ph;
+                }
+                const modalTemplateSearch = document.getElementById('modalTemplateSearch');
+                if (modalTemplateSearch && dict.history_search_ph) {
+                    modalTemplateSearch.placeholder = dict.history_search_ph;
+                }
+                const templateName = document.getElementById('template_name');
+                if (templateName && dict.template_name_ph) {
+                    templateName.placeholder = dict.template_name_ph;
+                }
+                const templateTagName = document.getElementById('template_tag_name');
+                if (templateTagName && dict.template_tag_name_ph) {
+                    templateTagName.placeholder = dict.template_tag_name_ph;
+                }
+                const newTemplateNameInput = document.getElementById('newTemplateNameInput');
+                if (newTemplateNameInput && dict.template_name_required_ph) {
+                    newTemplateNameInput.placeholder = dict.template_name_required_ph;
+                }
+                const newTemplateTagNameInput = document.getElementById('newTemplateTagNameInput');
+                if (newTemplateTagNameInput && dict.template_tag_optional_ph) {
+                    newTemplateTagNameInput.placeholder = dict.template_tag_optional_ph;
+                }
+
+                // Buttons and other elements
+                const showAllTemplatesBtn = document.getElementById('showAllTemplatesBtn');
+                if (showAllTemplatesBtn && dict.btn_open_all) {
+                    showAllTemplatesBtn.textContent = dict.btn_open_all;
+                }
+                const importHistoryBtn = document.getElementById('importHistoryBtn');
+                if (importHistoryBtn && dict.btn_import) {
+                    importHistoryBtn.innerHTML = `<i data-lucide="upload" class="w-4 h-4"></i> ${dict.btn_import}`;
+                    lucide.createIcons();
+                }
+                const importTemplatesBtn = document.getElementById('importTemplatesBtn');
+                if (importTemplatesBtn && dict.btn_import) {
+                    importTemplatesBtn.innerHTML = `<i data-lucide="upload" class="w-4 h-4"></i> ${dict.btn_import}`;
+                    lucide.createIcons();
+                }
+                const createTemplateBtn = document.querySelector('#templateForm button[type="submit"]');
+                if (createTemplateBtn && dict.btn_create_template) {
+                    createTemplateBtn.innerHTML = `<i data-lucide="plus" class="w-4 h-4"></i> ${dict.btn_create_template}`;
+                    lucide.createIcons();
+                }
+                const templatesLibrary = document.getElementById('templatesLibraryTitle');
+                if (templatesLibrary && dict.templates_library) {
+                    templatesLibrary.textContent = dict.templates_library;
+                }
+                const footerSubscribe = document.querySelector('footer span');
+                if (footerSubscribe && dict.footer_subscribe) {
+                    footerSubscribe.textContent = dict.footer_subscribe;
+                }
+                const urlDetailModalTitle = document.querySelector('#urlDetailModal h3');
+                if (urlDetailModalTitle && dict.modal_url_details) {
+                    urlDetailModalTitle.textContent = dict.modal_url_details;
+                }
+                const closeUrlDetailModal = document.getElementById('closeUrlDetailModal');
+                if (closeUrlDetailModal && dict.btn_close) {
+                    closeUrlDetailModal.textContent = dict.btn_close;
+                }
+                const deleteUrlBtn = document.getElementById('deleteUrlBtn');
+                if (deleteUrlBtn && dict.btn_delete) {
+                    deleteUrlBtn.textContent = dict.btn_delete;
+                }
+                const copyFullUrlBtn = document.getElementById('copyFullUrlBtn');
+                if (copyFullUrlBtn && dict.btn_copy) {
+                    copyFullUrlBtn.textContent = dict.btn_copy;
+                }
+                const applyFromModalBtn = document.getElementById('applyFromModalBtn');
+                if (applyFromModalBtn && dict.btn_use) {
+                    applyFromModalBtn.textContent = dict.btn_use;
+                }
+                const allTemplatesModalTitle = document.querySelector('#allTemplatesModal h3');
+                if (allTemplatesModalTitle && dict.modal_all_templates) {
+                    allTemplatesModalTitle.textContent = dict.modal_all_templates;
+                }
+                const closeModalBtn = document.getElementById('closeModalBtn');
+                if (closeModalBtn && dict.btn_close) {
+                    closeModalBtn.textContent = dict.btn_close;
+                }
+                const saveTemplateModalTitle = document.querySelector('#saveTemplateModal h3');
+                if (saveTemplateModalTitle && dict.modal_save_template) {
+                    saveTemplateModalTitle.textContent = dict.modal_save_template;
+                }
+                const cancelSaveTemplate = document.getElementById('cancelSaveTemplate');
+                if (cancelSaveTemplate && dict.btn_cancel) {
+                    cancelSaveTemplate.textContent = dict.btn_cancel;
+                }
+                const confirmSaveTemplate = document.getElementById('confirmSaveTemplate');
+                if (confirmSaveTemplate && dict.btn_save) {
+                    confirmSaveTemplate.textContent = dict.btn_save;
+                }
+                const importModalTitle = document.querySelector('#importTemplatesModal h3');
+                if (importModalTitle && dict.modal_import) {
+                    importModalTitle.textContent = dict.modal_import;
+                }
+                const importDescription = document.querySelector('#importTemplatesModal p');
+                if (importDescription && dict.import_description) {
+                    importDescription.textContent = dict.import_description;
+                }
+                const downloadJsonTemplate = document.getElementById('downloadJsonTemplate');
+                if (downloadJsonTemplate && dict.btn_download_json) {
+                    downloadJsonTemplate.textContent = dict.btn_download_json;
+                }
+                const downloadCsvTemplate = document.getElementById('downloadCsvTemplate');
+                if (downloadCsvTemplate && dict.btn_download_csv) {
+                    downloadCsvTemplate.textContent = dict.btn_download_csv;
+                }
+                const closeImportModal = document.getElementById('closeImportModal');
+                if (closeImportModal && dict.btn_cancel) {
+                    closeImportModal.textContent = dict.btn_cancel;
+                }
+                const triggerImportFile = document.getElementById('triggerImportFile');
+                if (triggerImportFile && dict.btn_select_file) {
+                    triggerImportFile.textContent = dict.btn_select_file;
+                }
+                const templateCreatedLabel = document.getElementById('templateDetailCreatedLabel');
+                if (templateCreatedLabel && dict.template_created) {
+                    templateCreatedLabel.textContent = dict.template_created;
+                }
+                const closeTemplateDetailModal = document.getElementById('closeTemplateDetailModal');
+                if (closeTemplateDetailModal && dict.btn_close) {
+                    closeTemplateDetailModal.textContent = dict.btn_close;
+                }
+                const applyTemplateBtn = document.getElementById('applyTemplateBtn');
+                if (applyTemplateBtn && dict.btn_apply) {
+                    applyTemplateBtn.textContent = dict.btn_apply;
+                }
+
+                // Tag and Color label
+                const tagLabel = document.getElementById('templateTagLabel');
+                if (tagLabel && dict.template_tag_label) {
+                    tagLabel.textContent = dict.template_tag_label;
+                }
+
+                // Обновляем подпись переключателя
+                if (langToggleLabel) {
+                    langToggleLabel.textContent = lang.toUpperCase();
+                }
+
+                // Обновляем тексты кнопок онбординга
+                const obSkip = document.getElementById('onboardingSkip');
+                const obBack = document.getElementById('onboardingBack');
+                const obNext = document.getElementById('onboardingNext');
+                const obDone = document.getElementById('onboardingDone');
+                if (obSkip && dict.onboarding_btn_skip) obSkip.textContent = dict.onboarding_btn_skip;
+                if (obBack && dict.onboarding_btn_back) obBack.textContent = dict.onboarding_btn_back;
+                if (obNext && dict.onboarding_btn_next) obNext.querySelector('span').textContent = dict.onboarding_btn_next;
+                if (obDone && dict.onboarding_btn_done) obDone.textContent = dict.onboarding_btn_done;
+
+                // Обновляем переводы для help view
+                const helpViewTitle = document.getElementById('helpViewTitle');
+                const helpOnboardingBtn = document.getElementById('helpOnboardingBtn');
+                const helpTelegramBtn = document.getElementById('helpTelegramBtn');
+                const helpWebsiteBtn = document.getElementById('helpWebsiteBtn');
+                const helpGithubBtn = document.getElementById('helpGithubBtn');
+                
+                if (helpViewTitle && dict.help_view_title) {
+                    helpViewTitle.textContent = dict.help_view_title;
+                }
+                if (helpOnboardingBtn && dict.help_onboarding_btn) {
+                    helpOnboardingBtn.textContent = dict.help_onboarding_btn;
+                }
+                if (helpTelegramBtn && dict.help_telegram_btn) {
+                    helpTelegramBtn.textContent = dict.help_telegram_btn;
+                }
+                if (helpWebsiteBtn && dict.help_website_btn) {
+                    helpWebsiteBtn.textContent = dict.help_website_btn;
+                }
+                if (helpGithubBtn && dict.help_github_btn) {
+                    helpGithubBtn.textContent = dict.help_github_btn;
+                }
+            }
+
+            // навешиваем data-i18n там, где нужно (однократно)
+            (function initI18nMarkers() {
+                const labels = document.querySelectorAll('label');
+                labels.forEach(label => {
+                    const text = label.textContent.trim();
+                    if (text.startsWith('URL')) label.setAttribute('data-i18n', 'label_url');
+                    else if (text.startsWith('Источник')) label.setAttribute('data-i18n', 'label_source');
+                    else if (text.startsWith('Канал')) label.setAttribute('data-i18n', 'label_medium');
+                    else if (text.startsWith('Кампания')) label.setAttribute('data-i18n', 'label_campaign');
+                    else if (text.startsWith('Содержание')) label.setAttribute('data-i18n', 'label_content');
+                    else if (text.startsWith('Ключевое')) label.setAttribute('data-i18n', 'label_term');
+                });
+            })();
+
+            // --- Onboarding logic ---
+            const onboardingOverlay = document.getElementById('onboardingOverlay');
+            const onboardingTitle = document.getElementById('onboardingTitle');
+            const onboardingText = document.getElementById('onboardingText');
+            const onboardingBullet1 = document.getElementById('onboardingBullet1');
+            const onboardingBullet2 = document.getElementById('onboardingBullet2');
+            const onboardingStepIndicator = document.getElementById('onboardingStepIndicator');
+            const onboardingBack = document.getElementById('onboardingBack');
+            const onboardingNext = document.getElementById('onboardingNext');
+            const onboardingDone = document.getElementById('onboardingDone');
+            const onboardingSkip = document.getElementById('onboardingSkip');
+
+            function highlightElement(selector) {
+                const highlight = document.getElementById('onboardingHighlight');
+                const spotlight = document.getElementById('onboardingSpotlight');
+                if (!highlight || !spotlight) return;
+                
+                const element = document.querySelector(selector);
+                if (!element) {
+                    highlight.style.display = 'none';
+                    spotlight.style.clipPath = '';
+                    spotlight.style.webkitClipPath = '';
+                    return;
+                }
+                
+                const rect = element.getBoundingClientRect();
+                const padding = 8;
+                
+                // Позиционируем рамку подсветки
+                highlight.style.display = 'block';
+                highlight.style.width = `${rect.width + padding * 2}px`;
+                highlight.style.height = `${rect.height + padding * 2}px`;
+                highlight.style.left = `${rect.left - padding}px`;
+                highlight.style.top = `${rect.top - padding}px`;
+                
+                // Вырезаем область элемента из затемнения используя clip-path
+                const cutoutLeft = Math.max(0, rect.left - padding);
+                const cutoutTop = Math.max(0, rect.top - padding);
+                const cutoutRight = Math.min(window.innerWidth, rect.right + padding);
+                const cutoutBottom = Math.min(window.innerHeight, rect.bottom + padding);
+                
+                // Создаем clip-path который затемняет всё кроме области элемента
+                const clipPath = `polygon(
+                    0% 0%,
+                    0% 100%,
+                    ${cutoutLeft}px 100%,
+                    ${cutoutLeft}px ${cutoutTop}px,
+                    ${cutoutRight}px ${cutoutTop}px,
+                    ${cutoutRight}px ${cutoutBottom}px,
+                    ${cutoutLeft}px ${cutoutBottom}px,
+                    ${cutoutLeft}px 100%,
+                    100% 100%,
+                    100% 0%
+                )`;
+                
+                spotlight.style.clipPath = clipPath;
+                spotlight.style.webkitClipPath = clipPath;
+            }
+
+            function updateOnboardingContent() {
+                if (!onboardingOverlay) return;
+                const dict = translations[currentLang] || translations.ru;
+                const steps = onboardingSteps[currentLang] || onboardingSteps.ru;
+                if (!steps || !steps.length) return;
+
+                if (onboardingIndex < 0) onboardingIndex = 0;
+                if (onboardingIndex >= steps.length) onboardingIndex = steps.length - 1;
+
+                const step = steps[onboardingIndex];
+                const key = step.key;
+
+                if (onboardingTitle && dict[`onboarding_step${key}_title`]) {
+                    onboardingTitle.textContent = dict[`onboarding_step${key}_title`];
+                }
+                if (onboardingText && dict[`onboarding_step${key}_text`]) {
+                    onboardingText.textContent = dict[`onboarding_step${key}_text`];
+                }
+                if (onboardingBullet1 && dict[`onboarding_step${key}_bullet1`]) {
+                    onboardingBullet1.textContent = dict[`onboarding_step${key}_bullet1`];
+                }
+                if (onboardingBullet2 && dict[`onboarding_step${key}_bullet2`]) {
+                    onboardingBullet2.textContent = dict[`onboarding_step${key}_bullet2`];
+                }
+                if (onboardingStepIndicator) {
+                    onboardingStepIndicator.textContent = `${onboardingIndex + 1} / ${steps.length}`;
+                }
+
+                if (onboardingBack) {
+                    onboardingBack.disabled = onboardingIndex === 0;
+                }
+                if (onboardingNext && onboardingDone) {
+                    const isLast = onboardingIndex === steps.length - 1;
+                    onboardingNext.classList.toggle('hidden', isLast);
+                    onboardingDone.classList.toggle('hidden', !isLast);
+                }
+
+                // Переключаем вкладку, если указана
+                if (step.view && typeof switchView === 'function') {
+                    switchView(step.view);
+                }
+
+                // Подсвечиваем элемент для текущего шага
+                setTimeout(() => {
+                    if (step.highlight) {
+                        highlightElement(step.highlight);
+                    } else {
+                        const highlight = document.getElementById('onboardingHighlight');
+                        if (highlight) highlight.style.display = 'none';
+                    }
+                }, 300);
+            }
+
+            // Обновляем подсветку при изменении размера окна
+            window.addEventListener('resize', () => {
+                if (onboardingOverlay && !onboardingOverlay.classList.contains('hidden')) {
+                    const steps = onboardingSteps[currentLang] || onboardingSteps.ru;
+                    if (onboardingIndex >= 0 && onboardingIndex < steps.length) {
+                        const step = steps[onboardingIndex];
+                        if (step.highlight) {
+                            highlightElement(step.highlight);
+                        }
+                    }
+                }
+            });
+
+            function openOnboarding() {
+                if (!onboardingOverlay) return;
+                onboardingOverlay.classList.remove('hidden');
+                onboardingIndex = 0;
+                updateOnboardingContent();
+                lucide.createIcons();
+                // Обновляем переключатель языка в онбординге
+                const obLangLabel = document.getElementById('onboardingLangLabel');
+                if (obLangLabel) {
+                    obLangLabel.textContent = currentLang.toUpperCase();
+                }
+                // Скрываем подвал во время онбординга
+                const footer = document.querySelector('footer');
+                if (footer) {
+                    footer.style.display = 'none';
+                }
+            }
+
+            function closeOnboarding(markDone = true) {
+                if (!onboardingOverlay) return;
+                onboardingOverlay.classList.add('hidden');
+                const highlight = document.getElementById('onboardingHighlight');
+                const spotlight = document.getElementById('onboardingSpotlight');
+                if (highlight) highlight.style.display = 'none';
+                if (spotlight) {
+                    spotlight.style.clipPath = '';
+                    spotlight.style.webkitClipPath = '';
+                }
+                // Показываем подвал обратно
+                const footer = document.querySelector('footer');
+                if (footer) {
+                    footer.style.display = '';
+                }
+                if (markDone) {
+                    localStorage.setItem(ONBOARDING_KEY, '1');
+                }
+            }
+
+            if (onboardingNext) {
+                onboardingNext.addEventListener('click', () => {
+                    onboardingIndex += 1;
+                    updateOnboardingContent();
+                });
+            }
+            if (onboardingBack) {
+                onboardingBack.addEventListener('click', () => {
+                    onboardingIndex -= 1;
+                    updateOnboardingContent();
+                });
+            }
+            if (onboardingDone) {
+                onboardingDone.addEventListener('click', () => {
+                    closeOnboarding(true);
+                });
+            }
+            if (onboardingSkip) {
+                onboardingSkip.addEventListener('click', () => {
+                    closeOnboarding(true);
+                });
+            }
+
+            if (langToggle) {
+                langToggle.addEventListener('click', () => {
+                    currentLang = currentLang === 'ru' ? 'en' : 'ru';
+                    localStorage.setItem('utmka_lang', currentLang);
+                    applyTranslations(currentLang);
+                    // Перерисовываем динамический контент с новым языком
+                    if (typeof renderTemplates === 'function') renderTemplates();
+                    if (typeof renderHistory === 'function') renderHistory();
+                    // Обновляем тексты онбординга, если он открыт
+                    if (onboardingOverlay && !onboardingOverlay.classList.contains('hidden')) {
+                        updateOnboardingContent();
+                    }
+                });
+            }
+
+            // Переключатель языка в онбординге
+            const onboardingLangToggle = document.getElementById('onboardingLangToggle');
+            if (onboardingLangToggle) {
+                onboardingLangToggle.addEventListener('click', () => {
+                    currentLang = currentLang === 'ru' ? 'en' : 'ru';
+                    localStorage.setItem('utmka_lang', currentLang);
+                    applyTranslations(currentLang);
+                    // Обновляем тексты онбординга
+                    updateOnboardingContent();
+                    // Обновляем переключатель языка в онбординге
+                    const obLangLabel = document.getElementById('onboardingLangLabel');
+                    if (obLangLabel) {
+                        obLangLabel.textContent = currentLang.toUpperCase();
+                    }
+                });
+            }
+
+            // Help Button - инициализация (переключает на вкладку помощи)
+            function initHelpButton() {
+                try {
+                    const helpBtn = document.getElementById('help-btn');
+                    const openOnboardingFromHelp = document.getElementById('openOnboardingFromHelp');
+
+                    if (!helpBtn) {
+                        return;
+                    }
+
+                    // Переключаем на вкладку помощи
+                    helpBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof switchView === 'function') {
+                            switchView('help');
+                            window.location.hash = 'help';
+                        }
+                        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                            lucide.createIcons();
+                        }
+                    };
+
+                    if (openOnboardingFromHelp) {
+                        openOnboardingFromHelp.onclick = function() {
+                            if (typeof openOnboarding === 'function') {
+                                openOnboarding();
+                            }
+                        };
+                    }
+                } catch (e) {
+                    console.error('Error initializing help button:', e);
+                }
+            }
+
+            // применяем язык при старте
+            try {
+                applyTranslations(currentLang);
+            } catch (e) {
+                console.error('Error applying translations:', e);
+            }
+
+            const loader = document.getElementById('loader');
+            const mainContent = document.getElementById('main-content');
+            const navbar = document.getElementById('navbar');
+            let currentUser = { email: 'local_user' };
+            
+            // Убеждаемся, что подвал виден при загрузке
+            try {
+                const footer = document.querySelector('footer');
+                if (footer) {
+                    footer.style.display = '';
+                }
+            } catch (e) {
+                console.error('Error showing footer:', e);
+            }
+
+            let state = {
+                history: [], templates: [], historyViewMode: 'grid', templatesViewMode: 'table',
+                historySearch: '', templatesSearch: '', historySort: 'created_at_desc', templatesSort: 'created_at_desc',
+                historyDateRange: [], templatesSortColumn: 'created_at', templatesSortDirection: 'desc',
+                historySortColumn: 'created_at', historySortDirection: 'desc',
+            };
+
+            function startApp() {
+                console.log('startApp called at:', new Date().toISOString());
+                try {
+                    console.log('Hiding loader, showing content...');
+                    
+                    // Сначала показываем контент - это самое важное
+                    if (loader) {
+                        loader.classList.add('hidden');
+                        loader.style.display = 'none';
+                    }
+                    if (mainContent) {
+                        mainContent.classList.remove('hidden');
+                        mainContent.style.display = '';
+                    }
+                    if (navbar) {
+                        navbar.classList.remove('hidden');
+                        navbar.style.display = '';
+                    }
+                    
+                    // Инициализируем иконки Lucide, если они загружены
+                    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                        try {
+                            lucide.createIcons();
+                            console.log('Lucide icons initialized');
+                        } catch (e) {
+                            console.warn('Lucide icons initialization failed:', e);
+                        }
+                    } else {
+                        console.warn('Lucide not available yet, icons will be initialized later');
+                        // Пытаемся инициализировать позже
+                        setTimeout(() => {
+                            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                                lucide.createIcons();
+                                console.log('Lucide icons initialized (delayed)');
+                            }
+                        }, 1000);
+                    }
+                    // Убеждаемся, что подвал виден
+                    const footer = document.querySelector('footer');
+                    if (footer) {
+                        footer.style.display = '';
+                    }
+                    // Вызываем initAppForUser асинхронно с обработкой ошибок
+                    if (typeof initAppForUser === 'function') {
+                        console.log('Calling initAppForUser...');
+                        initAppForUser().catch(e => {
+                            console.error('Error in initAppForUser:', e);
+                            // Показываем контент даже если инициализация не удалась
+                        });
+                    } else {
+                        console.error('initAppForUser is not defined!');
+                    }
+                    if (typeof initHistoryDateRangePicker === 'function') {
+                        initHistoryDateRangePicker();
+                    }
+                    // Переинициализируем help button после показа navbar
+                    setTimeout(() => {
+                        try {
+                            if (typeof initHelpButton === 'function') {
+                                initHelpButton();
+                            }
+                            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                                lucide.createIcons();
+                            }
+                        } catch (e) {
+                            console.error('Error reinitializing help button:', e);
+                        }
+                    }, 300);
+                } catch (e) {
+                    console.error('Error in startApp:', e);
+                    // Показываем контент даже при ошибке
+                    if (loader) loader.classList.add('hidden');
+                    if (mainContent) mainContent.classList.remove('hidden');
+                    if (navbar) navbar.classList.remove('hidden');
+                }
+            }
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const views = document.querySelectorAll('[data-view]');
+            function switchView(targetId) {
+                views.forEach(view => view.classList.toggle('active', view.dataset.view === targetId));
+                navLinks.forEach(link => {
+                    const isTarget = link.dataset.target === targetId;
+                    link.classList.toggle('active', isTarget);
+                    link.classList.toggle('text-indigo-600', isTarget); link.classList.toggle('dark:text-indigo-400', isTarget);
+                    link.classList.toggle('bg-slate-100', isTarget); link.classList.toggle('dark:bg-slate-800', isTarget);
+                });
+            }
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => { e.preventDefault(); switchView(e.currentTarget.dataset.target); window.location.hash = e.currentTarget.dataset.target; });
+            });
+
+            async function initAppForUser() {
+                try {
+                    console.log('initAppForUser started');
+                    if (!currentUser) {
+                        console.warn('No currentUser, skipping initialization');
+                        return;
+                    }
+                    
+                    await fetchData();
+                    console.log('Data fetched, rendering...');
+                    
+                    renderAll();
+                    
+                    // Инициализация палитры цветов
+                    try {
+                        const templateColorPalette = document.getElementById('templateColorPalette');
+                        const templateTagColor = document.getElementById('template_tag_color');
+                        if (templateColorPalette && templateTagColor && typeof initColorPalette === 'function') {
+                            initColorPalette(templateColorPalette, templateTagColor);
+                        }
+                    } catch (e) {
+                        console.warn('Error initializing color palette:', e);
+                    }
+                    
+                    try {
+                        const newTemplateColorPalette = document.getElementById('newTemplateColorPalette');
+                        const newTemplateTagColorInput = document.getElementById('newTemplateTagColorInput');
+                        if (newTemplateColorPalette && newTemplateTagColorInput && typeof initColorPalette === 'function') {
+                            initColorPalette(newTemplateColorPalette, newTemplateTagColorInput);
+                        }
+                    } catch (e) {
+                        console.warn('Error initializing new template color palette:', e);
+                    }
+                    
+                    // Переключение на нужную вкладку
+                    try {
+                        switchView(window.location.hash.substring(1) || 'generator');
+                    } catch (e) {
+                        console.warn('Error switching view:', e);
+                    }
+                    
+                    // Инициализация остальных компонентов
+                    try {
+                        if (typeof initDatePickers === 'function') {
+                            initDatePickers();
+                        }
+                    } catch (e) {
+                        console.warn('Error initializing date pickers:', e);
+                    }
+                    
+                    try {
+                        if (typeof initHistoryEventListeners === 'function') {
+                            initHistoryEventListeners();
+                        }
+                    } catch (e) {
+                        console.warn('Error initializing history event listeners:', e);
+                    }
+                    
+                    try {
+                        if (typeof initTemplatesEventListeners === 'function') {
+                            initTemplatesEventListeners();
+                        }
+                    } catch (e) {
+                        console.warn('Error initializing templates event listeners:', e);
+                    }
+                    
+                    console.log('initAppForUser completed successfully');
+                } catch (e) {
+                    console.error('Error in initAppForUser:', e);
+                    throw e; // Пробрасываем ошибку дальше для обработки в startApp
+                }
+            }
+
+            async function fetchData() {
+                try {
+                    console.log('=== Начало загрузки данных ===');
+                    console.log('User email:', currentUser.email);
+                    
+                    // Загружаем данные последовательно (не параллельно) с таймаутами
+                    console.log('Запрос истории...');
+                    let historyData = [];
+                    try {
+                        const historyController = new AbortController();
+                        const historyTimeout = setTimeout(() => {
+                            console.warn('Таймаут истории - отменяем запрос');
+                            historyController.abort();
+                        }, 15000); // 15 секунд таймаут
+                        
+                        const historyRes = await fetch(`/history?user_email=${currentUser.email}`, {
+                            signal: historyController.signal,
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Cache-Control': 'no-cache'
+                            }
+                        });
+                        clearTimeout(historyTimeout);
+                        
+                        console.log('История получена, статус:', historyRes.status, historyRes.statusText);
+                        
+                        if (historyRes.ok) {
+                            historyData = await historyRes.json();
+                            console.log('✓ История загружена:', historyData.length, 'элементов');
+                            state.history = historyData;
+                        } else {
+                            console.warn('История не загружена, статус:', historyRes.status);
+                            state.history = [];
+                        }
+                    } catch (e) {
+                        console.error('Ошибка при запросе истории:', e);
+                        console.error('Тип ошибки:', e.name);
+                        console.error('Сообщение:', e.message);
+                        if (e.name === 'AbortError') {
+                            console.error('Таймаут при загрузке истории (15 секунд)');
+                        }
+                        state.history = [];
+                    }
+                    
+                    // Небольшая пауза между запросами
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    console.log('Запрос шаблонов...');
+                    let templatesData = [];
+                    try {
+                        const templatesController = new AbortController();
+                        const templatesTimeout = setTimeout(() => {
+                            console.warn('Таймаут шаблонов - отменяем запрос');
+                            templatesController.abort();
+                        }, 15000); // 15 секунд таймаут
+                        
+                        const templatesRes = await fetch(`/templates?user_email=${currentUser.email}`, {
+                            signal: templatesController.signal,
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Cache-Control': 'no-cache'
+                            }
+                        });
+                        clearTimeout(templatesTimeout);
+                        
+                        console.log('Шаблоны получены, статус:', templatesRes.status, templatesRes.statusText);
+                        
+                        if (templatesRes.ok) {
+                            templatesData = await templatesRes.json();
+                            console.log('✓ Шаблоны загружены:', templatesData.length, 'элементов');
+                            state.templates = templatesData;
+                        } else {
+                            console.warn('Шаблоны не загружены, статус:', templatesRes.status);
+                            state.templates = [];
+                        }
+                    } catch (e) {
+                        console.error('Ошибка при запросе шаблонов:', e);
+                        console.error('Тип ошибки:', e.name);
+                        console.error('Сообщение:', e.message);
+                        if (e.name === 'AbortError') {
+                            console.error('Таймаут при загрузке шаблонов (15 секунд)');
+                        }
+                        state.templates = [];
+                    }
+                    
+                    console.log('=== Загрузка данных завершена ===');
+                    console.log('Итого: история -', state.history.length, 'элементов, шаблоны -', state.templates.length, 'элементов');
+                } catch (e) {
+                    console.error('Критическая ошибка в fetchData:', e);
+                    console.error('Stack:', e.stack);
+                    state.history = [];
+                    state.templates = [];
+                }
+            }
+
+            function renderAll() {
+                renderHistory();
+                renderTemplates();
+                renderRecentTemplates();
+            }
+
+            // --- Генератор UTM ---
+            const utmForm = document.getElementById('utmForm');
+            const addToTemplateBtn = document.getElementById('addToTemplateBtn');
+            if (utmForm) {
+                utmForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Only proceed if the submit event was triggered by the Generate button intentionally
+                const submitButton = e.submitter;
+                if (!submitButton || submitButton.type !== 'submit' || !submitButton.hasAttribute('data-intentional-submit')) {
+                    return;
+                }
+
+                // Remove the attribute after checking
+                submitButton.removeAttribute('data-intentional-submit');
+
+                const rawUrl = document.getElementById('url').value;
+                if (!rawUrl) { showToast('Введите URL сайта', 'error'); return; }
+                const baseUrl = rawUrl.startsWith('https://') || rawUrl.startsWith('http://') ? rawUrl : `https://${rawUrl}`;
+
+                const params = {
+                    utm_source: document.getElementById('utm_source').value, utm_medium: document.getElementById('utm_medium').value,
+                    utm_campaign: document.getElementById('utm_campaign').value, utm_term: document.getElementById('utm_term').value,
+                    utm_content: document.getElementById('utm_content').value,
+                };
+
+                try {
+                    const url = new URL(baseUrl);
+                    Object.entries(params).forEach(([key, value]) => { if (value) url.searchParams.set(key, value); });
+                    const finalUrl = url.toString();
+                    document.getElementById('resultUrl').value = finalUrl;
+                    addToTemplateBtn.disabled = false;
+
+                    await fetch('/history', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_email: currentUser.email, url: finalUrl })
+                    });
+                    await fetchData();
+                    renderHistory();
+                    showToast('Ссылка сохранена в историю!');
+                } catch (error) {
+                    showToast('Неверный формат URL', 'error');
+                }
+                });
+            }
+
+            const clearFormButton = document.getElementById('clearFormButton');
+            if (clearFormButton) {
+                clearFormButton.addEventListener('click', () => {
+                    if (utmForm) utmForm.reset();
+                    const resultUrlEl = document.getElementById('resultUrl');
+                    if (resultUrlEl) resultUrlEl.value = '';
+                    if (addToTemplateBtn) addToTemplateBtn.disabled = true;
+                });
+            }
+
+            // Add explicit click handler for the Generate button to ensure it's the only way to generate UTM links
+            const generateButton = document.querySelector('#utmForm button[type="submit"]');
+            if (generateButton) {
+                generateButton.addEventListener('click', (e) => {
+                    // This ensures the form submission is intentional
+                    e.target.setAttribute('data-intentional-submit', 'true');
+                });
+            }
+
+            const copyButton = document.getElementById('copyButton');
+            if (copyButton) {
+                copyButton.addEventListener('click', () => {
+                    const resultUrlEl = document.getElementById('resultUrl');
+                    if (!resultUrlEl) return;
+                    const resultUrl = resultUrlEl.value;
+                    if (!resultUrl) return;
+                    navigator.clipboard.writeText(resultUrl).then(() => showToast('Ссылка скопирована!'));
+                });
+            }
+
+            function applyTemplateToForm(template) {
+                document.getElementById('utm_source').value = template.utm_source || '';
+                document.getElementById('utm_medium').value = template.utm_medium || '';
+                document.getElementById('utm_campaign').value = template.utm_campaign || '';
+                document.getElementById('utm_content').value = template.utm_content || '';
+                document.getElementById('utm_term').value = template.utm_term || '';
+                showToast(`Шаблон "${template.name}" применен.`);
+            }
+
+            function applyHistoryToForm(historyItem) {
+                // Извлекаем UTM-параметры из URL
+                const url = historyItem.full_url || historyItem.url;
+                const urlObj = new URL(url);
+
+                // Извлекаем базовый URL (без параметров)
+                const baseUrl = urlObj.origin + urlObj.pathname;
+                document.getElementById('url').value = baseUrl.replace(/^https?:\/\//, '');
+
+                // Извлекаем UTM-параметры
+                document.getElementById('utm_source').value = urlObj.searchParams.get('utm_source') || '';
+                document.getElementById('utm_medium').value = urlObj.searchParams.get('utm_medium') || '';
+                document.getElementById('utm_campaign').value = urlObj.searchParams.get('utm_campaign') || '';
+                document.getElementById('utm_content').value = urlObj.searchParams.get('utm_content') || '';
+                document.getElementById('utm_term').value = urlObj.searchParams.get('utm_term') || '';
+
+                // Переключаемся на страницу генератора
+                switchView('generator');
+                showToast('UTM-параметры применены из истории!');
+            }
+
+            function initDatePickers() {
+                document.querySelectorAll('.date-picker-btn').forEach(button => {
+                    const input = button.parentElement.querySelector('input');
+
+                    // Prevent any form submission when calendar button is clicked
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+
+                    const fp = flatpickr(button, {
+                        dateFormat: "Y-m-d", locale: "ru",
+                        onReady: (_, __, instance) => {
+                            const container = instance.calendarContainer;
+                            const buttonContainer = document.createElement('div');
+                            buttonContainer.className = 'flatpickr-custom-buttons';
+                            buttonContainer.innerHTML = `<button class='flatpickr-custom-btn' type='button'>Сегодня</button>`;
+
+                            buttonContainer.children[0].addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                instance.setDate(new Date(), true);
+                                instance.close();
+                            });
+
+                            container.appendChild(buttonContainer);
+                        },
+                        onChange: (selectedDates, dateStr) => {
+                            // Эта функция теперь ТОЛЬКО обновляет значение поля
+                            if (input.value.includes(dateStr)) return;
+                            input.value = input.value ? `${input.value}_${dateStr}` : dateStr;
+                        },
+                        onClose: () => {
+                            // Ensure no form submission happens when calendar closes
+                            return false;
+                        }
+                    });
+                });
+            }
+
+            // --- Шаблоны ---
+            function applyTemplateToForm(template) {
+                document.getElementById('utm_source').value = template.utm_source || '';
+                document.getElementById('utm_medium').value = template.utm_medium || '';
+                document.getElementById('utm_campaign').value = template.utm_campaign || '';
+                document.getElementById('utm_content').value = template.utm_content || '';
+                document.getElementById('utm_term').value = template.utm_term || '';
+                showToast(`Шаблон "${template.name}" применен.`);
+            }
+
+            const recentTemplatesContainer = document.getElementById('recentTemplatesContainer');
+            function renderRecentTemplates() {
+                const container = recentTemplatesContainer;
+                container.innerHTML = ''; // Очищаем контейнер
+
+                // Сортируем шаблоны, чтобы последние добавленные были первыми
+                const sortedTemplates = [...state.templates].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                if (sortedTemplates.length === 0) {
+                    container.innerHTML = `<p class="text-xs text-slate-400">У вас пока нет шаблонов.</p>`;
+                    return;
+                }
+
+                // Ограничиваем количество шаблонов для отображения (примерно 4 ряда)
+                const maxTemplates = 16; // Примерно 4 ряда по 4 шаблона
+                const templatesToShow = sortedTemplates.slice(0, maxTemplates);
+
+                // Используем requestAnimationFrame для рендеринга после того, как DOM будет готов
+                requestAnimationFrame(() => {
+                    // Добавляем шаблоны
+                    for (const t of templatesToShow) {
+                        const button = document.createElement('button');
+                        button.dataset.templateId = t.id;
+                        // Стиль кнопок с полусферическими краями
+                        button.className = "recent-template-btn text-sm px-4 py-2 rounded-full font-medium transition-all duration-200 border-0 shadow-sm";
+                        button.textContent = t.name;
+
+                        // Применяем цвет на основе тега с улучшенными цветами
+                        if (t.tag_color && t.tag_color !== 'null') {
+                            const textColor = getTextColorForBg(t.tag_color);
+                            button.style.backgroundColor = t.tag_color;
+                            button.style.color = textColor;
+                            button.style.border = 'none';
+                            // Улучшенное ховер-состояние
+                            button.onmouseover = () => {
+                                button.style.transform = 'translateY(-1px)';
+                                button.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                            };
+                            button.onmouseout = () => {
+                                button.style.transform = 'translateY(0)';
+                                button.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                            };
+                        } else {
+                            // Стандартный стиль для кнопок без цвета тега - светло-серый
+                            button.style.backgroundColor = '#f1f5f9';
+                            button.style.color = '#475569';
+                            button.style.border = 'none';
+                            button.onmouseover = () => {
+                                button.style.backgroundColor = '#e2e8f0';
+                                button.style.transform = 'translateY(-1px)';
+                                button.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                            };
+                            button.onmouseout = () => {
+                                button.style.backgroundColor = '#f1f5f9';
+                                button.style.transform = 'translateY(0)';
+                                button.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                            };
+                        }
+
+                        container.appendChild(button);
+                    }
+                });
+            }
+
+            // Перерисовываем при изменении размера окна
+            window.addEventListener('resize', renderRecentTemplates);
+
+
+            recentTemplatesContainer.addEventListener('click', e => {
+                if (e.target.classList.contains('recent-template-btn')) {
+                    const template = state.templates.find(t => t.id == e.target.dataset.templateId);
+                    if (template) applyTemplateToForm(template);
+                }
+            });
+
+            // --- Модальные окна ---
+            const allTemplatesModal = document.getElementById('allTemplatesModal');
+            const modalTemplatesList = document.getElementById('modalTemplatesList');
+            const modalTemplateSearch = document.getElementById('modalTemplateSearch');
+
+            document.getElementById('showAllTemplatesBtn').addEventListener('click', () => {
+                renderAllTemplatesModal();
+                allTemplatesModal.classList.remove('hidden');
+                allTemplatesModal.classList.add('flex');
+            });
+
+            document.getElementById('closeModalBtn').addEventListener('click', () => {
+                allTemplatesModal.classList.add('hidden');
+                allTemplatesModal.classList.remove('flex');
+            });
+
+            modalTemplateSearch.addEventListener('input', () => renderAllTemplatesModal());
+
+            function renderAllTemplatesModal() {
+                const query = modalTemplateSearch.value.toLowerCase();
+                const filteredTemplates = state.templates.filter(t => t.name.toLowerCase().includes(query));
+                if (filteredTemplates.length === 0) {
+                    modalTemplatesList.innerHTML = `<p class="text-center text-slate-500">Ничего не найдено</p>`;
+                    return;
+                }
+                modalTemplatesList.innerHTML = `<div class="space-y-2">
+                ${filteredTemplates.map(t => `
+                    <button data-template-id="${t.id}" class="modal-template-item w-full text-left p-3 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <p class="font-semibold selectable-text">${t.name}</p>
+                        <p class="text-xs text-slate-500 truncate selectable-text">source: ${t.utm_source || '-'}, medium: ${t.utm_medium || '-'}</p>
+                    </button>
+                `).join('')}
+            </div>`;
+            }
+
+            modalTemplatesList.addEventListener('click', e => {
+                const item = e.target.closest('.modal-template-item');
+                if (item) {
+                    const template = state.templates.find(t => t.id == item.dataset.templateId);
+                    if (template) applyTemplateToForm(template);
+                    allTemplatesModal.classList.add('hidden');
+                    allTemplatesModal.classList.remove('flex');
+                }
+            });
+
+            const saveTemplateModal = document.getElementById('saveTemplateModal');
+            const newTemplateNameInput = document.getElementById('newTemplateNameInput');
+
+            addToTemplateBtn.addEventListener('click', () => {
+                saveTemplateModal.classList.remove('hidden');
+                saveTemplateModal.classList.add('flex');
+                newTemplateNameInput.focus();
+            });
+
+            document.getElementById('cancelSaveTemplate').addEventListener('click', () => {
+                newTemplateNameInput.value = '';
+                document.getElementById('newTemplateTagNameInput').value = '';
+                document.getElementById('newTemplateTagColorInput').value = '';
+                document.querySelectorAll('#newTemplateColorPalette .color-dot').forEach(dot => dot.classList.remove('selected'));
+                saveTemplateModal.classList.add('hidden');
+                saveTemplateModal.classList.remove('flex');
+            });
+
+            document.getElementById('confirmSaveTemplate').addEventListener('click', async () => {
+                const name = newTemplateNameInput.value.trim();
+                if (!name) {
+                    showToast('Введите название шаблона', 'error');
+                    return;
+                }
+
+                const newTemplate = {
+                    user_email: currentUser.email, name: name,
+                    utm_source: document.getElementById('utm_source').value, utm_medium: document.getElementById('utm_medium').value,
+                    utm_campaign: document.getElementById('utm_campaign').value, utm_content: document.getElementById('utm_content').value,
+                    utm_term: document.getElementById('utm_term').value,
+                    tag_name: document.getElementById('newTemplateTagNameInput').value,
+                    tag_color: document.getElementById('newTemplateTagColorInput').value,
+                };
+
+                await fetch('/templates', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newTemplate)
+                });
+                await fetchData();
+                renderAll();
+                showToast('Шаблон сохранен!');
+                newTemplateNameInput.value = '';
+                document.getElementById('newTemplateTagNameInput').value = '';
+                document.getElementById('newTemplateTagColorInput').value = '';
+                document.querySelectorAll('#newTemplateColorPalette .color-dot').forEach(dot => dot.classList.remove('selected'));
+                saveTemplateModal.classList.add('hidden');
+                saveTemplateModal.classList.remove('flex');
+            });
+
+
+            // --- Остальной код (рендеринг истории, шаблонов, импорт/экспорт и т.д.) ---
+
+            const templateForm = document.getElementById('templateForm');
+
+            const PRESET_COLORS = [
+                '#dbeafe', '#dcfce7', '#fef3c7', '#fce7f3', '#e0e7ff',
+                '#f0f9ff', '#f0fdf4', '#fefce8', '#fef2f2', '#f5f3ff'
+            ];
+
+            function initColorPalette(paletteContainer, colorInput) {
+                if (!paletteContainer || !colorInput) return;
+
+                paletteContainer.innerHTML = PRESET_COLORS.map(color =>
+                    `<div class="color-dot" style="background-color: ${color};" data-color="${color}"></div>`
+                ).join('');
+
+                paletteContainer.addEventListener('click', (e) => {
+                    const target = e.target;
+                    if (!target.classList.contains('color-dot')) return;
+
+                    const isSelected = target.classList.contains('selected');
+
+                    paletteContainer.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('selected'));
+
+                    if (isSelected) {
+                        colorInput.value = '';
+                    } else {
+                        target.classList.add('selected');
+                        colorInput.value = target.dataset.color;
+                    }
+                });
+            }
+
+
+            templateForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await fetch('/templates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_email: currentUser.email,
+                        name: document.getElementById('template_name').value,
+                        utm_source: document.getElementById('template_utm_source').value,
+                        utm_medium: document.getElementById('template_utm_medium').value,
+                        utm_campaign: document.getElementById('template_utm_campaign').value,
+                        utm_content: document.getElementById('template_utm_content').value,
+                        utm_term: document.getElementById('template_utm_term').value,
+                        tag_name: document.getElementById('template_tag_name').value,
+                        tag_color: document.getElementById('template_tag_color').value,
+                    })
+                });
+                await fetchData();
+                renderAll();
+                showToast('Шаблон сохранен!');
+                templateForm.reset();
+                // Сбрасываем цвет
+                selectedColorInput.value = '';
+                colorPalette.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('selected'));
+            });
+
+            function initHistoryDateRangePicker() {
+                flatpickr("#historyDateRange", {
+                    mode: "range",
+                    dateFormat: "Y-m-d",
+                    locale: "ru",
+                    onChange: function (selectedDates) {
+                        if (selectedDates.length === 2) {
+                            state.historyDateRange = selectedDates;
+                        } else {
+                            state.historyDateRange = [];
+                        }
+                        renderHistory();
+                    },
+                    onReady: (_, __, instance) => {
+                        const container = instance.calendarContainer;
+                        const buttonContainer = document.createElement('div');
+                        buttonContainer.className = 'flatpickr-custom-buttons !-mt-2 !pt-0 !pb-2';
+                        buttonContainer.innerHTML = `<button class='flatpickr-custom-btn' type='button'>Очистить</button>`;
+
+                        buttonContainer.children[0].addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            instance.clear();
+                            instance.close();
+                        });
+                        container.appendChild(buttonContainer);
+                    },
+                });
+            }
+
+            function getTextColorForBg(hexColor) {
+                if (!hexColor || hexColor.length < 7) return '#374151';
+
+                // Специальные цвета для всех пастельных тонов
+                const colorMap = {
+                    '#dbeafe': '#1e40af', // темно-синий для светло-синего
+                    '#dcfce7': '#166534', // темно-зеленый для светло-зеленого  
+                    '#fef3c7': '#92400e', // темно-оранжевый для светло-желтого
+                    '#fce7f3': '#be185d', // темно-розовый для светло-розового
+                    '#e0e7ff': '#3730a3', // темно-фиолетовый для светло-фиолетового
+                    '#f0f9ff': '#0c4a6e', // темно-голубой для светло-голубого
+                    '#f0fdf4': '#14532d', // темно-зеленый для светло-зеленого
+                    '#fefce8': '#a16207', // темно-желтый для светло-желтого
+                    '#fef2f2': '#991b1b', // темно-красный для светло-красного
+                    '#f5f3ff': '#581c87'  // темно-фиолетовый для светло-фиолетового
+                };
+
+                if (colorMap[hexColor]) {
+                    return colorMap[hexColor];
+                }
+
+                // Fallback для других цветов
+                const r = parseInt(hexColor.slice(1, 3), 16);
+                const g = parseInt(hexColor.slice(3, 5), 16);
+                const b = parseInt(hexColor.slice(5, 7), 16);
+                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                return luminance > 0.7 ? '#374151' : '#ffffff';
+            }
+
+            // Helper function to parse dates safely
+            function parseDate(dateString) {
+                if (!dateString) return new Date(0);
+
+                // Try different date formats
+                let date;
+                if (dateString.includes('T')) {
+                    // Already in ISO format
+                    date = new Date(dateString);
+                } else if (dateString.includes(' ')) {
+                    // SQLite format: "YYYY-MM-DD HH:MM:SS"
+                    date = new Date(dateString.replace(' ', 'T'));
+                } else {
+                    // Just date: "YYYY-MM-DD"
+                    date = new Date(dateString + 'T00:00:00');
+                }
+
+                // Check if date is valid
+                if (isNaN(date.getTime())) {
+                    console.warn('Invalid date:', dateString);
+                    return new Date(0);
+                }
+
+                return date;
+            }
+
+            function applyFiltersAndSorting(items, searchQuery, sortKey, dateRange, sortColumn = null, sortDirection = null) {
+                // Create a copy of the array to avoid mutating the original
+                let filtered = [...items];
+
+                if (searchQuery) {
+                    const query = searchQuery.toLowerCase().trim();
+                    const queryWords = query.split(/\s+/).filter(word => word.length > 0);
+
+                    filtered = filtered.filter(item => {
+                        // Search in all relevant fields including UTM parameters, tags, and names
+                        const searchableText = [
+                            item.full_url || item.url || '',
+                            item.base_url || '',
+                            item.name || '', // Template name for templates
+                            item.tag_name || '', // Tag name for templates
+                            item.utm_source || '',
+                            item.utm_medium || '',
+                            item.utm_campaign || '',
+                            item.utm_content || '',
+                            item.utm_term || ''
+                        ].join(' ').toLowerCase();
+
+                        // If query has multiple words, all words must be found
+                        if (queryWords.length > 1) {
+                            return queryWords.every(word => searchableText.includes(word));
+                        } else {
+                            return searchableText.includes(query);
+                        }
+                    });
+                }
+
+                if (dateRange && dateRange.length === 2) {
+                    const [start, end] = dateRange;
+                    start.setHours(0, 0, 0, 0);
+                    end.setHours(23, 59, 59, 999);
+
+                    filtered = filtered.filter(item => {
+                        const itemDate = parseDate(item.created_at);
+                        return itemDate >= start && itemDate <= end;
+                    });
+                }
+
+                // Use new sorting system if parameters provided, otherwise use old system
+                if (sortColumn && sortDirection) {
+                    filtered.sort((a, b) => {
+                        if (sortColumn === 'created_at') {
+                            const timeA = parseDate(a.created_at).getTime();
+                            const timeB = parseDate(b.created_at).getTime();
+                            return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
+                        }
+
+                        let valA, valB;
+                        if (sortColumn === 'tag_name') {
+                            valA = a.tag_name || '';
+                            valB = b.tag_name || '';
+                        } else if (sortColumn === 'full_url') {
+                            valA = a.full_url || a.url || '';
+                            valB = b.full_url || b.url || '';
+                        } else {
+                            valA = a[sortColumn] || '';
+                            valB = b[sortColumn] || '';
+                        }
+
+                        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                } else {
+                    // Old sorting system for history
+                    const [key, direction] = sortKey.split('_');
+
+                    filtered.sort((a, b) => {
+                        if (key === 'created_at') {
+                            const timeA = parseDate(a.created_at).getTime();
+                            const timeB = parseDate(b.created_at).getTime();
+                            return direction === 'asc' ? timeA - timeB : timeB - timeA;
+                        }
+
+                        // Обрабатываем сортировку по тегу
+                        let valA, valB;
+                        if (key === 'tag_name') {
+                            valA = a.tag_name || '';
+                            valB = b.tag_name || '';
+                        } else {
+                            valA = a[key] || '';
+                            valB = b[key] || '';
+                        }
+
+                        if (valA < valB) return direction === 'asc' ? -1 : 1;
+                        if (valA > valB) return direction === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                }
+
+                return filtered;
+            }
+            const historyContainer = document.getElementById('historyContainer');
+            function renderHistory() {
+                const items = applyFiltersAndSorting(state.history, state.historySearch, state.historySort, state.historyDateRange, state.historySortColumn, state.historySortDirection);
+                const dict = translations[currentLang] || translations.ru;
+                if (items.length === 0) { historyContainer.innerHTML = `<p class="text-center py-10 text-slate-500">${dict.nothing_found || 'Ничего не найдено.'}</p>`; return; }
+                if (state.historyViewMode === 'table') {
+                    const getSortIcon = (column) => {
+                        if (state.historySortColumn !== column) return '';
+                        return state.historySortDirection === 'asc' ?
+                            '<i data-lucide="chevron-up" class="w-3 h-3 ml-1"></i>' :
+                            '<i data-lucide="chevron-down" class="w-3 h-3 ml-1"></i>';
+                    };
+
+                    historyContainer.innerHTML = `<div class="overflow-x-auto w-full"><table class="w-full table-auto"><thead class="border-b border-slate-200 dark:border-slate-700"><tr><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="full_url">URL${getSortIcon('full_url')}</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase w-64 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="created_at">${dict.history_date || 'Дата'}${getSortIcon('created_at')}</th><th class="relative px-6 py-3 w-32"></th></tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-800">${items.map(item => `<tr class="history-item cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" data-id="${item.id}"><td class="px-6 py-4"><div class="text-sm text-slate-900 dark:text-slate-200 selectable-text" title="${item.full_url || item.url}">${item.full_url || item.url}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('')}</tbody></table></div>`;
+                } else if (state.historyViewMode === 'grid') {
+                    historyContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${items.map(item => `<div class="history-item cursor-pointer p-4 border rounded-lg bg-white dark:bg-slate-800/50 shadow space-y-2" data-id="${item.id}"><p class="text-sm truncate selectable-text" title="${item.full_url || item.url}">${item.full_url || item.url}</p><p class="text-xs text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</p><div class="flex justify-end space-x-2 pt-2"><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('')}</div>`;
+                } else { // List view
+                    historyContainer.innerHTML = `<div class="space-y-2">${items.map(item => `<div class="history-item cursor-pointer p-3 border rounded-lg bg-white dark:bg-slate-800/50 shadow flex justify-between items-center gap-4" data-id="${item.id}"><div class="min-w-0 flex-grow"><p class="text-sm truncate selectable-text" title="${item.full_url || item.url}">${item.full_url || item.url}</p><p class="text-xs text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</p></div><div class="flex items-center space-x-2 flex-shrink-0"><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('')}</div>`;
+                }
+                lucide.createIcons();
+            }
+            const templatesContainer = document.getElementById('templatesContainer');
+            function renderTemplates() {
+                const items = applyFiltersAndSorting(state.templates, state.templatesSearch, state.templatesSort, null, state.templatesSortColumn, state.templatesSortDirection);
+                const dict = translations[currentLang] || translations.ru;
+
+                if (items.length === 0) {
+                    templatesContainer.innerHTML = `<p class="text-center py-10 text-slate-500">${dict.nothing_found || 'Ничего не найдено.'}</p>`;
+                    return;
+                }
+
+                const renderTag = (t) => {
+                    if (!t.tag_name) return '';
+                    const textColor = getTextColorForBg(t.tag_color);
+                    return `<span class="px-2 py-1 text-xs font-medium rounded-full shadow-sm inline-block max-w-full truncate transition-all duration-200" style="background-color:${t.tag_color || '#f1f5f9'}; color: ${textColor}; margin: 2px;" title="${t.tag_name}">${t.tag_name}</span>`;
+                };
+
+                if (state.templatesViewMode === 'table') {
+                    const getSortIcon = (column) => {
+                        if (state.templatesSortColumn !== column) return '';
+                        return state.templatesSortDirection === 'asc' ?
+                            '<i data-lucide="chevron-up" class="w-3 h-3 ml-1"></i>' :
+                            '<i data-lucide="chevron-down" class="w-3 h-3 ml-1"></i>';
+                    };
+
+                    templatesContainer.innerHTML = `<div class="overflow-x-auto w-full"><table class="w-full table-auto"><thead class="border-b border-slate-200 dark:border-slate-700"><tr><th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase w-20"></th><th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="name">${dict.table_name || 'Название'}${getSortIcon('name')}</th><th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="tag_name">${dict.table_tag || 'Тег'}${getSortIcon('tag_name')}</th><th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="utm_source">${dict.table_source || 'Источник'}${getSortIcon('utm_source')}</th><th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="utm_medium">${dict.table_medium || 'Канал'}${getSortIcon('utm_medium')}</th><th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="utm_campaign">${dict.table_campaign || 'Кампания'}${getSortIcon('utm_campaign')}</th><th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none w-40" data-sort="created_at">${dict.table_created || 'Дата создания'}${getSortIcon('created_at')}</th></tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-800">${items.map(t => `<tr><td class="px-4 py-4 text-sm text-left"><div class="flex gap-1"><button data-id="${t.id}" class="view-template-btn text-blue-600 hover:text-blue-900 p-1" title="${dict.btn_view_template || 'Просмотр шаблона'}"><i data-lucide="eye" class="w-4 h-4"></i></button><button data-id="${t.id}" class="apply-template-btn text-green-600 hover:text-green-900 p-1" title="${dict.btn_apply_template || 'Применить шаблон'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-id="${t.id}" class="delete-template-btn text-red-600 hover:text-red-900 p-1" title="${dict.btn_delete_template || 'Удалить шаблон'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td><td class="px-4 py-4 text-sm text-left"><div class="truncate selectable-text" title="${t.name}">${t.name}</div></td><td class="px-4 py-4 text-sm text-left">${t.tag_name ? `<span class="px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap shadow-sm transition-all duration-200" style="background-color:${t.tag_color || '#f1f5f9'}; color: ${getTextColorForBg(t.tag_color)}; margin: 2px;">${t.tag_name}</span>` : '-'}</td><td class="px-4 py-4 text-sm text-left"><div class="truncate selectable-text" title="${t.utm_source}">${t.utm_source || '-'}</div></td><td class="px-4 py-4 text-sm text-left"><div class="truncate selectable-text" title="${t.utm_medium}">${t.utm_medium || '-'}</div></td><td class="px-4 py-4 text-sm text-left"><div class="truncate selectable-text" title="${t.utm_campaign}">${t.utm_campaign || '-'}</div></td><td class="px-4 py-4 text-sm text-left whitespace-nowrap text-slate-500 selectable-text">${parseDate(t.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</td></tr>`).join('')}</tbody></table></div>`;
+                } else if (state.templatesViewMode === 'grid') {
+                    templatesContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">${items.map(t => `<div class="p-6 border rounded-xl bg-white dark:bg-slate-800/50 shadow-lg hover:shadow-xl transition-shadow duration-200 space-y-4"><div class="space-y-3"><h3 class="font-bold text-lg text-slate-900 dark:text-white truncate selectable-text">${t.name}</h3><div class="space-y-3"><div class="flex items-center gap-2"><div class="flex-1 min-w-0">${renderTag(t)}</div></div><div class="flex gap-1"><button data-id="${t.id}" class="apply-template-btn text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 p-2 rounded-lg transition-colors duration-150" title="${dict.btn_apply_template || 'Применить шаблон'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-id="${t.id}" class="view-template-btn text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-colors duration-150" title="${dict.btn_view_template || 'Просмотр шаблона'}"><i data-lucide="eye" class="w-4 h-4"></i></button><button data-id="${t.id}" class="delete-template-btn text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors duration-150" title="${dict.btn_delete_template || 'Удалить шаблон'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div></div><div class="text-sm text-slate-600 dark:text-slate-300 space-y-2 pt-3 border-t border-slate-200 dark:border-slate-700"><div class="flex justify-between"><span class="font-medium">${dict.grid_source || 'Источник:'}</span><span class="text-slate-900 dark:text-slate-100 truncate ml-2 selectable-text">${t.utm_source || '-'}</span></div><div class="flex justify-between"><span class="font-medium">${dict.grid_medium || 'Канал:'}</span><span class="text-slate-900 dark:text-slate-100 truncate ml-2 selectable-text">${t.utm_medium || '-'}</span></div><div class="flex justify-between"><span class="font-medium">${dict.grid_campaign || 'Кампания:'}</span><span class="text-slate-900 dark:text-slate-100 truncate ml-2 selectable-text">${t.utm_campaign || '-'}</span></div><div class="flex justify-between"><span class="font-medium">${dict.template_created || 'Создан:'}</span><span class="text-slate-900 dark:text-slate-100 truncate ml-2 selectable-text">${parseDate(t.created_at).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</span></div></div></div>`).join('')}</div>`;
+                } else { // list
+                    templatesContainer.innerHTML = `<div class="space-y-2">${items.map(t => `<div class="p-3 border rounded-lg bg-white dark:bg-slate-800/50 shadow flex justify-between items-center"><div><div class="flex items-center gap-2"><p class="font-bold selectable-text">${t.name}</p>${renderTag(t)}</div><p class="text-xs text-slate-500 truncate selectable-text">source: ${t.utm_source || '-'}, medium: ${t.utm_medium || '-'}, campaign: ${t.utm_campaign || '-'}</p><p class="text-xs text-slate-400 selectable-text">${dict.template_created || 'Создан:'} ${parseDate(t.created_at).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</p></div><div class="flex gap-2"><button data-id="${t.id}" class="apply-template-btn text-green-600 hover:text-green-900 p-1" title="${dict.btn_apply_template || 'Применить шаблон'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-id="${t.id}" class="view-template-btn text-blue-600 hover:text-blue-900 p-1" title="${dict.btn_view_template || 'Просмотр шаблона'}"><i data-lucide="eye" class="w-4 h-4"></i></button><button data-id="${t.id}" class="delete-template-btn text-red-600 hover:text-red-900 p-1" title="${dict.btn_delete_template || 'Удалить шаблон'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('')}</div>`;
+                }
+                lucide.createIcons();
+            }
+
+            function initHistoryEventListeners() {
+                // Search functionality
+                const historySearchEl = document.getElementById('historySearch');
+                if (historySearchEl) {
+                    historySearchEl.addEventListener('input', e => {
+                        state.historySearch = e.target.value;
+                        renderHistory();
+                    });
+                }
+
+                // View mode buttons
+                document.querySelectorAll('.history-view-btn').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        state.historyViewMode = e.currentTarget.dataset.viewMode;
+                        document.querySelectorAll('.history-view-btn').forEach(b => b.classList.remove('active'));
+                        e.currentTarget.classList.add('active');
+                        renderHistory();
+                    });
+                });
+            }
+
+            const urlDetailModal = document.getElementById('urlDetailModal');
+            const fullUrlText = document.getElementById('fullUrlText');
+            const deleteUrlBtn = document.getElementById('deleteUrlBtn');
+            let currentDetailItemId = null;
+
+            function openUrlDetailModal(item) {
+                currentDetailItemId = item.id;
+                fullUrlText.value = item.full_url || item.url;
+                urlDetailModal.classList.remove('hidden');
+                urlDetailModal.classList.add('flex');
+            }
+
+            function closeUrlDetailModal() {
+                currentDetailItemId = null;
+                urlDetailModal.classList.add('hidden');
+                urlDetailModal.classList.remove('flex');
+            }
+
+            historyContainer.addEventListener('click', (e) => {
+                const itemElement = e.target.closest('.history-item');
+                if (itemElement && !e.target.closest('button')) {
+                    const itemId = itemElement.dataset.id;
+                    const item = state.history.find(h => h.id == itemId);
+                    if (item) {
+                        openUrlDetailModal(item);
+                    }
+                }
+            });
+
+            document.getElementById('closeUrlDetailModal').addEventListener('click', closeUrlDetailModal);
+            document.getElementById('copyFullUrlBtn').addEventListener('click', () => {
+                if (!fullUrlText.value) return;
+                navigator.clipboard.writeText(fullUrlText.value).then(() => showToast('Полная ссылка скопирована!'));
+            });
+
+            document.getElementById('applyFromModalBtn').addEventListener('click', () => {
+                if (!fullUrlText.value) return;
+                const item = state.history.find(h => h.id == currentDetailItemId);
+                if (item) {
+                    applyHistoryToForm(item);
+                    closeUrlDetailModal();
+                }
+            });
+
+            deleteUrlBtn.addEventListener('click', async () => {
+                if (!currentDetailItemId) return;
+                await fetch(`/history/${currentDetailItemId}`, { method: 'DELETE' });
+                await fetchData();
+                renderHistory();
+                closeUrlDetailModal();
+                showToast('Запись удалена.');
+            });
+            function initTemplatesEventListeners() {
+                // Search functionality
+                document.getElementById('templatesSearch').addEventListener('input', e => {
+                    state.templatesSearch = e.target.value;
+                    renderTemplates();
+                });
+
+                // View mode buttons
+                document.querySelectorAll('.templates-view-btn').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        state.templatesViewMode = e.currentTarget.dataset.viewMode;
+                        document.querySelectorAll('.templates-view-btn').forEach(b => b.classList.remove('active'));
+                        e.currentTarget.classList.add('active');
+                        renderTemplates();
+                    });
+                });
+            }
+
+            historyContainer.addEventListener('click', async (e) => {
+                const deleteBtn = e.target.closest('.delete-history-btn');
+                const copyBtn = e.target.closest('.copy-history-btn');
+                const applyBtn = e.target.closest('.apply-history-btn');
+                const sortHeader = e.target.closest('th[data-sort]');
+
+                if (sortHeader) {
+                    const column = sortHeader.dataset.sort;
+                    if (state.historySortColumn === column) {
+                        // Toggle direction if same column
+                        state.historySortDirection = state.historySortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        // New column, default to ascending
+                        state.historySortColumn = column;
+                        state.historySortDirection = 'asc';
+                    }
+                    renderHistory();
+                    return;
+                }
+
+                if (applyBtn) {
+                    const itemId = applyBtn.dataset.id;
+                    const item = state.history.find(h => h.id == itemId);
+                    if (item) {
+                        applyHistoryToForm(item);
+                    }
+                    return;
+                }
+
+                if (deleteBtn) { await fetch(`/history/${deleteBtn.dataset.id}`, { method: 'DELETE' }); await fetchData(); renderHistory(); showToast('Запись удалена.'); }
+                if (copyBtn) { navigator.clipboard.writeText(copyBtn.dataset.url).then(() => showToast('Ссылка скопирована!')); }
+            });
+
+            templatesContainer.addEventListener('click', async (e) => {
+                const deleteBtn = e.target.closest('.delete-template-btn');
+                const viewBtn = e.target.closest('.view-template-btn');
+                const applyBtn = e.target.closest('.apply-template-btn');
+                const sortHeader = e.target.closest('th[data-sort]');
+
+                if (sortHeader) {
+                    const column = sortHeader.dataset.sort;
+                    if (state.templatesSortColumn === column) {
+                        // Toggle direction if same column
+                        state.templatesSortDirection = state.templatesSortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        // New column, default to ascending
+                        state.templatesSortColumn = column;
+                        state.templatesSortDirection = 'asc';
+                    }
+                    renderTemplates();
+                    return;
+                }
+
+                if (deleteBtn) {
+                    await fetch(`/templates/${deleteBtn.dataset.id}`, { method: 'DELETE' });
+                    await fetchData();
+                    renderAll();
+                    showToast('Шаблон удален.');
+                    return; // Prevent other actions
+                }
+                if (viewBtn) {
+                    const templateId = viewBtn.dataset.id;
+                    const template = state.templates.find(t => t.id == templateId);
+                    if (template) {
+                        openTemplateDetailModal(template);
+                    }
+                    return; // Prevent other actions
+                }
+                if (applyBtn) {
+                    const templateId = applyBtn.dataset.id;
+                    const template = state.templates.find(t => t.id == templateId);
+                    if (template) {
+                        applyTemplateToForm(template);
+                        switchView('generator');
+                    }
+                }
+            });
+
+            const templateDetailModal = document.getElementById('templateDetailModal');
+            let currentTemplateDetail = null;
+
+            function openTemplateDetailModal(template) {
+                currentTemplateDetail = template;
+                document.getElementById('templateDetailName').textContent = template.name;
+                document.getElementById('templateDetailSource').textContent = template.utm_source || '-';
+                document.getElementById('templateDetailMedium').textContent = template.utm_medium || '-';
+                document.getElementById('templateDetailCampaign').textContent = template.utm_campaign || '-';
+                document.getElementById('templateDetailContent').textContent = template.utm_content || '-';
+                document.getElementById('templateDetailTerm').textContent = template.utm_term || '-';
+                document.getElementById('templateDetailCreated').textContent = parseDate(template.created_at).toLocaleString('ru-RU');
+
+                // Добавляем тег в модальное окно
+                const tagContainer = document.getElementById('templateDetailTag');
+                if (template.tag_name) {
+                    const textColor = getTextColorForBg(template.tag_color);
+                    tagContainer.innerHTML = `<span class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap shadow-sm transition-all duration-200" style="background-color:${template.tag_color || '#f1f5f9'}; color: ${textColor}; margin: 2px;">${template.tag_name}</span>`;
+                } else {
+                    tagContainer.innerHTML = '<span class="text-slate-500">-</span>';
+                }
+
+                templateDetailModal.classList.remove('hidden');
+                templateDetailModal.classList.add('flex');
+            }
+
+            function closeTemplateDetailModal() {
+                currentTemplateDetail = null;
+                templateDetailModal.classList.add('hidden');
+                templateDetailModal.classList.remove('flex');
+            }
+
+            document.getElementById('closeTemplateDetailModal').addEventListener('click', closeTemplateDetailModal);
+            document.getElementById('applyTemplateBtn').addEventListener('click', () => {
+                if (currentTemplateDetail) {
+                    applyTemplateToForm(currentTemplateDetail);
+                    closeTemplateDetailModal();
+                    switchView('generator');
+                }
+            });
+
+            const importFileInput = document.getElementById('importFileInput');
+            const importTemplatesModal = document.getElementById('importTemplatesModal');
+
+            document.getElementById('importTemplatesBtn').addEventListener('click', () => {
+                console.log('Import button clicked');
+                importTemplatesModal.classList.remove('hidden');
+                importTemplatesModal.classList.add('flex');
+            });
+            document.getElementById('closeImportModal').addEventListener('click', () => {
+                importTemplatesModal.classList.add('hidden');
+                importTemplatesModal.classList.remove('flex');
+            });
+
+
+            // Обработчики для скачивания примеров шаблонов
+            document.getElementById('downloadJsonTemplate').addEventListener('click', async () => {
+                const filename = 'templates_example.json';
+
+                try {
+                    const response = await fetch('/download_template_with_folder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: filename })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        showToast(`Файл сохранен в: ${result.folder_path}\\${result.filename}`, 'success');
+                    } else {
+                        throw new Error(result.error || 'Ошибка при скачивании файла');
+                    }
+                } catch (error) {
+                    console.error('Download error:', error);
+                    showToast(`Ошибка при скачивании файла: ${error.message}`, 'error');
+                }
+            });
+
+            document.getElementById('downloadCsvTemplate').addEventListener('click', async () => {
+                const filename = 'templates_example.csv';
+
+                try {
+                    const response = await fetch('/download_template_with_folder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: filename })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        showToast(`Файл сохранен в: ${result.folder_path}\\${result.filename}`, 'success');
+                    } else {
+                        throw new Error(result.error || 'Ошибка при скачивании файла');
+                    }
+                } catch (error) {
+                    console.error('Download error:', error);
+                    showToast(`Ошибка при скачивании файла: ${error.message}`, 'error');
+                }
+            });
+            document.getElementById('triggerImportFile').addEventListener('click', () => {
+                console.log('Trigger import file button clicked');
+                importTemplatesModal.classList.add('hidden');
+                importTemplatesModal.classList.remove('flex');
+                importFileInput.click();
+            });
+
+            importFileInput.addEventListener('change', handleImport);
+            function handleImport(event) {
+                console.log('File input changed');
+                const file = event.target.files[0];
+                if (!file) {
+                    console.log('No file selected');
+                    return;
+                }
+                console.log('File selected:', file.name, file.type, file.size);
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        let templatesToImport;
+
+                        if (file.name.endsWith('.json')) {
+                            templatesToImport = JSON.parse(e.target.result);
+                        } else if (file.name.endsWith('.csv')) {
+                            templatesToImport = parseCSV(e.target.result);
+                        } else {
+                            throw new Error('Неподдерживаемый формат файла.');
+                        }
+
+                        if (!Array.isArray(templatesToImport)) {
+                            throw new Error('Файл должен содержать массив объектов.');
+                        }
+
+                        // Валидация данных
+                        if (templatesToImport.length === 0) {
+                            throw new Error('Файл не содержит данных для импорта.');
+                        }
+
+                        // Проверяем обязательные поля
+                        const requiredFields = ['name'];
+                        for (let i = 0; i < templatesToImport.length; i++) {
+                            const template = templatesToImport[i];
+                            for (const field of requiredFields) {
+                                if (!template[field] || template[field].trim() === '') {
+                                    throw new Error(`Шаблон ${i + 1}: поле '${field}' является обязательным.`);
+                                }
+                            }
+                        }
+
+                        const templatesWithUser = templatesToImport.map(t => ({
+                            ...t,
+                            user_email: currentUser.email
+                        }));
+
+                        const response = await fetch('/templates', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(templatesWithUser)
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            await fetchData();
+                            renderAll();
+                            showToast(`Успешно импортировано ${result.imported_count} шаблонов.`);
+                        } else {
+                            throw new Error(result.error || 'Ошибка на сервере при импорте.');
+                        }
+                    } catch (error) {
+                        showToast(`Ошибка импорта: ${error.message}`, 'error');
+                    } finally {
+                        importFileInput.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            function parseCSV(text) {
+                const lines = text.split('\n').filter(line => line.trim());
+                if (lines.length < 2) return [];
+
+                const headers = parseCSVLine(lines[0]);
+                const data = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = parseCSVLine(lines[i]);
+                    if (values.length === headers.length) {
+                        const obj = {};
+                        headers.forEach((header, index) => {
+                            obj[header.trim()] = values[index] ? values[index].trim() : '';
+                        });
+                        data.push(obj);
+                    }
+                }
+
+                return data;
+            }
+
+            function parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+
+                    if (char === '"') {
+                        if (inQuotes && line[i + 1] === '"') {
+                            current += '"';
+                            i++; // Skip next quote
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+
+                result.push(current);
+                return result;
+            }
+            document.getElementById('exportJsonBtn').addEventListener('click', () => exportData('json'));
+            document.getElementById('exportCsvBtn').addEventListener('click', () => exportData('csv'));
+
+            // Export history
+            document.getElementById('exportHistoryJsonBtn').addEventListener('click', () => exportHistoryData('json'));
+            document.getElementById('exportHistoryCsvBtn').addEventListener('click', () => exportHistoryData('csv'));
+
+            async function exportData(format) {
+                try {
+                    const response = await fetch('/export_templates', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_email: currentUser.email, format: format })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast(`Файл сохранен: ${result.filename}`);
+                    } else {
+                        showToast(result.error || 'Ошибка экспорта', 'error');
+                    }
+                } catch (error) {
+                    showToast(`Ошибка экспорта: ${error.message}`, 'error');
+                }
+            }
+
+            async function exportHistoryData(format) {
+                try {
+                    const response = await fetch('/export_history', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_email: currentUser.email, format: format })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast(`Файл истории сохранен: ${result.filename}`);
+                    } else {
+                        showToast(result.error || 'Ошибка экспорта истории', 'error');
+                    }
+                } catch (error) {
+                    showToast(`Ошибка экспорта истории: ${error.message}`, 'error');
+                }
+            }
+
+            // History Import logic
+            const importHistoryFileInput = document.getElementById('importHistoryFileInput');
+            document.getElementById('importHistoryBtn').addEventListener('click', () => {
+                importHistoryFileInput.click();
+            });
+
+            importHistoryFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        let historyToImport;
+                        if (file.name.endsWith('.json')) {
+                            historyToImport = JSON.parse(e.target.result);
+                        } else if (file.name.endsWith('.csv')) {
+                            historyToImport = parseCSV(e.target.result);
+                        }
+
+                        if (!Array.isArray(historyToImport)) throw new Error('Некорректный формат файла');
+
+                        const historyWithUser = historyToImport.map(h => ({
+                            ...h,
+                            user_email: currentUser.email
+                        }));
+
+                        const response = await fetch('/import_history', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(historyWithUser)
+                        });
+
+                        const result = await response.json();
+                        if (result.success) {
+                            await fetchData();
+                            renderAll();
+                            showToast(`Импортировано ${result.imported_count} записей истории.`);
+                        }
+                    } catch (error) {
+                        showToast(`Ошибка импорта: ${error.message}`, 'error');
+                    } finally {
+                        importHistoryFileInput.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            function convertToCSV(data) {
+                if (data.length === 0) return '';
+
+                const headers = Object.keys(data[0]);
+                const csvHeaders = headers.map(header => escapeCSVValue(header)).join(',');
+
+                const csvRows = data.map(row => {
+                    return headers.map(header => escapeCSVValue(row[header] || '')).join(',');
+                });
+
+                return [csvHeaders, ...csvRows].join('\n');
+            }
+
+            function escapeCSVValue(value) {
+                if (value === null || value === undefined) return '';
+
+                const stringValue = String(value);
+
+                // If value contains comma, newline, or quote, wrap in quotes and escape quotes
+                if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
+                    return '"' + stringValue.replace(/"/g, '""') + '"';
+                }
+
+                return stringValue;
+            }
+            function downloadBlob(blob, filename) {
+                console.log('Downloading file:', filename);
+                try {
+                    // Проверяем, поддерживает ли браузер URL.createObjectURL
+                    if (typeof URL.createObjectURL === 'undefined') {
+                        console.log('URL.createObjectURL not supported, trying alternative method');
+                        // Альтернативный метод для PyWebView
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            const data = e.target.result;
+                            // Определяем MIME тип на основе расширения файла
+                            let mimeType = 'text/plain';
+                            if (filename.endsWith('.json')) {
+                                mimeType = 'application/json';
+                            } else if (filename.endsWith('.csv')) {
+                                mimeType = 'text/csv';
+                            }
+
+                            // Создаем временный элемент для скачивания
+                            const link = document.createElement('a');
+                            link.href = `data:${mimeType};charset=utf-8,` + encodeURIComponent(data);
+                            link.download = filename;
+                            link.style.display = 'none';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            showToast(`Файл ${filename} скачан успешно!`);
+                        };
+                        reader.readAsText(blob, 'UTF-8');
+                    } else {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        console.log('Download completed:', filename);
+                        showToast(`Файл ${filename} скачан успешно!`);
+                    }
+                } catch (error) {
+                    console.error('Download error:', error);
+                    showToast(`Ошибка при скачивании файла: ${error.message}`, 'error');
+                }
+            }
+            const toastEl = document.getElementById('toast');
+            function showToast(message, type = 'success') {
+                try {
+                    const toastMessage = document.getElementById('toast-message');
+                    if (toastMessage) {
+                        toastMessage.textContent = message;
+                    }
+                    if (toastEl) {
+                        toastEl.className = `fixed top-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-transform transform z-[60] ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
+                        toastEl.classList.remove('translate-x-[150%]');
+                        setTimeout(() => {
+                            if (toastEl) {
+                                toastEl.classList.add('translate-x-[150%]');
+                            }
+                        }, 3000);
+                    }
+                } catch (e) {
+                    console.error('Error showing toast:', e);
+                }
+            }
+            
+            // Принудительный запуск приложения - не ждем внешние ресурсы
+            function initializeApp() {
+                console.log('Инициализация приложения...', new Date().toISOString());
+                
+                // Проверяем наличие критических элементов
+                const loader = document.getElementById('loader');
+                const mainContent = document.getElementById('main-content');
+                const navbar = document.getElementById('navbar');
+                
+                if (!loader || !mainContent || !navbar) {
+                    console.error('Критические элементы DOM не найдены! Попытка повторной инициализации...');
+                    // Пытаемся еще раз через небольшую задержку
+                    setTimeout(initializeApp, 100);
+                    return;
+                }
+                
+                console.log('Все элементы DOM найдены, запускаем приложение...');
+                
+                // Запускаем приложение немедленно - не ждем внешние ресурсы
+                try {
+                    startApp();
+                    console.log('Приложение запущено успешно');
+                    
+                    // Загружаем favicon динамически после запуска приложения
+                    setTimeout(() => {
+                        const link = document.createElement('link');
+                        link.rel = 'icon';
+                        link.type = 'image/png';
+                        link.href = '/favicon.ico';
+                        link.onerror = function() { this.remove(); };
+                        document.head.appendChild(link);
+                    }, 1000);
+                } catch (e) {
+                    console.error('Error starting app:', e);
+                    // Показываем контент даже если есть ошибки
+                    if (loader) loader.classList.add('hidden');
+                    if (mainContent) mainContent.classList.remove('hidden');
+                    if (navbar) navbar.classList.remove('hidden');
+                }
+            }
+
+            // Запускаем сразу после DOMContentLoaded - не ждем внешние ресурсы
+            // Если DOM уже загружен, запускаем сразу
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    console.log('DOMContentLoaded - запуск через 10мс');
+                    // Минимальная задержка для стабильности, но очень короткая
+                    setTimeout(initializeApp, 10);
+                });
+            } else {
+                // DOM уже загружен - запускаем немедленно
+                console.log('DOM уже загружен - запуск немедленно');
+                setTimeout(initializeApp, 10);
+            }
+            
+            // Fallback: если ничего не сработало за 2 секунды, принудительно показываем контент
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                const mainContent = document.getElementById('main-content');
+                const navbar = document.getElementById('navbar');
+                
+                if (loader && !loader.classList.contains('hidden')) {
+                    console.warn('Fallback: принудительное отображение контента');
+                    if (loader) loader.classList.add('hidden');
+                    if (mainContent) mainContent.classList.remove('hidden');
+                    if (navbar) navbar.classList.remove('hidden');
+                    
+                    // Пытаемся запустить приложение
+                    try {
+                        if (typeof startApp === 'function') {
+                            startApp();
+                        }
+                    } catch (e) {
+                        console.error('Fallback: ошибка при запуске:', e);
+                    }
+                }
+            }, 2000);
+        });
+    </script>
+    
+    <!-- Debug Panel для логов -->
+    <div id="debug-panel" style="position: fixed; bottom: 60px; right: 10px; width: 450px; max-height: 400px; background: rgba(15, 23, 42, 0.95); color: #10b981; padding: 12px; font-family: 'Courier New', monospace; font-size: 11px; overflow-y: auto; z-index: 99999; display: none; border: 2px solid #10b981; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #10b981;">
+            <strong style="color: #10b981; font-size: 13px;">🔍 Debug Logs</strong>
+            <button onclick="document.getElementById('debug-panel').style.display='none'" style="background: #ef4444; color: #fff; border: none; padding: 4px 10px; cursor: pointer; border-radius: 4px; font-size: 11px;">✕ Закрыть</button>
+        </div>
+        <div id="debug-log-content" style="max-height: 350px; overflow-y: auto;"></div>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #10b981; display: flex; gap: 8px;">
+            <button onclick="document.getElementById('debug-log-content').innerHTML=''" style="background: #3b82f6; color: #fff; border: none; padding: 4px 10px; cursor: pointer; border-radius: 4px; font-size: 11px;">Очистить</button>
+            <button onclick="document.getElementById('debug-panel').style.display=document.getElementById('debug-panel').style.display==='none'?'block':'none'" style="background: #6b7280; color: #fff; border: none; padding: 4px 10px; cursor: pointer; border-radius: 4px; font-size: 11px;">Свернуть</button>
+        </div>
+    </div>
+    
+    <script>
+        // Перехватываем console.log/error/warn и выводим в панель
+        (function() {
+            const debugPanel = document.getElementById('debug-panel');
+            const debugContent = document.getElementById('debug-log-content');
+            
+            if (!debugPanel || !debugContent) {
+                console.error('Debug panel elements not found');
+                return;
+            }
+            
+            const originalLog = console.log;
+            const originalError = console.error;
+            const originalWarn = console.warn;
+            const originalInfo = console.info;
+            
+            function addLog(type, ...args) {
+                const time = new Date().toLocaleTimeString();
+                const message = args.map(arg => {
+                    if (typeof arg === 'object') {
+                        try {
+                            return JSON.stringify(arg, null, 2);
+                        } catch {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+                
+                const colors = {
+                    'log': '#10b981',   // green
+                    'error': '#ef4444', // red
+                    'warn': '#f59e0b',  // yellow
+                    'info': '#3b82f6'   // blue
+                };
+                
+                const color = colors[type] || '#10b981';
+                const logEntry = document.createElement('div');
+                logEntry.style.cssText = `color: ${color}; margin-bottom: 4px; padding: 2px 0; border-left: 2px solid ${color}; padding-left: 6px; word-break: break-word;`;
+                logEntry.innerHTML = `<span style="opacity: 0.7;">[${time}]</span> <strong>[${type.toUpperCase()}]</strong> ${message}`;
+                
+                debugContent.appendChild(logEntry);
+                debugContent.scrollTop = debugContent.scrollHeight;
+                
+                // Автоматически показываем панель при ошибках и предупреждениях
+                if (type === 'error' || type === 'warn') {
+                    debugPanel.style.display = 'block';
+                }
+            }
+            
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                addLog('log', ...args);
+            };
+            
+            console.error = function(...args) {
+                originalError.apply(console, args);
+                addLog('error', ...args);
+            };
+            
+            console.warn = function(...args) {
+                originalWarn.apply(console, args);
+                addLog('warn', ...args);
+            };
+            
+            console.info = function(...args) {
+                if (originalInfo) originalInfo.apply(console, args);
+                addLog('info', ...args);
+            };
+            
+            // Перехватываем глобальные ошибки
+            window.addEventListener('error', (e) => {
+                addLog('error', `Глобальная ошибка: ${e.message} в ${e.filename}:${e.lineno}:${e.colno}`);
+            });
+            
+            window.addEventListener('unhandledrejection', (e) => {
+                addLog('error', `Необработанное обещание: ${e.reason}`);
+            });
+            
+            // Показываем панель при первой ошибке
+            let firstError = true;
+            const originalAddLog = addLog;
+            addLog = function(type, ...args) {
+                originalAddLog(type, ...args);
+                if (firstError && (type === 'error' || type === 'warn')) {
+                    firstError = false;
+                    debugPanel.style.display = 'block';
+                }
+            };
+            
+            console.log('Debug panel initialized');
+        })();
+    </script>
+</body>
+
+</html>

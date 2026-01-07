@@ -1,0 +1,54 @@
+[
+  {
+    "name": "Facebook Ads - Conversions",
+    "utm_source": "facebook",
+    "utm_medium": "cpc",
+    "utm_campaign": "{campaign_name}",
+    "utm_content": "{adset_name}_{ad_name}",
+    "utm_term": "{placement}",
+    "tag_name": "Social",
+    "tag_color": "#3b82f6"
+  },
+  {
+    "name": "Instagram Ads - Story",
+    "utm_source": "instagram",
+    "utm_medium": "cpc",
+    "utm_campaign": "{campaign_name}",
+    "utm_content": "story_{ad_name}",
+    "utm_term": "{placement}",
+    "tag_name": "Social",
+    "tag_color": "#3b82f6"
+  },
+  {
+    "name": "Google Ads - Search",
+    "utm_source": "google",
+    "utm_medium": "cpc",
+    "utm_campaign": "{campaignid}",
+    "utm_content": "{creative}",
+    "utm_term": "{keyword}",
+    "tag_name": "Search",
+    "tag_color": "#ef4444"
+  },
+  {
+    "name": "LinkedIn Ads - Sponsored Content",
+    "utm_source": "linkedin",
+    "utm_medium": "cpc",
+    "utm_campaign": "{campaign_group}",
+    "utm_content": "{campaign_name}",
+    "utm_term": "{ad_name}",
+    "tag_name": "B2B",
+    "tag_color": "#0ea5e9"
+  },
+  {
+    "name": "Email Campaign - Newsletter",
+    "utm_source": "newsletter",
+    "utm_medium": "email",
+    "utm_campaign": "monthly_update_{month}",
+    "utm_content": "button_main",
+    "utm_term": "-",
+    "tag_name": "Email",
+    "tag_color": "#10b981"
+  }
+]
+
+
