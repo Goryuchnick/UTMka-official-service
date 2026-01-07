@@ -12,3 +12,4 @@ echo Нажмите Ctrl+C для остановки сервера
 echo.
 python app.py --headless
 
+
