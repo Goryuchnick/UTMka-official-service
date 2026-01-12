@@ -70,10 +70,11 @@
 
         /* Glassmorphism Utilities */
         .glass {
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
         }
 
         .dark .glass {
@@ -82,11 +83,11 @@
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
         }
 
         .dark .glass-card {
@@ -96,13 +97,13 @@
         }
 
         .glass-input {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(203, 213, 225, 0.6);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(203, 213, 225, 0.8);
             backdrop-filter: blur(4px);
         }
 
         .glass-input:focus {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 1);
             border-color: #6366f1;
             box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
             outline: none;
@@ -239,7 +240,7 @@
 </head>
 
 <body
-    class="bg-slate-100 dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 font-sans h-full transition-colors duration-500 overflow-hidden selection:bg-indigo-500/30">
+    class="bg-white dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 font-sans h-full transition-colors duration-500 overflow-hidden selection:bg-indigo-500/30">
 
     <!-- Background Ambiance -->
     <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -358,7 +359,7 @@
                                             адрес *</label>
                                         <div class="relative flex items-center">
                                             <div
-                                                class="absolute left-0 top-0 bottom-0 px-3 flex items-center bg-slate-100/50 dark:bg-slate-800/50 border border-r-0 border-slate-200 dark:border-slate-700 rounded-l-xl text-slate-500 text-sm">
+                                                class="absolute left-0 top-0 bottom-0 px-3 flex items-center bg-slate-100 dark:bg-slate-800/50 border border-r-0 border-slate-200 dark:border-slate-700 rounded-l-xl text-slate-600 dark:text-slate-400 text-sm">
                                                 https://
                                             </div>
                                             <input type="text" id="url" required placeholder="example.com/page"
@@ -445,7 +446,7 @@
 
                                 <div class="relative group">
                                     <textarea id="resultUrl" readonly
-                                        class="w-full h-28 bg-slate-50/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-sm font-mono text-slate-700 dark:text-slate-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 selection:bg-indigo-500/40"></textarea>
+                                        class="w-full h-28 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-sm font-mono text-slate-800 dark:text-slate-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 selection:bg-indigo-500/40"></textarea>
                                     <button id="copyButton"
                                         class="absolute top-3 right-3 p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-indigo-600 transition-colors btn-hover-effect">
                                         <i data-lucide="copy" class="w-4 h-4"></i>
@@ -516,10 +517,10 @@
                                 class="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors whitespace-nowrap"><i
                                     data-lucide="upload" class="w-4 h-4"></i> Импорт</button>
                             <button id="exportHistoryJsonBtn"
-                                class="px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap"><i
+                                class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap border border-slate-200 dark:border-slate-700"><i
                                     data-lucide="file-json" class="w-4 h-4"></i> JSON</button>
                             <button id="exportHistoryCsvBtn"
-                                class="px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap"><i
+                                class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap border border-slate-200 dark:border-slate-700"><i
                                     data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV</button>
                             <input type="file" id="importHistoryFileInput" class="hidden" accept=".json,.csv">
                         </div>
@@ -645,17 +646,17 @@
                                 </button>
                                 <div class="space-y-2">
                                     <a href="https://t.me/pronin_marketing" target="_blank"
-                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium">
+                                        class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium border border-slate-200 dark:border-slate-700">
                                         <i data-lucide="send" class="w-5 h-5"></i>
                                         <span id="helpTelegramBtn">Telegram канал</span>
                                     </a>
                                     <a href="https://alex-pronin.ru/projects/utmka" target="_blank"
-                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium">
+                                        class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium border border-slate-200 dark:border-slate-700">
                                         <i data-lucide="globe" class="w-5 h-5"></i>
                                         <span id="helpWebsiteBtn">Сайт проекта</span>
                                     </a>
                                     <a href="https://github.com/Goryuchnick/utmKA-2.0/issues" target="_blank"
-                                        class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium">
+                                        class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium border border-slate-200 dark:border-slate-700">
                                         <i data-lucide="github" class="w-5 h-5"></i>
                                         <span id="helpGithubBtn">GitHub Issues</span>
                                     </a>
@@ -771,7 +772,7 @@
                 <textarea id="fullUrlText" readonly
                     class="w-full text-sm font-mono p-4 rounded-xl bg-slate-50 dark:bg-[#0B1120] border border-slate-200 dark:border-white/10 h-32 resize-y focus:ring-2 focus:ring-indigo-500/50 outline-none"></textarea>
             </div>
-            <div class="p-4 bg-slate-50/50 dark:bg-[#0B1120]/50 flex justify-end gap-3 rounded-b-lg">
+            <div class="p-4 bg-slate-50 dark:bg-[#0B1120]/50 flex justify-end gap-3 rounded-b-lg">
                 <button id="closeUrlDetailModal"
                     class="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Закрыть</button>
                 <div class="flex gap-2">
@@ -875,7 +876,7 @@
                     <h3 id="templateDetailName" class="text-xl font-bold truncate pr-4"></h3>
                     <div id="templateDetailTag" class="flex-shrink-0"></div>
                 </div>
-                <div class="space-y-3 text-sm bg-slate-50/50 dark:bg-black/20 p-4 rounded-xl border border-white/5">
+                <div class="space-y-3 text-sm bg-slate-50 dark:bg-black/20 p-4 rounded-xl border border-slate-200 dark:border-white/5">
                     <div class="grid grid-cols-[100px_1fr] gap-2 items-center"><span
                             class="text-slate-500 font-medium">Source:</span> <span id="templateDetailSource"
                             class="font-mono text-indigo-600 dark:text-indigo-400 truncate"></span></div>
@@ -962,7 +963,7 @@
             // --- Theme toggle ---
             const themeToggle = document.getElementById('theme-toggle');
             const htmlEl = document.documentElement;
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTheme = localStorage.getItem('theme') || 'dark';
             htmlEl.classList.toggle('dark', savedTheme === 'dark');
             themeToggle.addEventListener('click', () => {
                 htmlEl.classList.toggle('dark');
