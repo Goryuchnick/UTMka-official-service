@@ -2,7 +2,7 @@
 chcp 65001 >nul
 cd /d "%~dp0\.."
 echo ========================================
-echo Сборка UTMka.exe (PyWebView версия)
+echo Сборка UTMka_QtWebEngine.exe
 echo ========================================
 echo.
 
@@ -24,7 +24,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
-python scripts\build.py
+python -c "import PyQt6" >nul 2>&1
+if errorlevel 1 (
+    echo ОШИБКА: PyQt6 не установлен!
+    echo Установите зависимости: pip install -r requirements.txt
+    pause
+    exit /b 1
+)
+
+python scripts\build_qtwebengine.py
 if errorlevel 1 (
     echo.
     echo ✗ Ошибка сборки!
@@ -33,15 +41,13 @@ if errorlevel 1 (
 )
 
 echo.
-if exist "dist\UTMka.exe" (
-    echo ✓ Сборка успешна! Файл: dist\UTMka.exe
+if exist "dist_qtwebengine\UTMka_QtWebEngine.exe" (
+    echo ✓ Сборка успешна! Файл: dist_qtwebengine\UTMka_QtWebEngine.exe
     echo.
     echo Размер файла:
-    dir "dist\UTMka.exe" | find "UTMka.exe"
+    dir "dist_qtwebengine\UTMka_QtWebEngine.exe" | find "UTMka_QtWebEngine.exe"
 ) else (
     echo ✗ Ошибка сборки! Файл не найден.
 )
 echo.
 pause
-
-
