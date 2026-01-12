@@ -4,7 +4,7 @@ chcp 65001 >nul 2>&1
 cd /d "%~dp0\.."
 
 echo ========================================
-echo Building UTMka_QtWebEngine.exe
+echo Building UTMka.exe (PyWebView version)
 echo ========================================
 echo.
 
@@ -26,18 +26,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Check PyQt6
-python -c "import PyQt6" >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: PyQt6 is not installed!
-    echo Install dependencies: pip install -r requirements.txt
-    pause
-    exit /b 1
-)
-
 REM Build
 echo Building...
-python scripts\build_qtwebengine.py
+python scripts\build.py
 if errorlevel 1 (
     echo.
     echo ERROR: Build failed!
@@ -46,12 +37,12 @@ if errorlevel 1 (
 )
 
 echo.
-if exist "dist_qtwebengine\UTMka_QtWebEngine.exe" (
+if exist "dist\UTMka.exe" (
     echo SUCCESS: Build completed!
-    echo File: dist_qtwebengine\UTMka_QtWebEngine.exe
+    echo File: dist\UTMka.exe
     echo.
     echo File size:
-    dir "dist_qtwebengine\UTMka_QtWebEngine.exe" | find "UTMka_QtWebEngine.exe"
+    dir "dist\UTMka.exe" | find "UTMka.exe"
 ) else (
     echo ERROR: Build failed! File not found.
 )
