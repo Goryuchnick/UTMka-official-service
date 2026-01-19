@@ -18,9 +18,9 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
-OutputDir=.
+OutputDir=..
 OutputBaseFilename=UTMka_Setup
-SetupIconFile=logo\logoutm.ico
+SetupIconFile=..\logo\logoutm.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -40,7 +40,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 ; IMPORTANT: Run build.py BEFORE compiling this script to generate the EXE!
-Source: "dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -53,17 +53,6 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
-procedure InitializeWizard;
-begin
-  // Проверка наличия exe файла перед установкой
-  if not FileExists(ExpandConstant('{src}\dist\{#MyAppExeName}')) then
-  begin
-    MsgBox('Ошибка: Файл ' + ExpandConstant('{src}\dist\{#MyAppExeName}') + ' не найден!' + #13#10 + 
-           'Пожалуйста, сначала запустите build.py для создания исполняемого файла.', mbError, MB_OK);
-    Abort;
-  end;
-end;
-
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then

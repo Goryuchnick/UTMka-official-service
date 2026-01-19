@@ -37,21 +37,27 @@ REM Compile installer
 echo Using: !ISCC_PATH!
 echo Compiling: config\setup.iss
 echo.
-"!ISCC_PATH!" "config\setup.iss"
+cd config
+"!ISCC_PATH!" "setup.iss"
+cd ..
 
 if !ERRORLEVEL! EQU 0 (
     echo.
+    echo ========================================
     echo SUCCESS: Installer created successfully!
-    echo File: UTMka_Setup.exe
+    echo ========================================
     if exist "UTMka_Setup.exe" (
         echo.
-        echo File size:
-        dir "UTMka_Setup.exe" | find "UTMka_Setup.exe"
+        echo File created: UTMka_Setup.exe
+        echo.
+        for %%A in ("UTMka_Setup.exe") do echo File size: %%~zA bytes
     )
 ) else (
     echo.
+    echo ========================================
     echo ERROR: Failed to compile installer!
     echo Error code: !ERRORLEVEL!
+    echo ========================================
 )
 echo.
 pause
