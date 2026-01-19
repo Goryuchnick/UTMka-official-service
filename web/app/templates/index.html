@@ -2063,7 +2063,6 @@
             async function fetchData() {
                 try {
                     // Загружаем данные последовательно (не параллельно) с таймаутами
-                    let historyData = [];
                     try {
                         const historyController = new AbortController();
                         const historyTimeout = setTimeout(() => {
@@ -2081,8 +2080,9 @@
                         clearTimeout(historyTimeout);
                         
                         if (historyRes.ok) {
-                            historyData = await historyRes.json();
-                            state.history = historyData;
+                            const historyData = await historyRes.json();
+                            // API возвращает { items: [...], pagination: {...} }
+                            state.history = historyData.items || historyData || [];
                         } else {
                             state.history = [];
                         }
@@ -2094,7 +2094,6 @@
                     // Небольшая пауза между запросами
                     await new Promise(resolve => setTimeout(resolve, 100));
                     
-                    let templatesData = [];
                     try {
                         const templatesController = new AbortController();
                         const templatesTimeout = setTimeout(() => {
@@ -2112,8 +2111,9 @@
                         clearTimeout(templatesTimeout);
                         
                         if (templatesRes.ok) {
-                            templatesData = await templatesRes.json();
-                            state.templates = templatesData;
+                            const templatesData = await templatesRes.json();
+                            // API возвращает { items: [...], pagination: {...}, tags: [...] }
+                            state.templates = templatesData.items || templatesData || [];
                         } else {
                             state.templates = [];
                         }
@@ -2186,7 +2186,15 @@
                     await API.request(`${API_BASE_URL}/history`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: finalUrl })
+                        body: JSON.stringify({
+                            base_url: baseUrl,
+                            full_url: finalUrl,
+                            utm_source: params.utm_source || null,
+                            utm_medium: params.utm_medium || null,
+                            utm_campaign: params.utm_campaign || null,
+                            utm_content: params.utm_content || null,
+                            utm_term: params.utm_term || null
+                        })
                     });
                     await fetchData();
                     renderHistory();
@@ -3470,15 +3478,11 @@
                             }
                         }
 
-                        const templatesWithUser = templatesToImport.map(t => ({
-                            ...t,
-                            user_email: currentUser.email
-                        }));
-
-                        const response = await fetch('/templates', {
+                        // Используем новый API для импорта шаблонов
+                        const response = await API.request(`${API_BASE_URL}/templates/import`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(templatesWithUser)
+                            body: JSON.stringify({ templates: templatesToImport })
                         });
 
                         const result = await response.json();
@@ -3488,7 +3492,7 @@
                             renderAll();
                             showToast(`Успешно импортировано ${result.imported_count} шаблонов.`);
                         } else {
-                            throw new Error(result.error || 'Ошибка на сервере при импорте.');
+                            throw new Error(result.message || result.error || 'Ошибка на сервере при импорте.');
                         }
                     } catch (error) {
                         showToast(`Ошибка импорта: ${error.message}`, 'error');
@@ -3555,16 +3559,28 @@
 
             async function exportData(format) {
                 try {
-                    const response = await fetch('/export_templates', {
+                    const response = await API.request(`${API_BASE_URL}/templates/export`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_email: currentUser.email, format: format })
+                        body: JSON.stringify({ format: format })
                     });
-                    const result = await response.json();
-                    if (result.success) {
-                        showToast(`Файл сохранен: ${result.filename}`);
+                    
+                    if (response.ok) {
+                        // Скачиваем файл напрямую
+                        const blob = await response.blob();
+                        const filename = `templates_export.${format}`;
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showToast(`Шаблоны экспортированы: ${filename}`);
                     } else {
-                        showToast(result.error || 'Ошибка экспорта', 'error');
+                        const result = await response.json();
+                        showToast(result.message || result.error || 'Ошибка экспорта', 'error');
                     }
                 } catch (error) {
                     showToast(`Ошибка экспорта: ${error.message}`, 'error');
@@ -3573,16 +3589,28 @@
 
             async function exportHistoryData(format) {
                 try {
-                    const response = await fetch('/export_history', {
+                    const response = await API.request(`${API_BASE_URL}/history/export`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_email: currentUser.email, format: format })
+                        body: JSON.stringify({ format: format })
                     });
-                    const result = await response.json();
-                    if (result.success) {
-                        showToast(`Файл истории сохранен: ${result.filename}`);
+                    
+                    if (response.ok) {
+                        // Скачиваем файл напрямую
+                        const blob = await response.blob();
+                        const filename = `history_export.${format}`;
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showToast(`История экспортирована: ${filename}`);
                     } else {
-                        showToast(result.error || 'Ошибка экспорта истории', 'error');
+                        const result = await response.json();
+                        showToast(result.message || result.error || 'Ошибка экспорта истории', 'error');
                     }
                 } catch (error) {
                     showToast(`Ошибка экспорта истории: ${error.message}`, 'error');
