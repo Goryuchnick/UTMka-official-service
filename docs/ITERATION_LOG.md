@@ -75,21 +75,70 @@ utmKA-2.0-2/
 
 ## Итерация 1: Инициализация структуры проекта
 
-**Дата:** [Pending]  
-**Статус:** Не начата
+**Дата:** 19.01.2026  
+**Статус:** Завершена ✅
 
 ### Задачи
 
-- [ ] Создать структуру папок `web/app/`
-- [ ] Создать `web/app/__init__.py` с Flask app factory
-- [ ] Создать `web/app/config.py` с конфигурацией
-- [ ] Создать `web/requirements.txt`
-- [ ] Создать `web/.env.example`
-- [ ] Создать `web/run.py`
+- [x] Создать структуру папок `web/app/`
+- [x] Создать `web/app/__init__.py` с Flask app factory
+- [x] Создать `web/app/config.py` с конфигурацией
+- [x] Создать `web/app/extensions.py` для Flask extensions
+- [x] Создать `web/requirements.txt`
+- [x] Создать `web/.env.example`
+- [x] Создать `web/run.py`
+- [x] Создать базовую структуру папок (models, routes, services, utils, oauth)
+
+### Изменённые файлы
+
+- `web/app/__init__.py` — Flask app factory с инициализацией расширений
+- `web/app/config.py` — Конфигурация из переменных окружения (Development, Production, Testing)
+- `web/app/extensions.py` — Инициализация SQLAlchemy, JWT, Migrate
+- `web/app/routes/__init__.py` — Регистрация blueprints (пока заглушка с health check)
+- `web/requirements.txt` — Все необходимые зависимости (Flask, SQLAlchemy, JWT, OAuth, Payment)
+- `web/.env.example` — Пример переменных окружения
+- `web/run.py` — Точка входа для запуска приложения
+- `web/.gitignore` — Игнорирование venv, .env, БД файлов
+- `web/README.md` — Краткая документация по запуску
+
+### Структура создана
+
+```
+web/
+├── app/
+│   ├── __init__.py          ✅ Flask app factory
+│   ├── config.py            ✅ Конфигурация
+│   ├── extensions.py        ✅ Flask extensions
+│   ├── models/              ✅ (заглушка)
+│   ├── routes/              ✅ (заглушка с health check)
+│   ├── services/            ✅ (заглушка)
+│   │   └── oauth/           ✅ (заглушка)
+│   ├── utils/               ✅ (заглушка)
+│   └── templates/           ⏳ (будет в итерации 3)
+├── migrations/              ⏳ (будет в итерации 2)
+├── tests/                   ⏳ (будет позже)
+├── requirements.txt         ✅
+├── .env.example             ✅
+├── .gitignore               ✅
+├── README.md                ✅
+└── run.py                   ✅
+```
 
 ### Заметки
 
-_Будут добавлены после выполнения_
+- Flask app factory настроен и готов к расширению
+- Конфигурация поддерживает Development, Production, Testing режимы
+- Все зависимости указаны в requirements.txt
+- Базовая структура папок создана с заглушками для будущих модулей
+- Health check endpoint (`/health`) добавлен для проверки работы сервера
+- Главный endpoint (`/`) возвращает информацию о версии API
+
+### Следующие шаги
+
+**Итерация 2:** Настройка базы данных
+- Подключить SQLAlchemy модели
+- Настроить Alembic
+- Создать начальную миграцию
 
 ---
 
