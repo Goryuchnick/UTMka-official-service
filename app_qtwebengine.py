@@ -150,9 +150,16 @@ def init_db():
             utm_campaign TEXT,
             utm_content TEXT,
             utm_term TEXT,
+            short_url TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Миграция: добавляем колонку short_url если её нет
+    try:
+        cursor.execute('ALTER TABLE history_new ADD COLUMN short_url TEXT')
+    except sqlite3.OperationalError:
+        pass  # Колонка уже существует
     
     # Таблица шаблонов (уже имеет правильную структуру)
     cursor.execute('''
@@ -364,6 +371,26 @@ def delete_history(item_id):
     conn.commit()
     conn.close()
     return jsonify({'success': True})
+
+
+@app.route('/history/<int:item_id>/short_url', methods=['PUT'])
+def update_history_short_url(item_id):
+    """Обновляет сокращённую ссылку для записи в истории."""
+    data = request.json
+    short_url = data.get('short_url')
+    
+    if not short_url:
+        return jsonify({'success': False, 'error': 'short_url is required'}), 400
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('UPDATE history_new SET short_url = ? WHERE id = ?', (short_url, item_id))
+        conn.commit()
+        return jsonify({'success': True, 'short_url': short_url})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        conn.close()
 
 
 # --- Шаблоны ---
@@ -726,7 +753,7 @@ if __name__ == '__main__':
         # Создаем главное окно
         main_window = QMainWindow()
         main_window.setWindowTitle("UTMka - сервис для бизнеса и маркетологов")
-        main_window.resize(1366, 800)
+        main_window.resize(1200, 900)
         
         # Создаем WebEngineView для отображения HTML
         web_view = QWebEngineView()
@@ -735,8 +762,8 @@ if __name__ == '__main__':
         # Устанавливаем WebView как центральный виджет
         main_window.setCentralWidget(web_view)
         
-        # Показываем окно
-        main_window.show()
+        # Показываем окно на весь экран
+        main_window.showMaximized()
         
         print("Запуск Qt приложения...")
         sys.exit(qt_app.exec())

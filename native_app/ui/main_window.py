@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("UTMka (Native)")
-        self.resize(900, 600)
+        self.resize(1200, 900)
 
         central = QWidget(self)
         self.setCentralWidget(central)

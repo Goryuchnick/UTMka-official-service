@@ -65,10 +65,17 @@ def init_db() -> None:
             utm_campaign TEXT,
             utm_content TEXT,
             utm_term TEXT,
+            short_url TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
     )
+    
+    # Миграция: добавляем колонку short_url если её нет
+    try:
+        cursor.execute('ALTER TABLE history_new ADD COLUMN short_url TEXT')
+    except:
+        pass  # Колонка уже существует
 
     # Таблица шаблонов
     cursor.execute(

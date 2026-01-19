@@ -152,9 +152,16 @@ def init_db():
             utm_campaign TEXT,
             utm_content TEXT,
             utm_term TEXT,
+            short_url TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Миграция: добавляем колонку short_url если её нет
+    try:
+        cursor.execute('ALTER TABLE history_new ADD COLUMN short_url TEXT')
+    except sqlite3.OperationalError:
+        pass  # Колонка уже существует
     
     # Таблица шаблонов (уже имеет правильную структуру)
     cursor.execute('''
@@ -321,7 +328,7 @@ def get_history():
         # Выбираем только нужные поля для ускорения
         try:
             history_items = conn.execute(
-                'SELECT id, user_email, base_url, full_url, utm_source, utm_medium, utm_campaign, utm_content, utm_term, created_at FROM history_new WHERE user_email = ? ORDER BY created_at DESC LIMIT 500',
+                'SELECT id, user_email, base_url, full_url, utm_source, utm_medium, utm_campaign, utm_content, utm_term, short_url, created_at FROM history_new WHERE user_email = ? ORDER BY created_at DESC LIMIT 500',
                 (user_email,)
             ).fetchall()
         except:
@@ -399,6 +406,26 @@ def delete_history(item_id):
     conn.commit()
     conn.close()
     return jsonify({'success': True})
+
+
+@app.route('/history/<int:item_id>/short_url', methods=['PUT'])
+def update_history_short_url(item_id):
+    """Обновляет сокращённую ссылку для записи в истории."""
+    data = request.json
+    short_url = data.get('short_url')
+    
+    if not short_url:
+        return jsonify({'success': False, 'error': 'short_url is required'}), 400
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('UPDATE history_new SET short_url = ? WHERE id = ?', (short_url, item_id))
+        conn.commit()
+        return jsonify({'success': True, 'short_url': short_url})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        conn.close()
 
 
 # --- Шаблоны ---
@@ -789,7 +816,7 @@ if __name__ == '__main__':
     # Создаем окно PyWebView, которое загружает наше Flask-приложение
     try:
         print("Создание окна webview...")
-        webview.create_window('UTMka - сервис для бизнеса и маркетологов', f'http://127.0.0.1:{flask_port}', width=1366, height=800, resizable=True)
+        webview.create_window('UTMka - сервис для бизнеса и маркетологов', f'http://127.0.0.1:{flask_port}', width=1200, height=900, resizable=True, maximized=True)
         print("Запуск webview...")
         webview.start()
     except Exception as e:

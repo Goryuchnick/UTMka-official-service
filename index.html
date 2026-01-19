@@ -194,6 +194,20 @@
             width: 80%;
         }
 
+        /* View mode buttons active state */
+        .history-view-btn.active,
+        .templates-view-btn.active {
+            background-color: white;
+            color: #6366f1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .history-view-btn.active,
+        .dark .templates-view-btn.active {
+            background-color: #334155;
+            color: #818cf8;
+        }
+
         .nav-link:hover::after {
             width: 80%;
         }
@@ -335,7 +349,7 @@
             </div>
 
             <div id="main-content"
-                class="hidden w-full h-full flex flex-col gap-6 overflow-y-auto px-4 md:px-6 lg:px-8 py-4 pb-32 no-scrollbar">
+                class="hidden w-full h-full flex flex-col gap-6 overflow-y-auto px-4 md:px-6 lg:px-8 py-4 pb-16 no-scrollbar">
 
                 <!-- === GENERATOR VIEW === -->
                 <div data-view="generator" class="active fade-in h-full flex flex-col">
@@ -514,10 +528,10 @@
                                         class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all"><i
                                             data-lucide="list" class="w-4 h-4"></i></button>
                                     <button data-view-mode="grid"
-                                        class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all active"><i
+                                        class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all"><i
                                             data-lucide="layout-grid" class="w-4 h-4"></i></button>
                                     <button data-view-mode="table"
-                                        class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all"><i
+                                        class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all active"><i
                                             data-lucide="table" class="w-4 h-4"></i></button>
                                 </div>
                             </div>
@@ -604,13 +618,13 @@
                                         </div>
                                         <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                                             <button data-view-mode="list"
-                                                class="templates-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 active"><i
+                                                class="templates-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600"><i
                                                     data-lucide="list" class="w-4 h-4"></i></button>
                                             <button data-view-mode="grid"
                                                 class="templates-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600"><i
                                                     data-lucide="layout-grid" class="w-4 h-4"></i></button>
                                             <button data-view-mode="table"
-                                                class="templates-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600"><i
+                                                class="templates-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 active"><i
                                                     data-lucide="table" class="w-4 h-4"></i></button>
                                         </div>
                                     </div>
@@ -784,12 +798,22 @@
                 <textarea id="fullUrlText" readonly
                     class="w-full text-sm font-mono p-4 rounded-xl bg-slate-50 dark:bg-[#0B1120] border border-slate-200 dark:border-white/10 h-32 resize-y focus:ring-2 focus:ring-indigo-500/50 outline-none"></textarea>
             </div>
-            <div class="p-4 bg-slate-50 dark:bg-[#0B1120]/50 flex justify-end gap-3 rounded-b-lg">
+            <div class="p-4 bg-slate-50 dark:bg-[#0B1120]/50 flex flex-wrap justify-between gap-3 rounded-b-lg">
                 <button id="closeUrlDetailModal"
                     class="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Закрыть</button>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <button id="deleteUrlBtn"
                         class="px-4 py-2 bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors">Удалить</button>
+                    <button id="shortenUrlModalBtn"
+                        class="px-4 py-2 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5">
+                        <i data-lucide="shrink" class="w-4 h-4"></i>
+                        <span id="shortenUrlModalBtnText">Сократить</span>
+                    </button>
+                    <button id="qrCodeModalBtn"
+                        class="px-4 py-2 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5">
+                        <i data-lucide="qr-code" class="w-4 h-4"></i>
+                        <span id="qrCodeModalBtnText">QR-код</span>
+                    </button>
                     <button id="copyFullUrlBtn"
                         class="px-4 py-2 bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 rounded-lg text-sm font-medium transition-colors">Копировать</button>
                     <button id="applyFromModalBtn"
@@ -1055,6 +1079,7 @@
                     grid_campaign: 'Кампания:',
                     nothing_found: 'Ничего не найдено.',
                     history_date: 'Дата',
+                    history_short_url: 'Короткая ссылка',
                     btn_apply_utm: 'Применить UTM-параметры',
                     btn_copy_link: 'Копировать ссылку',
                     // Help View
@@ -1160,6 +1185,7 @@
                     grid_campaign: 'Campaign:',
                     nothing_found: 'Nothing found.',
                     history_date: 'Date',
+                    history_short_url: 'Short URL',
                     btn_apply_utm: 'Apply UTM parameters',
                     btn_copy_link: 'Copy link',
                     // Help View
@@ -1328,6 +1354,14 @@
                 const copyFullUrlBtn = document.getElementById('copyFullUrlBtn');
                 if (copyFullUrlBtn && dict.btn_copy) {
                     copyFullUrlBtn.textContent = dict.btn_copy;
+                }
+                const shortenUrlModalBtnText = document.getElementById('shortenUrlModalBtnText');
+                if (shortenUrlModalBtnText && dict.btn_shorten_short) {
+                    shortenUrlModalBtnText.textContent = dict.btn_shorten_short;
+                }
+                const qrCodeModalBtnText = document.getElementById('qrCodeModalBtnText');
+                if (qrCodeModalBtnText && dict.btn_qr_code) {
+                    qrCodeModalBtnText.textContent = dict.btn_qr_code;
                 }
                 const applyFromModalBtn = document.getElementById('applyFromModalBtn');
                 if (applyFromModalBtn && dict.btn_use) {
@@ -1746,12 +1780,66 @@
                 console.error('Error showing footer:', e);
             }
 
+            // Загружаем сохранённые настройки пользователя
+            const savedHistoryViewMode = localStorage.getItem('utmka_historyViewMode') || 'table';
+            const savedTemplatesViewMode = localStorage.getItem('utmka_templatesViewMode') || 'table';
+
             let state = {
-                history: [], templates: [], historyViewMode: 'grid', templatesViewMode: 'table',
+                history: [], templates: [], historyViewMode: savedHistoryViewMode, templatesViewMode: savedTemplatesViewMode,
                 historySearch: '', templatesSearch: '', historySort: 'created_at_desc', templatesSort: 'created_at_desc',
                 historyDateRange: [], templatesSortColumn: 'created_at', templatesSortDirection: 'desc',
                 historySortColumn: 'created_at', historySortDirection: 'desc',
             };
+
+            // Общий обработчик для кнопок переключения вида (добавляется только один раз)
+            (function() {
+                if (document.documentElement.hasAttribute('data-view-mode-handler')) return;
+                document.addEventListener('click', (e) => {
+                    const historyViewBtn = e.target.closest('.history-view-btn');
+                    const templatesViewBtn = e.target.closest('.templates-view-btn');
+                    
+                    if (historyViewBtn) {
+                        e.preventDefault();
+                        state.historyViewMode = historyViewBtn.dataset.viewMode;
+                        localStorage.setItem('utmka_historyViewMode', state.historyViewMode);
+                        document.querySelectorAll('.history-view-btn').forEach(b => b.classList.remove('active'));
+                        historyViewBtn.classList.add('active');
+                        if (typeof renderHistory === 'function') {
+                            renderHistory();
+                        }
+                    }
+                    
+                    if (templatesViewBtn) {
+                        e.preventDefault();
+                        state.templatesViewMode = templatesViewBtn.dataset.viewMode;
+                        localStorage.setItem('utmka_templatesViewMode', state.templatesViewMode);
+                        document.querySelectorAll('.templates-view-btn').forEach(b => b.classList.remove('active'));
+                        templatesViewBtn.classList.add('active');
+                        if (typeof renderTemplates === 'function') {
+                            renderTemplates();
+                        }
+                    }
+                });
+                document.documentElement.setAttribute('data-view-mode-handler', 'true');
+            })();
+
+            // Функция для установки активных кнопок вида при загрузке
+            function syncViewModeButtons() {
+                // История
+                document.querySelectorAll('.history-view-btn').forEach(b => {
+                    b.classList.remove('active');
+                    if (b.dataset.viewMode === state.historyViewMode) {
+                        b.classList.add('active');
+                    }
+                });
+                // Шаблоны
+                document.querySelectorAll('.templates-view-btn').forEach(b => {
+                    b.classList.remove('active');
+                    if (b.dataset.viewMode === state.templatesViewMode) {
+                        b.classList.add('active');
+                    }
+                });
+            }
 
             function startApp() {
                 try {
@@ -1916,6 +2004,15 @@
                         }
                     } catch (e) {
                         console.warn('Error initializing templates event listeners:', e);
+                    }
+                    
+                    // Синхронизация кнопок вида с сохранёнными настройками
+                    try {
+                        if (typeof syncViewModeButtons === 'function') {
+                            syncViewModeButtons();
+                        }
+                    } catch (e) {
+                        console.warn('Error syncing view mode buttons:', e);
                     }
                     
                 } catch (e) {
@@ -2732,11 +2829,11 @@
                             '<i data-lucide="chevron-down" class="w-3 h-3 ml-1"></i>';
                     };
 
-                    historyContainer.innerHTML = `<div class="overflow-x-auto w-full"><table class="w-full table-auto"><thead class="border-b border-slate-200 dark:border-slate-700"><tr><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="full_url">URL${getSortIcon('full_url')}</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase w-64 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="created_at">${dict.history_date || 'Дата'}${getSortIcon('created_at')}</th><th class="relative px-6 py-3 w-32"></th></tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-800">${items.map(item => `<tr class="history-item cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" data-id="${item.id}"><td class="px-6 py-4"><div class="text-sm text-slate-900 dark:text-slate-200 selectable-text" title="${item.full_url || item.url}">${item.full_url || item.url}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('')}</tbody></table></div>`;
+                    historyContainer.innerHTML = `<div class="overflow-x-auto w-full"><table class="w-full table-auto"><thead class="border-b border-slate-200 dark:border-slate-700"><tr><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="full_url">URL${getSortIcon('full_url')}</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="short_url">${dict.history_short_url || 'Короткая'}${getSortIcon('short_url')}</th><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase w-48 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 select-none" data-sort="created_at">${dict.history_date || 'Дата'}${getSortIcon('created_at')}</th><th class="relative px-6 py-3 w-40"></th></tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-800">${items.map(item => `<tr class="history-item cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" data-id="${item.id}"><td class="px-6 py-4"><div class="text-sm text-slate-900 dark:text-slate-200 selectable-text truncate max-w-xs" title="${item.full_url || item.url}">${item.full_url || item.url}</div></td><td class="px-6 py-4"><div class="text-sm text-emerald-600 dark:text-emerald-400 selectable-text" title="${item.short_url || ''}">${item.short_url || '<span class="text-slate-400">—</span>'}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-1"><button data-id="${item.id}" data-url="${item.full_url || item.url}" class="shorten-history-btn text-emerald-600 hover:text-emerald-900 p-1" title="${dict.btn_shorten || 'Сократить ссылку'}"><i data-lucide="shrink" class="w-4 h-4"></i></button><button data-url="${item.short_url || item.full_url || item.url}" class="qr-history-btn text-purple-600 hover:text-purple-900 p-1" title="${dict.btn_qr_code || 'QR-код'}"><i data-lucide="qr-code" class="w-4 h-4"></i></button><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900 p-1" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900 p-1" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900 p-1" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('')}</tbody></table></div>`;
                 } else if (state.historyViewMode === 'grid') {
-                    historyContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${items.map(item => `<div class="history-item cursor-pointer p-4 border rounded-lg bg-white dark:bg-slate-800/50 shadow space-y-2" data-id="${item.id}"><p class="text-sm truncate selectable-text" title="${item.full_url || item.url}">${item.full_url || item.url}</p><p class="text-xs text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</p><div class="flex justify-end space-x-2 pt-2"><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('')}</div>`;
+                    historyContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${items.map(item => `<div class="history-item cursor-pointer p-4 border rounded-lg bg-white dark:bg-slate-800/50 shadow space-y-2" data-id="${item.id}"><p class="text-sm truncate selectable-text" title="${item.full_url || item.url}">${item.full_url || item.url}</p>${item.short_url ? `<p class="text-xs text-emerald-600 dark:text-emerald-400 truncate selectable-text" title="${item.short_url}">${item.short_url}</p>` : ''}<p class="text-xs text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</p><div class="flex justify-end space-x-1 pt-2"><button data-id="${item.id}" data-url="${item.full_url || item.url}" class="shorten-history-btn text-emerald-600 hover:text-emerald-900 p-1" title="${dict.btn_shorten || 'Сократить ссылку'}"><i data-lucide="shrink" class="w-4 h-4"></i></button><button data-url="${item.short_url || item.full_url || item.url}" class="qr-history-btn text-purple-600 hover:text-purple-900 p-1" title="${dict.btn_qr_code || 'QR-код'}"><i data-lucide="qr-code" class="w-4 h-4"></i></button><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900 p-1" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900 p-1" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900 p-1" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('')}</div>`;
                 } else { // List view
-                    historyContainer.innerHTML = `<div class="space-y-2">${items.map(item => `<div class="history-item cursor-pointer p-3 border rounded-lg bg-white dark:bg-slate-800/50 shadow flex justify-between items-center gap-4" data-id="${item.id}"><div class="min-w-0 flex-grow"><p class="text-sm truncate selectable-text" title="${item.full_url || item.url}">${item.full_url || item.url}</p><p class="text-xs text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</p></div><div class="flex items-center space-x-2 flex-shrink-0"><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('')}</div>`;
+                    historyContainer.innerHTML = `<div class="space-y-2">${items.map(item => `<div class="history-item cursor-pointer p-3 border rounded-lg bg-white dark:bg-slate-800/50 shadow flex justify-between items-center gap-4" data-id="${item.id}"><div class="min-w-0 flex-grow"><p class="text-sm truncate selectable-text" title="${item.full_url || item.url}">${item.full_url || item.url}</p>${item.short_url ? `<p class="text-xs text-emerald-600 dark:text-emerald-400 truncate selectable-text">${item.short_url}</p>` : ''}<p class="text-xs text-slate-500 selectable-text">${parseDate(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU')}</p></div><div class="flex items-center space-x-1 flex-shrink-0"><button data-id="${item.id}" data-url="${item.full_url || item.url}" class="shorten-history-btn text-emerald-600 hover:text-emerald-900 p-1" title="${dict.btn_shorten || 'Сократить ссылку'}"><i data-lucide="shrink" class="w-4 h-4"></i></button><button data-url="${item.short_url || item.full_url || item.url}" class="qr-history-btn text-purple-600 hover:text-purple-900 p-1" title="${dict.btn_qr_code || 'QR-код'}"><i data-lucide="qr-code" class="w-4 h-4"></i></button><button data-id="${item.id}" class="apply-history-btn text-green-600 hover:text-green-900 p-1" title="${dict.btn_apply_utm || 'Применить UTM-параметры'}"><i data-lucide="wand-sparkles" class="w-4 h-4"></i></button><button data-url="${item.full_url || item.url}" class="copy-history-btn text-indigo-600 hover:text-indigo-900 p-1" title="${dict.btn_copy_link || 'Копировать ссылку'}"><i data-lucide="copy" class="w-4 h-4"></i></button><button data-id="${item.id}" class="delete-history-btn text-red-600 hover:text-red-900 p-1" title="${dict.btn_delete || 'Удалить'}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('')}</div>`;
                 }
                 lucide.createIcons();
             }
@@ -2782,16 +2879,7 @@
                         renderHistory();
                     });
                 }
-
-                // View mode buttons
-                document.querySelectorAll('.history-view-btn').forEach(btn => {
-                    btn.addEventListener('click', e => {
-                        state.historyViewMode = e.currentTarget.dataset.viewMode;
-                        document.querySelectorAll('.history-view-btn').forEach(b => b.classList.remove('active'));
-                        e.currentTarget.classList.add('active');
-                        renderHistory();
-                    });
-                });
+                // View mode buttons обрабатываются общим обработчиком выше
             }
 
             const urlDetailModal = document.getElementById('urlDetailModal');
@@ -2804,6 +2892,7 @@
                 fullUrlText.value = item.full_url || item.url;
                 urlDetailModal.classList.remove('hidden');
                 urlDetailModal.classList.add('flex');
+                lucide.createIcons();
             }
 
             function closeUrlDetailModal() {
@@ -2829,6 +2918,104 @@
                 navigator.clipboard.writeText(fullUrlText.value).then(() => showToast('Полная ссылка скопирована!'));
             });
 
+            // Сократить ссылку из модального окна
+            document.getElementById('shortenUrlModalBtn').addEventListener('click', async () => {
+                const resultUrl = fullUrlText.value;
+                if (!resultUrl) return;
+                const dict = translations[state.lang] || translations['ru'];
+                const btn = document.getElementById('shortenUrlModalBtn');
+                const originalContent = btn.innerHTML;
+                
+                try {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>';
+                    lucide.createIcons();
+                    
+                    const response = await fetch(`https://clck.ru/--?url=${encodeURIComponent(resultUrl)}`);
+                    const shortUrl = await response.text();
+                    
+                    if (shortUrl && shortUrl.startsWith('http')) {
+                        fullUrlText.value = shortUrl;
+                        navigator.clipboard.writeText(shortUrl);
+                        showToast(dict.msg_short_link_copied || 'Короткая ссылка скопирована!');
+                    } else {
+                        throw new Error(shortUrl || 'Failed to shorten URL');
+                    }
+                } catch (error) {
+                    console.error('Error shortening URL:', error);
+                    showToast(dict.msg_shorten_error || 'Ошибка сокращения ссылки', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    lucide.createIcons();
+                }
+            });
+
+            // QR-код из модального окна
+            document.getElementById('qrCodeModalBtn').addEventListener('click', () => {
+                const resultUrl = fullUrlText.value;
+                if (!resultUrl) return;
+                const dict = translations[state.lang] || translations['ru'];
+                
+                try {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(resultUrl)}`;
+                    
+                    const qrModal = document.createElement('div');
+                    qrModal.id = 'qrModal';
+                    qrModal.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in';
+                    qrModal.innerHTML = `
+                        <div class="glass-card max-w-lg w-full rounded-2xl shadow-2xl p-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-bold dark:text-white">${dict.btn_qr_code || 'QR-код'}</h3>
+                                <button id="closeQrModal" class="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <div class="flex justify-center mb-6 px-8 py-10 bg-white dark:bg-slate-800 rounded-2xl border-8 border-slate-100 dark:border-slate-700/50">
+                                <img src="${qrUrl}" alt="QR Code" class="rounded-lg shadow-lg w-full max-w-[320px] h-auto" />
+                            </div>
+                            <button id="downloadQrBtn" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-500 transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="download" class="w-5 h-5"></i>
+                                ${dict.btn_download_qr || 'Скачать QR-код'}
+                            </button>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(qrModal);
+                    lucide.createIcons();
+                    
+                    document.getElementById('closeQrModal').addEventListener('click', () => {
+                        qrModal.remove();
+                    });
+                    
+                    qrModal.addEventListener('click', (e) => {
+                        if (e.target === qrModal) qrModal.remove();
+                    });
+                    
+                    document.getElementById('downloadQrBtn').addEventListener('click', async () => {
+                        try {
+                            const response = await fetch(qrUrl);
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'qr-code.png';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                            showToast(dict.msg_qr_downloaded || 'QR-код скачан!');
+                        } catch (error) {
+                            console.error('Error downloading QR code:', error);
+                            showToast(dict.msg_qr_error || 'Ошибка скачивания QR-кода', 'error');
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error generating QR code:', error);
+                    showToast(dict.msg_qr_error || 'Ошибка генерации QR-кода', 'error');
+                }
+            });
+
             document.getElementById('applyFromModalBtn').addEventListener('click', () => {
                 if (!fullUrlText.value) return;
                 const item = state.history.find(h => h.id == currentDetailItemId);
@@ -2852,23 +3039,17 @@
                     state.templatesSearch = e.target.value;
                     renderTemplates();
                 });
-
-                // View mode buttons
-                document.querySelectorAll('.templates-view-btn').forEach(btn => {
-                    btn.addEventListener('click', e => {
-                        state.templatesViewMode = e.currentTarget.dataset.viewMode;
-                        document.querySelectorAll('.templates-view-btn').forEach(b => b.classList.remove('active'));
-                        e.currentTarget.classList.add('active');
-                        renderTemplates();
-                    });
-                });
+                // View mode buttons обрабатываются общим обработчиком выше
             }
 
             historyContainer.addEventListener('click', async (e) => {
                 const deleteBtn = e.target.closest('.delete-history-btn');
                 const copyBtn = e.target.closest('.copy-history-btn');
                 const applyBtn = e.target.closest('.apply-history-btn');
+                const shortenBtn = e.target.closest('.shorten-history-btn');
+                const qrBtn = e.target.closest('.qr-history-btn');
                 const sortHeader = e.target.closest('th[data-sort]');
+                const dict = translations[currentLang] || translations.ru;
 
                 if (sortHeader) {
                     const column = sortHeader.dataset.sort;
@@ -2890,6 +3071,111 @@
                     if (item) {
                         applyHistoryToForm(item);
                     }
+                    return;
+                }
+
+                // Сокращение ссылки из истории
+                if (shortenBtn) {
+                    const itemId = shortenBtn.dataset.id;
+                    const url = shortenBtn.dataset.url;
+                    
+                    try {
+                        shortenBtn.disabled = true;
+                        shortenBtn.classList.add('opacity-50');
+                        
+                        const response = await fetch(`https://clck.ru/--?url=${encodeURIComponent(url)}`);
+                        const shortUrl = await response.text();
+                        
+                        if (shortUrl && shortUrl.trim() && !shortUrl.includes('error')) {
+                            const trimmedUrl = shortUrl.trim();
+                            
+                            // Сохраняем short_url в базу данных
+                            await fetch(`/history/${itemId}/short_url`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ short_url: trimmedUrl })
+                            });
+                            
+                            // Обновляем локальные данные
+                            const item = state.history.find(h => h.id == itemId);
+                            if (item) {
+                                item.short_url = trimmedUrl;
+                            }
+                            
+                            navigator.clipboard.writeText(trimmedUrl);
+                            showToast(dict.msg_short_link_copied || 'Короткая ссылка скопирована!');
+                            renderHistory();
+                        } else {
+                            throw new Error('Failed to shorten URL');
+                        }
+                    } catch (error) {
+                        console.error('Shorten URL error:', error);
+                        showToast(dict.msg_shorten_error || 'Ошибка сокращения ссылки', 'error');
+                    } finally {
+                        shortenBtn.disabled = false;
+                        shortenBtn.classList.remove('opacity-50');
+                    }
+                    return;
+                }
+
+                // QR-код для ссылки из истории
+                if (qrBtn) {
+                    const url = qrBtn.dataset.url;
+                    if (!url) return;
+                    
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
+                    
+                    const existingModal = document.getElementById('qrModal');
+                    if (existingModal) existingModal.remove();
+                    
+                    const modal = document.createElement('div');
+                    modal.id = 'qrModal';
+                    modal.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50';
+                    modal.innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-2xl max-w-lg w-full mx-4 relative">
+                            <button id="closeQrModal" class="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                            <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-6 text-center">${dict.btn_qr_code || 'QR-код'}</h3>
+                            <div class="flex justify-center mb-6 px-8 py-10 bg-white dark:bg-slate-800 rounded-2xl border-8 border-slate-100 dark:border-slate-700/50">
+                                <img src="${qrUrl}" alt="QR Code" class="rounded-lg w-full max-w-[280px] h-auto" />
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 text-center mb-6 break-all px-4">${url}</p>
+                            <button id="downloadQrBtn" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                ${dict.btn_download_qr || 'Скачать QR'}
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                    
+                    document.getElementById('closeQrModal').addEventListener('click', () => modal.remove());
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) modal.remove();
+                    });
+                    
+                    document.getElementById('downloadQrBtn').addEventListener('click', async () => {
+                        try {
+                            const response = await fetch(qrUrl);
+                            const blob = await response.blob();
+                            const downloadUrl = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = downloadUrl;
+                            a.download = 'qr-code.png';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(downloadUrl);
+                            showToast(dict.msg_qr_downloaded || 'QR-код скачан!');
+                        } catch (error) {
+                            console.error('Download QR error:', error);
+                            showToast(dict.msg_qr_error || 'Ошибка скачивания QR', 'error');
+                        }
+                    });
                     return;
                 }
 
