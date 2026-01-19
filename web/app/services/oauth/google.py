@@ -4,7 +4,7 @@ Google OAuth сервис
 import requests
 from datetime import datetime, timedelta
 from flask import current_app
-from ..extensions import db
+from ...extensions import db
 from ...models import User, OAuthAccount, Subscription
 
 
