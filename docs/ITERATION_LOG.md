@@ -144,20 +144,87 @@ web/
 
 ## Итерация 2: Настройка базы данных
 
-**Дата:** [Pending]  
-**Статус:** Не начата
+**Дата:** 19.01.2026  
+**Статус:** Завершена ✅
 
 ### Задачи
 
-- [ ] Установить SQLAlchemy и Alembic
-- [ ] Создать модели в `web/app/models/`
-- [ ] Инициализировать Alembic
-- [ ] Создать начальную миграцию
-- [ ] Протестировать создание таблиц
+- [x] Создать модель User
+- [x] Создать модель OAuthAccount
+- [x] Создать модель Subscription
+- [x] Создать модель History
+- [x] Создать модель Template
+- [x] Создать модель Payment
+- [x] Настроить Alembic
+- [x] Создать начальную миграцию
+
+### Изменённые файлы
+
+- `web/app/models/user.py` — Модель пользователя с методами работы с паролями
+- `web/app/models/oauth.py` — Модель OAuth аккаунтов (Yandex, VK, Google)
+- `web/app/models/subscription.py` — Модель подписок с логикой активации trial/pro
+- `web/app/models/history.py` — Модель истории UTM-меток
+- `web/app/models/template.py` — Модель шаблонов UTM-меток
+- `web/app/models/payment.py` — Модель платежей
+- `web/app/models/__init__.py` — Экспорт всех моделей
+- `web/app/__init__.py` — Импорт моделей для Alembic
+- `web/migrations/env.py` — Конфигурация Alembic
+- `web/migrations/alembic.ini` — Настройки Alembic
+- `web/migrations/script.py.mako` — Шаблон для миграций
+- `web/migrations/versions/001_initial_schema.py` — Начальная миграция
+
+### Созданные модели
+
+1. **User** — Пользователи
+   - Email, пароль (bcrypt), имя
+   - Email верификация, сброс пароля
+   - Relationships: subscription, history, templates, oauth_accounts, payments
+
+2. **OAuthAccount** — OAuth аккаунты
+   - Поддержка Yandex, VK, Google
+   - Хранение токенов и данных провайдера
+   - Уникальность по комбинации provider + provider_user_id
+
+3. **Subscription** — Подписки
+   - Планы: free, trial, pro
+   - Статусы: active, expired, cancelled
+   - Методы: activate_trial(), activate_pro(), cancel(), is_active()
+
+4. **History** — История UTM-меток
+   - base_url, full_url
+   - Все UTM параметры отдельными полями
+   - short_url для сокращённых ссылок
+
+5. **Template** — Шаблоны UTM-меток
+   - Все UTM параметры
+   - Теги и цвета для группировки
+
+6. **Payment** — Платежи
+   - Связь с платёжными системами (external_id)
+   - Статусы: pending, succeeded, failed, refunded
+   - Метаданные в JSON
+
+### Миграции
+
+- Настроен Alembic для управления миграциями
+- Создана начальная миграция `001_initial_schema.py`
+- Поддержка SQLite (development) и PostgreSQL (production)
+- Все индексы созданы согласно схеме
 
 ### Заметки
 
-_Будут добавлены после выполнения_
+- Все модели имеют методы `to_dict()` для сериализации
+- Relationships настроены с каскадным удалением (CASCADE)
+- Индексы созданы для оптимизации запросов
+- Модель Subscription имеет удобные методы для работы с подписками
+- User модель поддерживает как email/password, так и OAuth-only регистрацию
+
+### Следующие шаги
+
+**Итерация 3:** Адаптация фронтенда
+- Скопировать index.html в web/app/templates/
+- Добавить модальные окна авторизации
+- Добавить UI элементы для подписки
 
 ---
 

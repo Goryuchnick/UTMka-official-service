@@ -5,6 +5,9 @@ from flask import Flask
 from .config import Config
 from .extensions import db, jwt, migrate
 
+# Импортируем модели для Alembic
+from .models import User, OAuthAccount, Subscription, History, Template, Payment
+
 
 def create_app(config_class=Config):
     """
@@ -28,8 +31,11 @@ def create_app(config_class=Config):
     from .routes import register_blueprints
     register_blueprints(app)
     
-    # Инициализация базы данных
+    # Инициализация базы данных (только для SQLite в dev, для PostgreSQL используем миграции)
     with app.app_context():
-        db.create_all()
+        # Для SQLite в development можно использовать create_all
+        # Для production всегда используем миграции Alembic
+        if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite'):
+            db.create_all()
     
     return app
