@@ -8,6 +8,9 @@ from .extensions import db, jwt, migrate
 # Импортируем модели для Alembic
 from .models import User, OAuthAccount, Subscription, History, Template, Payment
 
+# Импортируем Flask для current_app в сервисах
+from flask import current_app
+
 
 def create_app(config_class=Config):
     """
