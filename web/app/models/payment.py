@@ -18,7 +18,7 @@ class Payment(db.Model):
     status = db.Column(db.String(50), nullable=False, index=True)  # 'pending', 'succeeded', 'failed', 'refunded'
     plan_id = db.Column(db.String(50), nullable=False)  # 'pro_monthly', 'pro_yearly'
     provider = db.Column(db.String(50), nullable=False)  # 'yookassa', 'stripe'
-    metadata = db.Column(db.JSON)  # Дополнительные данные от провайдера
+    payment_metadata = db.Column(db.JSON)  # Дополнительные данные от провайдера (переименовано из metadata, т.к. конфликт с SQLAlchemy)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -32,7 +32,7 @@ class Payment(db.Model):
             'status': self.status,
             'plan_id': self.plan_id,
             'provider': self.provider,
-            'metadata': self.metadata,
+            'metadata': self.payment_metadata,  # Возвращаем как metadata для API совместимости
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

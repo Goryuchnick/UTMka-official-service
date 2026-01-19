@@ -127,7 +127,7 @@ def upgrade() -> None:
         sa.Column('status', sa.String(length=50), nullable=False),
         sa.Column('plan_id', sa.String(length=50), nullable=False),
         sa.Column('provider', sa.String(length=50), nullable=False),
-        sa.Column('metadata', sa.JSON(), nullable=True),  # JSON для SQLite, JSONB для PostgreSQL
+        sa.Column('payment_metadata', sa.JSON(), nullable=True),  # Переименовано из metadata (конфликт с SQLAlchemy)
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
         sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
         sa.PrimaryKeyConstraint('id'),
