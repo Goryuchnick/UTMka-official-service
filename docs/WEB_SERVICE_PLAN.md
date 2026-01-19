@@ -171,10 +171,10 @@ utmKA-2.0-2/
 - [ ] Связывание OAuth с пользователем
 
 **Итерация 6:** VK OAuth
-- [ ] Регистрация приложения в VK
-- [ ] API: GET /auth/vk
-- [ ] API: GET /auth/vk/callback
-- [ ] Связывание OAuth с пользователем
+- [ ] Регистрация приложения в VK (требуется ручная настройка)
+- [x] API: GET /auth/vk
+- [x] API: GET /auth/vk/callback
+- [x] Связывание OAuth с пользователем
 
 **Итерация 7:** Google OAuth
 - [ ] Регистрация приложения в Google Cloud

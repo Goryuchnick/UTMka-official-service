@@ -397,22 +397,287 @@ _Будут добавлены после выполнения_
 
 ## Итерация 4: Email авторизация
 
-**Дата:** [Pending]  
-**Статус:** Не начата
+**Дата:** 19.01.2026  
+**Статус:** Завершена ✅
 
 ### Задачи
 
-- [ ] Создать `web/app/routes/auth.py`
-- [ ] Реализовать POST /auth/register
-- [ ] Реализовать POST /auth/login
-- [ ] Реализовать POST /auth/logout
-- [ ] Реализовать GET /auth/me
-- [ ] Настроить Flask-JWT-Extended
-- [ ] Добавить bcrypt для хеширования паролей
+- [x] Создать `web/app/routes/auth.py`
+- [x] Реализовать POST /auth/register
+- [x] Реализовать POST /auth/login
+- [x] Реализовать POST /auth/logout
+- [x] Реализовать GET /auth/me
+- [x] Настроить Flask-JWT-Extended
+- [x] Добавить bcrypt для хеширования паролей
+
+### Изменённые файлы
+
+- `web/app/routes/auth.py` — Роуты авторизации (register, login, logout, me, refresh)
+- `web/app/services/auth_service.py` — Сервис авторизации (регистрация, аутентификация)
+- `web/app/utils/decorators.py` — Декоратор @subscription_required
+
+### Реализованные функции
+
+1. **Регистрация (POST /auth/register)**
+   - Валидация email и пароля через Marshmallow
+   - Хеширование пароля через bcrypt
+   - Автоматическое создание подписки free
+   - Возврат JWT токенов после регистрации
+   - Проверка на дубликат email
+
+2. **Авторизация (POST /auth/login)**
+   - Проверка email и пароля
+   - Поддержка OAuth-only аккаунтов (сообщение об ошибке)
+   - Возврат JWT токенов (access + refresh)
+   - Информация о пользователе и подписке
+
+3. **Получение текущего пользователя (GET /auth/me)**
+   - Требует JWT токен
+   - Возвращает полную информацию о пользователе
+   - Включает информацию о подписке
+
+4. **Обновление токена (POST /auth/refresh)**
+   - Использует refresh токен
+   - Возвращает новый access токен
+   - Защищено @jwt_required(refresh=True)
+
+5. **Выход (POST /auth/logout)**
+   - Инвалидация токенов (заглушка, в будущем добавим blacklist)
 
 ### Заметки
 
-_Будут добавлены после выполнения_
+- Все эндпоинты используют валидацию через Marshmallow
+- JWT токены имеют срок действия (access: 1 час, refresh: 30 дней)
+- Пароли хешируются через werkzeug.security (bcrypt)
+- OAuth-only пользователи не могут войти через email/password
+
+### Следующие шаги
+
+**Итерация 5:** Yandex OAuth
+- Реализовать GET /auth/yandex
+- Реализовать GET /auth/yandex/callback
+- Создать сервис Yandex OAuth
+
+---
+
+## Итерация 5: Yandex OAuth
+
+**Дата:** 19.01.2026  
+**Статус:** Завершена ✅
+
+### Задачи
+
+- [x] Создать сервис Yandex OAuth (`web/app/services/oauth/yandex.py`)
+- [x] Реализовать GET /auth/yandex (редирект на Yandex)
+- [x] Реализовать GET /auth/yandex/callback (обработка callback)
+- [x] Связывание OAuth с пользователем
+- [x] Создание пользователя через OAuth
+
+### Изменённые файлы
+
+- `web/app/services/oauth/yandex.py` — Сервис Yandex OAuth
+- `web/app/services/oauth/__init__.py` — Экспорт YandexOAuth
+- `web/app/routes/auth.py` — Роуты /auth/yandex и /auth/yandex/callback
+- `web/app/config.py` — Добавлен FRONTEND_URL для OAuth редиректов
+
+### Реализованные функции
+
+1. **YandexOAuth сервис**
+   - `get_authorize_url(state)` — Генерация URL для редиректа на Yandex
+   - `exchange_code_for_token(code)` — Обмен authorization code на access token
+   - `get_user_info(access_token)` — Получение информации о пользователе
+   - `create_or_link_user()` — Создание или связывание пользователя с OAuth аккаунтом
+
+2. **Роут GET /auth/yandex**
+   - Генерация CSRF state токена
+   - Сохранение state в Flask session
+   - Редирект на страницу авторизации Yandex
+
+3. **Роут GET /auth/yandex/callback**
+   - Проверка CSRF state токена
+   - Обмен code на access token
+   - Получение информации о пользователе
+   - Создание или связывание пользователя
+   - Создание JWT токенов
+   - Возврат HTML страницы, которая устанавливает токены в localStorage
+
+### Логика работы
+
+1. Пользователь нажимает кнопку "Яндекс" на фронтенде
+2. Фронтенд редиректит на `/auth/yandex`
+3. Backend генерирует state токен и редиректит на Yandex
+4. Пользователь авторизуется на Yandex
+5. Yandex редиректит на `/auth/yandex/callback?code=...&state=...`
+6. Backend проверяет state, обменивает code на токен, получает данные пользователя
+7. Backend создаёт/связывает пользователя и возвращает HTML с токенами
+8. HTML страница устанавливает токены в localStorage и редиректит на главную
+
+### Безопасность
+
+- CSRF защита через state токен (secrets.token_urlsafe)
+- State хранится в Flask session
+- Токены передаются через HTML страницу, а не в URL
+- Проверка настроек OAuth перед использованием
+
+### Заметки
+
+- Требуется настройка переменных окружения: `YANDEX_CLIENT_ID`, `YANDEX_CLIENT_SECRET`, `YANDEX_REDIRECT_URI`
+- OAuth аккаунты автоматически связываются с существующими пользователями по email
+- Новые пользователи получают подписку free автоматически
+- Email считается верифицированным для OAuth пользователей
+
+### Следующие шаги
+
+**Итерация 6:** VK OAuth
+- Реализовать GET /auth/vk
+- Реализовать GET /auth/vk/callback
+- Создать сервис VK OAuth
+
+---
+
+## Итерация 7: Google OAuth
+
+**Дата:** 19.01.2026  
+**Статус:** Завершена ✅
+
+### Задачи
+
+- [x] Создать сервис Google OAuth (`web/app/services/oauth/google.py`)
+- [x] Реализовать GET /auth/google (редирект на Google)
+- [x] Реализовать GET /auth/google/callback
+- [x] Добавить Google OAuth в __init__.py
+- [x] Обновить ITERATION_LOG.md
+
+### Изменённые файлы
+
+- `web/app/services/oauth/google.py` — Сервис для работы с Google OAuth
+- `web/app/services/oauth/__init__.py` — Добавлен экспорт GoogleOAuth
+- `web/app/routes/auth.py` — Реализованы роуты `/auth/google` и `/auth/google/callback`
+
+### Реализованные функции
+
+1. **Сервис Google OAuth (GoogleOAuth)**
+   - `get_authorize_url(state)` — Генерация URL для редиректа на Google
+   - `exchange_code_for_token(code)` — Обмен authorization code на access token
+   - `get_user_info(access_token)` — Получение информации о пользователе через Google API
+   - `create_or_link_user()` — Создание или связывание пользователя
+
+2. **Роут GET /auth/google**
+   - Проверка конфигурации Google OAuth
+   - Генерация CSRF state токена
+   - Редирект на страницу авторизации Google с scope: `openid email profile`
+   - Запрос `access_type=offline` для получения refresh_token
+
+3. **Роут GET /auth/google/callback**
+   - Проверка CSRF state токена
+   - Обмен code на access и refresh токены
+   - Получение информации о пользователе
+   - Создание или связывание пользователя
+   - Возврат HTML страницы с установкой токенов в localStorage
+
+### Особенности Google OAuth
+
+- Использует OpenID Connect (scope: `openid email profile`)
+- Поддержка refresh_token через `access_type=offline` и `prompt=consent`
+- Google использует поле `sub` вместо `id` для идентификации пользователя
+- Email верификация через поле `verified_email`
+
+### Безопасность
+
+- CSRF защита через state токен
+- State хранится в Flask session
+- Токены передаются через HTML страницу, а не в URL
+- Проверка настроек OAuth перед использованием
+
+### Заметки
+
+- Требуется настройка переменных окружения: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+- OAuth аккаунты автоматически связываются с существующими пользователями по email
+- Новые пользователи получают подписку free автоматически
+- Email считается верифицированным для OAuth пользователей
+
+### Следующие шаги
+
+**Итерация 8:** API для истории и шаблонов
+- Реализовать GET /api/v1/history
+- Реализовать POST /api/v1/history
+- Реализовать DELETE /api/v1/history/:id
+- Реализовать GET /api/v1/templates
+- Реализовать POST /api/v1/templates
+- Реализовать DELETE /api/v1/templates/:id
+
+---
+
+## Итерация 6: VK OAuth
+
+**Дата:** 19.01.2026  
+**Статус:** Завершена ✅
+
+### Задачи
+
+- [x] Создать сервис VK OAuth (`web/app/services/oauth/vk.py`)
+- [x] Реализовать GET /auth/vk для редиректа на VK
+- [x] Реализовать GET /auth/vk/callback для обработки callback
+- [x] Связывание OAuth аккаунта с пользователем
+- [x] Обновить экспорты в `web/app/services/oauth/__init__.py`
+
+### Изменённые файлы
+
+- `web/app/services/oauth/vk.py` — Сервис для работы с VK OAuth
+- `web/app/services/oauth/__init__.py` — Добавлен экспорт VKOAuth
+- `web/app/routes/auth.py` — Реализованы роуты `/auth/vk` и `/auth/vk/callback`
+
+### Реализованные функции
+
+1. **Сервис VK OAuth (VKOAuth)**
+   - `get_authorize_url(state)` — Генерация URL для редиректа на VK
+   - `exchange_code_for_token(code)` — Обмен authorization code на access token
+   - `get_user_info(access_token, user_id)` — Получение информации о пользователе через VK API
+   - `create_or_link_user(provider_data, token_data)` — Создание или связывание пользователя
+
+2. **Роут GET /auth/vk**
+   - Проверка конфигурации VK OAuth
+   - Генерация CSRF state токена
+   - Редирект на страницу авторизации VK
+
+3. **Роут GET /auth/vk/callback**
+   - Проверка CSRF state токена
+   - Обмен authorization code на access token
+   - Получение информации о пользователе
+   - Создание/связывание пользователя
+   - Генерация JWT токенов
+   - Возврат HTML страницы для установки токенов в localStorage
+
+### Особенности VK OAuth
+
+- VK использует версию API (параметр `v=5.131`)
+- Требуется scope `email` для получения email пользователя
+- VK возвращает `user_id` в ответе на токен, а не в user info
+- User info получается через `users.get` метод VK API
+- VK может не возвращать refresh_token (зависит от настроек приложения)
+
+### Безопасность
+
+- CSRF защита через state токен
+- Проверка настроек OAuth перед использованием
+- Валидация всех данных от VK API
+
+### Заметки
+
+- Требуется настройка переменных окружения: `VK_CLIENT_ID`, `VK_CLIENT_SECRET`, `VK_REDIRECT_URI`
+- При регистрации приложения в VK необходимо указать redirect URI
+- Scope `email` обязателен для получения email пользователя
+- OAuth аккаунты автоматически связываются с существующими пользователями по email
+- Новые пользователи получают подписку free автоматически
+- Email считается верифицированным для OAuth пользователей
+
+### Следующие шаги
+
+**Итерация 7:** Google OAuth
+- Регистрация приложения в Google Cloud
+- Реализовать GET /auth/google
+- Реализовать GET /auth/google/callback
+- Создать сервис Google OAuth
 
 ---
 

@@ -60,6 +60,9 @@ class Config:
     
     # CORS
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
+    
+    # Frontend URL (для OAuth редиректов)
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5000')
 
 
 class DevelopmentConfig(Config):
