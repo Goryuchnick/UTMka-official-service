@@ -124,3 +124,5 @@ source/
 uTorrent*.dat
 "Разбивашка/"
 
+# Release notes
+RELEASE_*.md
