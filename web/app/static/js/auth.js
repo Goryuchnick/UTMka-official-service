@@ -136,7 +136,13 @@ const AuthService = {
             throw new Error(error.message || 'Ошибка регистрации');
         }
         
-        return await response.json();
+        const data = await response.json();
+        // Сохраняем токены и данные пользователя (API возвращает их при регистрации)
+        if (data.access_token && data.user) {
+            AuthUtils.setTokens(data.access_token, data.refresh_token);
+            AuthUtils.setUserData(data.user);
+        }
+        return data;
     },
     
     async logout() {

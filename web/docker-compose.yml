@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: utmka_web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://utmka_user:${DB_PASSWORD:-change_me}@db:5432/utmka_db
+      - SECRET_KEY=${SECRET_KEY:-change_me}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change_me}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5000}
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - utmka_network
+
+  db:
+    image: postgres:15-alpine
+    container_name: utmka_db
+    environment:
+      - POSTGRES_USER=utmka_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-change_me}
+      - POSTGRES_DB=utmka_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - utmka_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U utmka_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Опционально: Redis для кэширования
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: utmka_redis
+  #   restart: unless-stopped
+  #   networks:
+  #     - utmka_network
+
+volumes:
+  postgres_data:
+
+networks:
+  utmka_network:
+    driver: bridge

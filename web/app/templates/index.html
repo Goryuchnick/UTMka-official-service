@@ -1952,6 +1952,19 @@
             const allNavLinks = document.querySelectorAll('[data-target]'); // Все ссылки навигации (десктоп + мобильные)
             const views = document.querySelectorAll('[data-view]');
             function switchView(targetId) {
+                // ВСЕГДА удаляем экран авторизации при переключении вкладок
+                const authScreen = document.getElementById('auth-required-screen');
+                if (authScreen) {
+                    authScreen.remove();
+                }
+                
+                // Проверка авторизации для защищённых вкладок
+                const protectedViews = ['history', 'templates'];
+                if (protectedViews.includes(targetId) && !AuthUtils.isAuthenticated()) {
+                    showAuthRequiredScreen(targetId);
+                    return;
+                }
+                
                 views.forEach(view => view.classList.toggle('active', view.dataset.view === targetId));
                 navLinks.forEach(link => {
                     const isTarget = link.dataset.target === targetId;
@@ -1968,6 +1981,75 @@
                     link.classList.toggle('dark:text-indigo-400', isTarget);
                     link.classList.toggle('font-semibold', isTarget);
                 });
+            }
+            
+            // Функция показа экрана требования авторизации
+            function showAuthRequiredScreen(viewType) {
+                const dict = translations[currentLang] || translations.ru;
+                const viewNames = {
+                    'history': { ru: 'История', en: 'History' },
+                    'templates': { ru: 'Шаблоны', en: 'Templates' }
+                };
+                const viewDescriptions = {
+                    'history': {
+                        ru: 'Сохраняйте все ваши UTM-ссылки в одном месте. Легко находите нужные ссылки по дате или параметрам, экспортируйте в Excel.',
+                        en: 'Save all your UTM links in one place. Easily find links by date or parameters, export to Excel.'
+                    },
+                    'templates': {
+                        ru: 'Создавайте шаблоны для часто используемых UTM-параметров. Сэкономьте время и избегайте ошибок при создании ссылок.',
+                        en: 'Create templates for frequently used UTM parameters. Save time and avoid errors when creating links.'
+                    }
+                };
+                
+                const viewName = viewNames[viewType][currentLang];
+                const viewDesc = viewDescriptions[viewType][currentLang];
+                
+                // Скрываем все вкладки
+                views.forEach(view => view.classList.remove('active'));
+                
+                // Показываем экран авторизации
+                const authScreen = document.createElement('div');
+                authScreen.id = 'auth-required-screen';
+                authScreen.className = 'fade-in h-full flex flex-col items-center justify-center p-6';
+                authScreen.innerHTML = `
+                    <div class="glass-card max-w-md w-full p-8 rounded-3xl text-center space-y-6">
+                        <div class="inline-flex p-4 bg-indigo-500/10 rounded-2xl">
+                            <i data-lucide="${viewType === 'history' ? 'clock' : 'layers'}" class="w-12 h-12 text-indigo-600 dark:text-indigo-400"></i>
+                        </div>
+                        <div class="space-y-3">
+                            <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">${viewName}</h2>
+                            <p class="text-slate-600 dark:text-slate-400">${viewDesc}</p>
+                        </div>
+                        <div class="pt-4 space-y-3">
+                            <button onclick="document.getElementById('show-register-modal')?.click()" 
+                                class="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="user-plus" class="w-5 h-5"></i>
+                                ${currentLang === 'ru' ? 'Зарегистрироваться бесплатно' : 'Sign up for free'}
+                            </button>
+                            <button onclick="document.getElementById('show-login-modal')?.click()" 
+                                class="w-full px-6 py-3 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-medium transition-colors">
+                                ${currentLang === 'ru' ? 'Уже есть аккаунт? Войти' : 'Already have an account? Sign in'}
+                            </button>
+                        </div>
+                        <button onclick="switchView('generator')" 
+                            class="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+                            ${currentLang === 'ru' ? '← Вернуться к генератору' : '← Back to generator'}
+                        </button>
+                    </div>
+                `;
+                
+                // Удаляем старый экран, если есть
+                const oldScreen = document.getElementById('auth-required-screen');
+                if (oldScreen) oldScreen.remove();
+                
+                // Добавляем новый экран
+                const mainContent = document.getElementById('main-content');
+                if (mainContent) {
+                    mainContent.appendChild(authScreen);
+                    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                        lucide.createIcons();
+                    }
+                }
             }
             // Обработчик для всех ссылок навигации (десктоп и мобильные)
             allNavLinks.forEach(link => {
@@ -4006,6 +4088,9 @@
                 
                 try {
                     const user = await AuthService.login(email, password);
+                    // Удаляем экран требования авторизации, если он есть
+                    const authScreen = document.getElementById('auth-required-screen');
+                    if (authScreen) authScreen.remove();
                     hideModal(loginModal);
                     window.location.reload();
                 } catch (error) {
@@ -4024,13 +4109,17 @@
                 
                 try {
                     await AuthService.register(email, password, name);
-                    errorDiv.textContent = 'Регистрация успешна! Проверьте email для подтверждения.';
-                    errorDiv.classList.remove('hidden');
-                    errorDiv.classList.remove('text-red-600', 'dark:text-red-400');
-                    errorDiv.classList.add('text-green-600', 'dark:text-green-400');
+                    
+                    // Удаляем экран требования авторизации, если он есть
+                    const authScreen = document.getElementById('auth-required-screen');
+                    if (authScreen) authScreen.remove();
+                    hideModal(registerModal);
+                    window.location.reload();
                 } catch (error) {
                     errorDiv.textContent = error.message;
                     errorDiv.classList.remove('hidden');
+                    errorDiv.classList.remove('text-green-600', 'dark:text-green-400');
+                    errorDiv.classList.add('text-red-600', 'dark:text-red-400');
                 }
             });
             
@@ -4052,13 +4141,20 @@
                     if (userEmail) userEmail.textContent = user.email;
                     
                     // Update subscription badge
-                    const subscription = await AuthService.getSubscriptionStatus();
-                    const badge = document.getElementById('subscription-badge');
-                    if (subscription && subscription.is_active) {
-                        badge?.classList.remove('hidden');
-                        badge.textContent = subscription.plan === 'pro' ? 'Pro' : 'Trial';
-                    } else {
-                        badge?.classList.add('hidden');
+                    try {
+                        const subscription = await AuthService.getSubscriptionStatus();
+                        const badge = document.getElementById('subscription-badge');
+                        if (badge && subscription) {
+                            badge.classList.remove('hidden');
+                            const planMap = {
+                                'pro': 'Pro',
+                                'trial': 'Trial',
+                                'free': 'Free'
+                            };
+                            badge.textContent = planMap[subscription.plan] || 'Free';
+                        }
+                    } catch (e) {
+                        console.error('Error getting subscription status:', e);
                     }
                 } else {
                     authButtons?.classList.remove('hidden');
@@ -4066,15 +4162,43 @@
                 }
             }
             
-            // Initialize auth UI
-            if (AuthUtils.isAuthenticated()) {
-                AuthService.getCurrentUser().then(() => updateAuthUI());
+            // Initialize auth UI after DOM is ready
+            function initAuthUI() {
+                if (AuthUtils.isAuthenticated()) {
+                    // Загружаем данные пользователя и обновляем UI
+                    AuthService.getCurrentUser()
+                        .then((user) => {
+                            if (user) {
+                                updateAuthUI();
+                            } else {
+                                // Токен невалидный, очищаем
+                                AuthUtils.clearTokens();
+                                updateAuthUI();
+                            }
+                        })
+                        .catch((e) => {
+                            console.error('Error loading user:', e);
+                            AuthUtils.clearTokens();
+                            updateAuthUI();
+                        });
+                } else {
+                    updateAuthUI();
+                }
+            }
+            
+            // Вызываем после загрузки DOM
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initAuthUI);
             } else {
-                updateAuthUI();
+                // DOM уже загружен
+                initAuthUI();
             }
             
             // Export function to show subscription modal
             window.showSubscriptionModal = () => showModal(subscriptionModal);
+            
+            // Export showAuthRequiredScreen globally
+            window.showAuthRequiredScreen = showAuthRequiredScreen;
         })();
     </script>
 </body>
