@@ -48,209 +48,7 @@
             }
         }
     </script>
-    <style>
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(156, 163, 175, 0.5);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(156, 163, 175, 0.8);
-        }
-
-        /* Glassmorphism Utilities */
-        .glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
-        }
-
-        .dark .glass {
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(226, 232, 240, 0.9);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
-        }
-
-        .dark .glass-card {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .glass-input {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(203, 213, 225, 0.8);
-            backdrop-filter: blur(4px);
-        }
-
-        .glass-input:focus {
-            background: rgba(255, 255, 255, 1);
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-            outline: none;
-        }
-
-        .dark .glass-input {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(71, 85, 105, 0.6);
-            color: white;
-        }
-
-        .dark .glass-input:focus {
-            background: rgba(30, 41, 59, 0.8);
-            border-color: #818cf8;
-            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
-        }
-
-        /* Animations */
-        @keyframes float {
-            0% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
-
-            100% {
-                transform: translateY(0px);
-            }
-        }
-
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* View Management */
-        [data-view]:not(.active) {
-            display: none !important;
-        }
-
-        [data-view].active {
-            display: flex !important;
-        }
-
-        /* Interactive Elements */
-        .btn-hover-effect {
-            transition: all 0.2s;
-        }
-
-        .btn-hover-effect:active {
-            transform: scale(0.98);
-        }
-
-        .nav-link {
-            position: relative;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: #6366f1;
-            transition: all 0.3s;
-            transform: translateX(-50%);
-        }
-
-        .nav-link.active::after {
-            width: 80%;
-        }
-
-        /* View mode buttons active state */
-        .history-view-btn.active,
-        .templates-view-btn.active {
-            background-color: white;
-            color: #6366f1;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .dark .history-view-btn.active,
-        .dark .templates-view-btn.active {
-            background-color: #334155;
-            color: #818cf8;
-        }
-
-        .nav-link:hover::after {
-            width: 80%;
-        }
-
-        /* Color Dot Selection */
-        .color-dot {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: transform 0.2s;
-        }
-
-        .color-dot:hover {
-            transform: scale(1.1);
-        }
-
-        .color-dot.selected {
-            border-color: #6366f1;
-            transform: scale(1.15);
-        }
-
-        /* Loader */
-        .loader-spinner {
-            border: 3px solid rgba(99, 102, 241, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid #6366f1;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="web/app/static/css/style.css">
 </head>
 
 <body
@@ -258,12 +56,9 @@
 
     <!-- Background Ambiance -->
     <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/20 rounded-full blur-[100px] animate-float"
-            style="animation-delay: 0s;"></div>
-        <div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px] animate-float"
-            style="animation-delay: -2s;"></div>
-        <div class="absolute top-[40%] left-[40%] w-[30%] h-[30%] bg-cyan-500/10 rounded-full blur-[80px] animate-float"
-            style="animation-delay: -4s;"></div>
+        <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/20 rounded-full blur-[100px] animate-float delay-0"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px] animate-float delay-neg-2"></div>
+        <div class="absolute top-[40%] left-[40%] w-[30%] h-[30%] bg-cyan-500/10 rounded-full blur-[80px] animate-float delay-neg-4"></div>
     </div>
 
     <div id="app" class="relative z-10 flex flex-col h-full">
@@ -315,7 +110,7 @@
                             <span id="lang-toggle-label">RU</span>
                         </button>
                         <!-- Theme Toggle -->
-                        <button id="theme-toggle"
+                        <button id="theme-toggle" aria-label="Toggle theme"
                             class="p-2.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors text-slate-500 dark:text-slate-400">
                             <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
                             <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
@@ -403,7 +198,7 @@
                                             <div class="relative">
                                                 <input type="text" id="utm_campaign" placeholder="summer_sale"
                                                     class="glass-input w-full px-4 py-2.5 rounded-xl text-sm transition-all pr-10">
-                                                <button type="button"
+                                                <button type="button" aria-label="Select date"
                                                     class="date-picker-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-indigo-500 transition-colors">
                                                     <i data-lucide="calendar" class="w-4 h-4"></i>
                                                 </button>
@@ -415,7 +210,7 @@
                                             <div class="relative">
                                                 <input type="text" id="utm_content" placeholder="link_bottom"
                                                     class="glass-input w-full px-4 py-2.5 rounded-xl text-sm transition-all pr-10">
-                                                <button type="button"
+                                                <button type="button" aria-label="Select date"
                                                     class="date-picker-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-indigo-500 transition-colors">
                                                     <i data-lucide="calendar" class="w-4 h-4"></i>
                                                 </button>
@@ -428,7 +223,7 @@
                                             <div class="relative">
                                                 <input type="text" id="utm_term" placeholder="running shoes"
                                                     class="glass-input w-full px-4 py-2.5 rounded-xl text-sm transition-all pr-10">
-                                                <button type="button"
+                                                <button type="button" aria-label="Select date"
                                                     class="date-picker-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-indigo-500 transition-colors">
                                                     <i data-lucide="calendar" class="w-4 h-4"></i>
                                                 </button>
@@ -442,7 +237,7 @@
                                             <i data-lucide="zap" class="w-4 h-4"></i>
                                             <span id="generateBtn">Создать UTM‑ссылку</span>
                                         </button>
-                                        <button type="button" id="clearFormButton"
+                                        <button type="button" id="clearFormButton" title="Очистить форму"
                                             class="px-4 py-3 rounded-xl glass-input text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium flex items-center justify-center">
                                             <i data-lucide="eraser" class="w-5 h-5"></i>
                                         </button>
@@ -459,7 +254,7 @@
                                 </h3>
 
                                 <div class="relative group">
-                                    <textarea id="resultUrl" readonly
+                                    <textarea id="resultUrl" readonly aria-label="Generated URL"
                                         class="w-full h-28 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-sm font-mono text-slate-800 dark:text-slate-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 selection:bg-indigo-500/40"></textarea>
                                     <button id="copyButton" title="Копировать"
                                         class="absolute top-3 right-3 p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-indigo-600 transition-colors btn-hover-effect">
@@ -517,20 +312,20 @@
                                 <div class="relative flex-grow md:flex-grow-0 md:w-64">
                                     <i data-lucide="search"
                                         class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                                    <input type="search" id="historySearch" placeholder="Поиск..."
+                                    <input type="search" id="historySearch" placeholder="Поиск..." aria-label="Search history"
                                         class="glass-input pl-9 pr-4 py-2 rounded-xl text-sm w-full">
                                 </div>
-                                <input type="text" id="historyDateRange" placeholder="Дата"
+                                <input type="text" id="historyDateRange" placeholder="Дата" aria-label="Filter by date"
                                     class="glass-input px-3 py-2 rounded-xl text-sm w-32 text-center">
 
                                 <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                                    <button data-view-mode="list"
+                                    <button data-view-mode="list" aria-label="List view"
                                         class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all"><i
                                             data-lucide="list" class="w-4 h-4"></i></button>
-                                    <button data-view-mode="grid"
+                                    <button data-view-mode="grid" aria-label="Grid view"
                                         class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all"><i
                                             data-lucide="layout-grid" class="w-4 h-4"></i></button>
-                                    <button data-view-mode="table"
+                                    <button data-view-mode="table" aria-label="Table view"
                                         class="history-view-btn p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition-all active"><i
                                             data-lucide="table" class="w-4 h-4"></i></button>
                                 </div>
@@ -548,7 +343,7 @@
                             <button id="exportHistoryCsvBtn"
                                 class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap border border-slate-200 dark:border-slate-700"><i
                                     data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV</button>
-                            <input type="file" id="importHistoryFileInput" class="hidden" accept=".json,.csv">
+                            <input type="file" id="importHistoryFileInput" class="hidden" accept=".json,.csv" aria-label="Import history file">
                         </div>
 
                         <div id="historyContainer" class="w-full flex-grow overflow-y-auto px-1 pr-3 custom-scrollbar">
@@ -640,7 +435,7 @@
                                     <button id="exportCsvBtn"
                                         class="px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><i
                                             data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV</button>
-                                    <input type="file" id="importFileInput" class="hidden" accept=".json,.csv">
+                                    <input type="file" id="importFileInput" class="hidden" accept=".json,.csv" aria-label="Import templates file">
                                 </div>
 
                                 <div id="templatesContainer"
@@ -671,17 +466,17 @@
                                     <span id="helpOnboardingBtn">Пройти обучение</span>
                                 </button>
                                 <div class="space-y-2">
-                                    <a href="https://t.me/pronin_marketing" target="_blank"
+                                    <a href="https://t.me/pronin_marketing" target="_blank" rel="noopener noreferrer"
                                         class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium border border-slate-200 dark:border-slate-700">
                                         <i data-lucide="send" class="w-5 h-5"></i>
                                         <span id="helpTelegramBtn">Telegram канал</span>
                                     </a>
-                                    <a href="https://alex-pronin.ru/projects/utmka" target="_blank"
+                                    <a href="https://alex-pronin.ru/projects/utmka" target="_blank" rel="noopener noreferrer"
                                         class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium border border-slate-200 dark:border-slate-700">
                                         <i data-lucide="globe" class="w-5 h-5"></i>
                                         <span id="helpWebsiteBtn">Сайт проекта</span>
                                     </a>
-                                    <a href="https://github.com/Goryuchnick/utmKA-2.0/issues" target="_blank"
+                                    <a href="https://github.com/Goryuchnick/utmKA-2.0/issues" target="_blank" rel="noopener noreferrer"
                                         class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 font-medium border border-slate-200 dark:border-slate-700">
                                         <i data-lucide="github" class="w-5 h-5"></i>
                                         <span id="helpGithubBtn">GitHub Issues</span>
@@ -700,12 +495,12 @@
                     <div class="flex items-center gap-4">
                         <span>Подпишись на полезное</span>
                         <span class="hidden sm:inline text-slate-300 dark:text-slate-700">|</span>
-                        <a href="https://t.me/pronin_marketing" target="_blank"
+                        <a href="https://t.me/pronin_marketing" target="_blank" rel="noopener noreferrer"
                             class="hover:text-indigo-500 transition-colors flex items-center gap-1">
                             <i data-lucide="send" class="w-3 h-3"></i> Telegram
                         </a>
                     </div>
-                    <a href="https://alex-pronin.ru" target="_blank"
+                    <a href="https://alex-pronin.ru" target="_blank" rel="noopener noreferrer"
                         class="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded hover:bg-indigo-100 transition-colors">alex-pronin.ru</a>
                 </div>
             </footer>
@@ -795,7 +590,7 @@
                 <h3 class="text-xl font-bold dark:text-white">Детали ссылки</h3>
             </div>
             <div class="p-6">
-                <textarea id="fullUrlText" readonly
+                <textarea id="fullUrlText" readonly aria-label="Full URL"
                     class="w-full text-sm font-mono p-4 rounded-xl bg-slate-50 dark:bg-[#0B1120] border border-slate-200 dark:border-white/10 h-32 resize-y focus:ring-2 focus:ring-indigo-500/50 outline-none"></textarea>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-[#0B1120]/50 flex flex-wrap justify-between gap-3 rounded-b-lg">
@@ -831,7 +626,7 @@
                 <h3 class="text-lg font-bold">Все шаблоны</h3>
             </div>
             <div class="p-4">
-                <input type="search" id="modalTemplateSearch" placeholder="Поиск..."
+                <input type="search" id="modalTemplateSearch" placeholder="Поиск..." aria-label="Search templates"
                     class="glass-input w-full px-4 py-2 rounded-xl text-sm">
             </div>
             <div id="modalTemplatesList" class="flex-grow overflow-y-auto px-4 pb-4 space-y-2 custom-scrollbar">
@@ -851,11 +646,11 @@
             <div class="p-6">
                 <h3 class="text-xl font-bold mb-4">Сохранить как шаблон</h3>
                 <div class="space-y-4">
-                    <input type="text" id="newTemplateNameInput" placeholder="Название шаблона *" required
+                    <input type="text" id="newTemplateNameInput" placeholder="Название шаблона *" required aria-label="Template Name"
                         class="glass-input w-full px-4 py-2.5 rounded-xl text-sm">
 
                     <div class="bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-xl">
-                        <input type="text" id="newTemplateTagNameInput" placeholder="Тег (опционально)"
+                        <input type="text" id="newTemplateTagNameInput" placeholder="Тег (опционально)" aria-label="Tag Name"
                             class="glass-input w-full px-3 py-2 rounded-lg text-sm mb-2">
                         <input type="hidden" id="newTemplateTagColorInput">
                         <div id="newTemplateColorPalette" class="flex flex-wrap gap-2"></div>
@@ -1000,10 +795,30 @@
             const themeToggle = document.getElementById('theme-toggle');
             const htmlEl = document.documentElement;
             const savedTheme = localStorage.getItem('theme') || 'dark';
-            htmlEl.classList.toggle('dark', savedTheme === 'dark');
+            
+            // Применяем тему при загрузке
+            if (savedTheme === 'dark') {
+                htmlEl.classList.add('dark');
+            } else {
+                htmlEl.classList.remove('dark');
+            }
+            
             themeToggle.addEventListener('click', () => {
-                htmlEl.classList.toggle('dark');
-                localStorage.setItem('theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
+                const isDark = htmlEl.classList.contains('dark');
+                if (isDark) {
+                    htmlEl.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    htmlEl.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+                
+                // Перерисовываем данные для обновления темных классов
+                setTimeout(() => {
+                    if (typeof renderHistory === 'function') renderHistory();
+                    if (typeof renderTemplates === 'function') renderTemplates();
+                    if (typeof renderRecentTemplates === 'function') renderRecentTemplates();
+                }, 100);
             });
 
             // --- I18n (RU / EN) ---
@@ -1931,6 +1746,22 @@
                     link.classList.toggle('dark:text-indigo-400', isTarget);
                     link.classList.toggle('font-semibold', isTarget);
                 });
+                
+                // Перерисовываем данные при переключении вкладок
+                if (targetId === 'templates' && typeof renderTemplates === 'function') {
+                    // Небольшая задержка для гарантии, что DOM обновлен
+                    setTimeout(() => {
+                        renderTemplates();
+                    }, 50);
+                } else if (targetId === 'history' && typeof renderHistory === 'function') {
+                    setTimeout(() => {
+                        renderHistory();
+                    }, 50);
+                } else if (targetId === 'generator' && typeof renderRecentTemplates === 'function') {
+                    setTimeout(() => {
+                        renderRecentTemplates();
+                    }, 50);
+                }
             }
             // Обработчик для всех ссылок навигации (десктоп и мобильные)
             allNavLinks.forEach(link => {
@@ -1950,8 +1781,21 @@
                         return;
                     }
                     
+                    // Убеждаемся, что viewMode установлены перед загрузкой данных
+                    if (!state.templatesViewMode) {
+                        state.templatesViewMode = localStorage.getItem('utmka_templatesViewMode') || 'table';
+                    }
+                    if (!state.historyViewMode) {
+                        state.historyViewMode = localStorage.getItem('utmka_historyViewMode') || 'table';
+                    }
+                    
                     await fetchData();
                     renderAll();
+                    
+                    // Дополнительная перерисовка после небольшой задержки для гарантии
+                    setTimeout(() => {
+                        renderAll();
+                    }, 200);
                     
                     // Инициализация палитры цветов
                     try {
@@ -2386,6 +2230,13 @@
             const recentTemplatesContainer = document.getElementById('recentTemplatesContainer');
             function renderRecentTemplates() {
                 const container = recentTemplatesContainer;
+                
+                // Проверяем, что контейнер существует
+                if (!container) {
+                    console.warn('recentTemplatesContainer not found');
+                    return;
+                }
+                
                 container.innerHTML = ''; // Очищаем контейнер
 
                 // Сортируем шаблоны, чтобы последние добавленные были первыми
@@ -2818,9 +2669,24 @@
             }
             const historyContainer = document.getElementById('historyContainer');
             function renderHistory() {
+                // Проверяем, что контейнер существует
+                if (!historyContainer) {
+                    console.warn('historyContainer not found');
+                    return;
+                }
+                
+                // Убеждаемся, что viewMode установлен
+                if (!state.historyViewMode) {
+                    state.historyViewMode = localStorage.getItem('utmka_historyViewMode') || 'table';
+                }
+                
                 const items = applyFiltersAndSorting(state.history, state.historySearch, state.historySort, state.historyDateRange, state.historySortColumn, state.historySortDirection);
                 const dict = translations[currentLang] || translations.ru;
-                if (items.length === 0) { historyContainer.innerHTML = `<p class="text-center py-10 text-slate-500">${dict.nothing_found || 'Ничего не найдено.'}</p>`; return; }
+                if (items.length === 0) { 
+                    historyContainer.innerHTML = `<p class="text-center py-10 text-slate-500">${dict.nothing_found || 'Ничего не найдено.'}</p>`; 
+                    lucide.createIcons();
+                    return; 
+                }
                 if (state.historyViewMode === 'table') {
                     const getSortIcon = (column) => {
                         if (state.historySortColumn !== column) return '';
@@ -2839,11 +2705,23 @@
             }
             const templatesContainer = document.getElementById('templatesContainer');
             function renderTemplates() {
+                // Проверяем, что контейнер существует
+                if (!templatesContainer) {
+                    console.warn('templatesContainer not found');
+                    return;
+                }
+                
+                // Убеждаемся, что viewMode установлен
+                if (!state.templatesViewMode) {
+                    state.templatesViewMode = localStorage.getItem('utmka_templatesViewMode') || 'table';
+                }
+                
                 const items = applyFiltersAndSorting(state.templates, state.templatesSearch, state.templatesSort, null, state.templatesSortColumn, state.templatesSortDirection);
                 const dict = translations[currentLang] || translations.ru;
 
                 if (items.length === 0) {
                     templatesContainer.innerHTML = `<p class="text-center py-10 text-slate-500">${dict.nothing_found || 'Ничего не найдено.'}</p>`;
+                    lucide.createIcons();
                     return;
                 }
 
