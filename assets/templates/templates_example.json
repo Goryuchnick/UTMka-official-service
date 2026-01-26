@@ -1,0 +1,112 @@
+[
+  {
+    "name": "ВКонтакте - Автоматический",
+    "utm_source": "vkontakte",
+    "utm_medium": "cpc",
+    "utm_campaign": "{campaign_id}",
+    "utm_content": "{ad_id}",
+    "utm_term": "free, -30%, registration",
+    "tag_name": "Социальные сети",
+    "tag_color": "#3b82f6"
+  },
+  {
+    "name": "Яндекс.Директ - Динамический",
+    "utm_source": "yandex",
+    "utm_medium": "cpc",
+    "utm_campaign": "{campaign_id}",
+    "utm_content": "{ad_id}",
+    "utm_term": "{keyword}",
+    "tag_name": "Контекстная реклама",
+    "tag_color": "#ef4444"
+  },
+  {
+    "name": "Google Ads - Динамический",
+    "utm_source": "google",
+    "utm_medium": "cpc",
+    "utm_campaign": "{network}",
+    "utm_content": "{creative}",
+    "utm_term": "{keyword}",
+    "tag_name": "Контекстная реклама",
+    "tag_color": "#ef4444"
+  },
+  {
+    "name": "TikTok Ads - Видео",
+    "utm_source": "tiktok",
+    "utm_medium": "video",
+    "utm_campaign": "{campaign_id}",
+    "utm_content": "{ad_id}",
+    "utm_term": "{creative_id}",
+    "tag_name": "Социальные сети",
+    "tag_color": "#3b82f6"
+  },
+  {
+    "name": "Telegram Ads - Официальный",
+    "utm_source": "telegram",
+    "utm_medium": "cpc",
+    "utm_campaign": "{channel_id}",
+    "utm_content": "ad_variant",
+    "utm_term": "-",
+    "tag_name": "Мессенджеры",
+    "tag_color": "#3b82f6"
+  },
+  {
+    "name": "MyTarget - Мультиформат",
+    "utm_source": "mytarget",
+    "utm_medium": "cpc",
+    "utm_campaign": "{{campaign_id}}",
+    "utm_content": "{{banner_id}}",
+    "utm_term": "{{keyword}}",
+    "tag_name": "Социальные сети",
+    "tag_color": "#3b82f6"
+  },
+  {
+    "name": "Офлайн - QR-код на баннере",
+    "utm_source": "offline",
+    "utm_medium": "qr_code",
+    "utm_campaign": "summer_promo",
+    "utm_content": "city_center",
+    "utm_term": "-",
+    "tag_name": "Офлайн",
+    "tag_color": "#10b981"
+  },
+  {
+    "name": "Офлайн - Листовки",
+    "utm_source": "offline",
+    "utm_medium": "flyer",
+    "utm_campaign": "district_promo",
+    "utm_content": "promo_code_march",
+    "utm_term": "-",
+    "tag_name": "Офлайн",
+    "tag_color": "#10b981"
+  },
+  {
+    "name": "Радио - Промокод",
+    "utm_source": "radio",
+    "utm_medium": "audio",
+    "utm_campaign": "energy_fm",
+    "utm_content": "morning_show",
+    "utm_term": "code_word",
+    "tag_name": "Офлайн",
+    "tag_color": "#10b981"
+  },
+  {
+    "name": "CPA Сети - Партнеры",
+    "utm_source": "cpa_network",
+    "utm_medium": "affiliate",
+    "utm_campaign": "{partner_id}",
+    "utm_content": "{click_id}",
+    "utm_term": "-",
+    "tag_name": "Партнеры",
+    "tag_color": "#f59e0b"
+  },
+  {
+    "name": "Инфлюенсеры - YouTube Обзор",
+    "utm_source": "youtube",
+    "utm_medium": "video",
+    "utm_campaign": "blogger_name",
+    "utm_content": "integration_1",
+    "utm_term": "promo_link",
+    "tag_name": "Видео",
+    "tag_color": "#f59e0b"
+  }
+]

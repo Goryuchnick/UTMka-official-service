@@ -1,0 +1,12 @@
+name,utm_source,utm_medium,utm_campaign,utm_content,utm_term,tag_name,tag_color
+ВКонтакте - Автоматический,vkontakte,cpc,{campaign_id},{ad_id},"free, -30%, registration",Социальные сети,#3b82f6
+Яндекс.Директ - Динамический,yandex,cpc,{campaign_id},{ad_id},{keyword},Контекстная реклама,#ef4444
+Google Ads - Динамический,google,cpc,{network},{creative},{keyword},Контекстная реклама,#ef4444
+TikTok Ads - Видео,tiktok,video,{campaign_id},{ad_id},{creative_id},Социальные сети,#3b82f6
+Telegram Ads - Официальный,telegram,cpc,{channel_id},ad_variant,-,Мессенджеры,#3b82f6
+MyTarget - Мультиформат,mytarget,cpc,{{campaign_id}},{{banner_id}},{{keyword}},Социальные сети,#3b82f6
+Офлайн - QR-код на баннере,offline,qr_code,summer_promo,city_center,-,Офлайн,#10b981
+Офлайн - Листовки,offline,flyer,district_promo,promo_code_march,-,Офлайн,#10b981
+Радио - Промокод,radio,audio,energy_fm,morning_show,code_word,Офлайн,#10b981
+CPA Сети - Партнеры,cpa_network,affiliate,{partner_id},{click_id},-,Партнеры,#f59e0b
+Инфлюенсеры - YouTube Обзор,youtube,video,blogger_name,integration_1,promo_link,Видео,#f59e0b
