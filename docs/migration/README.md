@@ -16,7 +16,7 @@
 |------|----------|--------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Целевая архитектура | ✅ Актуально |
 | [STEP_1_RESTRUCTURE.md](STEP_1_RESTRUCTURE.md) | Этап 1: Структура папок | ✅ Выполнено |
-| [STEP_1B_SQLALCHEMY.md](STEP_1B_SQLALCHEMY.md) | Этап 1B: SQLAlchemy интеграция | 🔴 **В работе** |
+| [STEP_1B_SQLALCHEMY.md](STEP_1B_SQLALCHEMY.md) | Этап 1B: SQLAlchemy интеграция | ✅ Выполнено |
 | [STEP_1C_WEB_READY.md](STEP_1C_WEB_READY.md) | Этап 1C: Подготовка к Web | ⏳ Ожидает |
 | [STEP_2_FRONTEND.md](STEP_2_FRONTEND.md) | Этап 2: Разбиение frontend | ⏳ Ожидает |
 | [STEP_3_WINDOWS_INSTALLER.md](STEP_3_WINDOWS_INSTALLER.md) | Этап 3: Windows установщик | ⏳ Ожидает |
@@ -33,7 +33,7 @@
 ═══════════════════════════════════════════════════════════════
 STEP_1 ──► STEP_1B ──► STEP_1C ──► STEP_2 ──► STEP_3 ──► STEP_4
 структура  SQLAlchemy  Web-ready   frontend   Windows    macOS
-   ✅         🔴          ⏳          ⏳         ⏳         ⏳
+   ✅         ✅          ⏳          ⏳         ⏳         ⏳
 
 ФАЗА 2: WEB (будущее)
 ═══════════════════════════════════════════════════════════════
@@ -79,20 +79,22 @@ STEP_5 ──► OAuth ──► Subscriptions ──► Deploy
   - `src/api/` — Flask blueprints
   - `src/desktop/` — pywebview wrapper
   - `assets/`, `frontend/`, `installers/`, `tests/`
-
-### 🔴 Критические проблемы (STEP_1B)
-
-- [ ] Routes используют raw sqlite3 вместо SQLAlchemy
-- [ ] Путь к БД: рядом с exe вместо AppData
-- [ ] SQLAlchemy не инициализирован с Flask
-- [ ] Дублирование функций в routes
+- [x] **STEP_1B:** SQLAlchemy интеграция
+  - Routes переписаны на SQLAlchemy ORM
+  - Пути к БД исправлены (dev: текущая директория, prod: AppData)
+  - SQLAlchemy инициализирован с Flask
+  - Удалены дублирующиеся функции из routes
 
 ### ⏳ Ожидает (STEP_1C)
 
-- [ ] Модели: user_id FK вместо user_email
-- [ ] OAuth поля: google_id, yandex_id
-- [ ] Модель Subscription
-- [ ] WebConfig для PostgreSQL
+- [ ] Расширить User модель: OAuth поля (google_id, yandex_id)
+- [ ] Добавить модель Subscription
+- [ ] Создать WebConfig для PostgreSQL
+- [ ] Создать ProductionConfig
+- [ ] Добавить auth.py routes (заготовка)
+- [ ] Обновить create_app() для web/production конфигов
+
+**Примечание:** Миграция user_email → user_id откладывается до запуска Web-версии
 
 ### ⏳ Будущие этапы
 
@@ -122,13 +124,13 @@ STEP_5 ──► OAuth ──► Subscriptions ──► Deploy
 Проект: UTMka — генератор UTM-ссылок
 Цель: Кроссплатформенное приложение (Desktop + Web)
 
-Текущий этап: STEP_1B — SQLAlchemy интеграция
+Текущий этап: STEP_1C — Подготовка к Web версии
 
 Критические файлы:
-- docs/migration/STEP_1B_SQLALCHEMY.md — инструкции
-- src/core/models.py — модели БД
-- src/api/routes/*.py — нужно переписать на SQLAlchemy
-- src/api/__init__.py — добавить db.init_app()
+- docs/migration/STEP_1C_WEB_READY.md — инструкции
+- src/core/models.py — расширить User модель (OAuth поля)
+- src/core/config.py — добавить WebConfig для PostgreSQL
+- src/api/routes/auth.py — создать заготовку для OAuth
 
 Долгосрочные цели:
 1. Desktop: Windows + macOS, SQLite, pywebview
@@ -136,6 +138,8 @@ STEP_5 ──► OAuth ──► Subscriptions ──► Deploy
 3. Максимальное быстродействие
 
 Ограничения:
+- Desktop версия продолжает использовать user_email
+- Web версия будет использовать user_id (миграция позже)
 - Не ломать совместимость с текущей БД
 - Поэтапная миграция
 ```

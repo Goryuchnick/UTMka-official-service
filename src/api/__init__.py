@@ -6,6 +6,7 @@ import sys
 from flask import Flask
 
 from src.core.config import Config, DesktopConfig, DevelopmentConfig
+from src.core.models import db
 
 
 def get_resource_path(relative_path: str) -> str:
@@ -45,6 +46,12 @@ def create_app(config_name: str = 'development') -> Flask:
         'default': Config
     }
     app.config.from_object(configs.get(config_name, Config))
+    
+    # Инициализируем SQLAlchemy
+    db.init_app(app)
+    
+    with app.app_context():
+        db.create_all()
     
     # Регистрируем blueprints
     from src.api.routes.main import main_bp
