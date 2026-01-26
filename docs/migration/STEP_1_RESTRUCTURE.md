@@ -1,5 +1,7 @@
 # Этап 1: Реструктуризация папок
 
+## Статус: ✅ ЗАВЕРШЁН (2026-01-26)
+
 ## Цель
 
 Создать новую структуру папок и перенести существующий код без изменения логики.
@@ -426,5 +428,17 @@ mv templates_example*.csv assets/templates/
 
 ### Что осталось:
 
-- Тестирование запуска через `python -m src.desktop.main` (требует установки pywebview)
+- ⏳ Тестирование запуска через `python -m src.desktop.main` (требует установки pywebview)
 - Оригинальный `app.py` и `index.html` пока не удалены (работают как fallback)
+
+---
+
+## ➡️ Следующий этап: STEP_1B
+
+**Файл:** [STEP_1B_SQLALCHEMY.md](STEP_1B_SQLALCHEMY.md)
+
+**Задачи:**
+1. Добавить `db.init_app()` в `src/api/__init__.py`
+2. Переписать routes на SQLAlchemy ORM
+3. Исправить пути к БД (dev vs prod)
+4. Убрать дублирование функций из routes
