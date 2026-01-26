@@ -164,3 +164,173 @@ C:\Users\<user>\AppData\Roaming\UTMka\
 | Данные | Рядом с exe (теряются) | В AppData (сохраняются) |
 | Обновление | Полная переустановка | Только exe, данные целы |
 | Тестирование | Невозможно | Unit тесты |
+
+---
+
+## Desktop vs Web архитектура
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      src/core/                              │
+│              (ОБЩАЯ бизнес-логика)                          │
+│                                                             │
+│  ┌───────────┐  ┌───────────┐  ┌───────────┐               │
+│  │ models.py │  │services.py│  │ config.py │               │
+│  │           │  │           │  │           │               │
+│  │ - User    │  │ - UTM     │  │ - Desktop │               │
+│  │ - History │  │   Service │  │ - Web     │               │
+│  │ - Template│  │           │  │ - Dev     │               │
+│  │ - Sub*    │  │           │  │           │               │
+│  └───────────┘  └───────────┘  └───────────┘               │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+         ┌────────────┴────────────┐
+         │                         │
+         ▼                         ▼
+┌─────────────────┐       ┌─────────────────┐
+│    DESKTOP      │       │      WEB        │
+│                 │       │                 │
+│ DesktopConfig   │       │ WebConfig       │
+│ SQLite (local)  │       │ PostgreSQL      │
+│ user_email      │       │ user_id + FK    │
+│ No auth         │       │ OAuth + JWT     │
+│ Free forever    │       │ Subscriptions   │
+│ pywebview       │       │ gunicorn        │
+│                 │       │                 │
+│ Windows + macOS │       │ Cloud hosted    │
+└─────────────────┘       └─────────────────┘
+```
+
+### Конфигурации:
+
+| Конфиг | База данных | Auth | Подписки |
+|--------|-------------|------|----------|
+| `DesktopConfig` | SQLite (AppData) | email string | Нет |
+| `DevelopmentConfig` | SQLite (./utm_data.db) | email string | Нет |
+| `WebConfig` | PostgreSQL | OAuth + JWT | Да |
+| `ProductionConfig` | PostgreSQL (pool) | OAuth + JWT | Да |
+
+### Один код — разные режимы:
+
+```python
+# Desktop
+app = create_app('desktop')  # SQLite, no auth
+
+# Web
+app = create_app('web')      # PostgreSQL, OAuth
+
+# Dev
+app = create_app('development')  # SQLite, debug
+```
+
+---
+
+## Модели данных
+
+### Текущее состояние (v2.x):
+
+```
+users
+├── id
+├── email (unique)
+└── password_hash
+
+history_new
+├── id
+├── user_email ← string, not FK!
+├── base_url
+├── full_url
+├── utm_*
+├── short_url
+└── created_at
+
+templates
+├── id
+├── user_email ← string, not FK!
+├── name
+├── utm_*
+├── tag_*
+└── created_at
+```
+
+### Целевое состояние (v3.x Web):
+
+```
+users
+├── id
+├── email (unique)
+├── password_hash
+├── google_id (nullable)
+├── yandex_id (nullable)
+├── name
+├── avatar_url
+├── subscription_type
+├── subscription_expires_at
+├── created_at
+└── last_login_at
+
+history
+├── id
+├── user_id ← FK to users!
+├── base_url
+├── full_url
+├── utm_*
+├── short_url
+└── created_at
+
+templates
+├── id
+├── user_id ← FK to users!
+├── name
+├── utm_*
+├── tag_*
+└── created_at
+
+subscriptions
+├── id
+├── user_id ← FK
+├── plan_type
+├── started_at
+├── expires_at
+├── payment_*
+└── status
+```
+
+---
+
+## Быстродействие
+
+### Принципы:
+
+1. **SQLite для Desktop** — максимально быстрая локальная БД
+2. **Connection pooling для Web** — переиспользование подключений
+3. **Индексы** — на user_id/user_email, created_at
+4. **Лимиты** — LIMIT 500 для списков
+5. **Кэширование** — Cache-Control headers
+6. **Lazy loading** — данные по требованию
+
+### Оптимизации SQLite (Desktop):
+
+```python
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'connect_args': {
+        'timeout': 30,
+        'check_same_thread': False
+    }
+}
+
+# При инициализации
+PRAGMA journal_mode = WAL
+PRAGMA synchronous = NORMAL
+PRAGMA cache_size = 10000
+```
+
+### Оптимизации PostgreSQL (Web):
+
+```python
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'pool_size': 10,
+    'pool_recycle': 3600,
+    'pool_pre_ping': True
+}
+```

@@ -2,90 +2,155 @@
 
 ## Обзор
 
-Этот документ описывает план модернизации проекта UTMka до версии 3.0 с новой архитектурой.
+План модернизации проекта UTMka до версии 3.0 с поддержкой:
+- **Desktop** (Windows, macOS) — локальная SQLite, без авторизации
+- **Web** (будущее) — PostgreSQL, OAuth (Google/Яндекс), подписки
 
-**Статус:** Подготовка завершена. Удалены дублирующиеся файлы, созданы инструкции.
+**Стратегия:** Монорепо с общим core и разными конфигурациями.
 
 ---
 
 ## Содержание папки
 
-| Файл | Описание |
-|------|----------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Целевая архитектура проекта |
-| [STEP_1_RESTRUCTURE.md](STEP_1_RESTRUCTURE.md) | Этап 1: Реструктуризация папок |
-| [STEP_2_FRONTEND.md](STEP_2_FRONTEND.md) | Этап 2: Разбиение frontend |
-| [STEP_3_WINDOWS_INSTALLER.md](STEP_3_WINDOWS_INSTALLER.md) | Этап 3: Windows установщик |
-| [STEP_4_MACOS.md](STEP_4_MACOS.md) | Этап 4: macOS сборка |
-| [AI_WORKFLOW.md](AI_WORKFLOW.md) | Гайд по работе с AI агентами в Cursor |
-| [DELETED_FILES.md](DELETED_FILES.md) | Список удалённых файлов |
-
----
-
-## Быстрый старт
-
-### 1. Прочитай архитектуру
-```
-docs/migration/ARCHITECTURE.md
-```
-
-### 2. Начни с первого этапа
-```
-docs/migration/STEP_1_RESTRUCTURE.md
-```
-
-### 3. Используй AI эффективно
-```
-docs/migration/AI_WORKFLOW.md
-```
+| Файл | Описание | Статус |
+|------|----------|--------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Целевая архитектура | ✅ Актуально |
+| [STEP_1_RESTRUCTURE.md](STEP_1_RESTRUCTURE.md) | Этап 1: Структура папок | ✅ Выполнено |
+| [STEP_1B_SQLALCHEMY.md](STEP_1B_SQLALCHEMY.md) | Этап 1B: SQLAlchemy интеграция | 🔴 **В работе** |
+| [STEP_1C_WEB_READY.md](STEP_1C_WEB_READY.md) | Этап 1C: Подготовка к Web | ⏳ Ожидает |
+| [STEP_2_FRONTEND.md](STEP_2_FRONTEND.md) | Этап 2: Разбиение frontend | ⏳ Ожидает |
+| [STEP_3_WINDOWS_INSTALLER.md](STEP_3_WINDOWS_INSTALLER.md) | Этап 3: Windows установщик | ⏳ Ожидает |
+| [STEP_4_MACOS.md](STEP_4_MACOS.md) | Этап 4: macOS сборка | ⏳ Ожидает |
+| [STEP_5_WEB_DEPLOY.md](STEP_5_WEB_DEPLOY.md) | Этап 5: Web deployment | ⏳ Будущее |
+| [AI_WORKFLOW.md](AI_WORKFLOW.md) | Гайд по работе с AI | ✅ Актуально |
 
 ---
 
 ## Порядок выполнения
 
 ```
-ARCHITECTURE.md → STEP_1 → STEP_2 → STEP_3 → STEP_4
-      ↑                                        
-      └── AI_WORKFLOW.md (используй на каждом этапе)
+ФАЗА 1: DESKTOP (текущая)
+═══════════════════════════════════════════════════════════════
+STEP_1 ──► STEP_1B ──► STEP_1C ──► STEP_2 ──► STEP_3 ──► STEP_4
+структура  SQLAlchemy  Web-ready   frontend   Windows    macOS
+   ✅         🔴          ⏳          ⏳         ⏳         ⏳
+
+ФАЗА 2: WEB (будущее)
+═══════════════════════════════════════════════════════════════
+STEP_5 ──► OAuth ──► Subscriptions ──► Deploy
+  ⏳         ⏳           ⏳              ⏳
 ```
 
 ---
 
-## Рекомендуемые модели по этапам (для не-MAX тарифа)
+## Архитектура: Desktop vs Web
 
-| Этап | 🎯 Основная модель | 💡 Когда использовать дорогие | ⚡ Экономия |
-|------|------------------|------------------------------|-------------|
-| 1. Реструктуризация | **Sonnet 4.5** | Opus 4.5 — только если Sonnet не справляется | Sonnet 4 для простых задач |
-| 2. Frontend | **Gemini 3 Flash** | Sonnet 4.5 — для сложных компонентов | Sonnet 4 как компромисс |
-| 3. Windows installer | **GPT-5.2 Codex** | Sonnet 4.5 — для адаптации под проект | Sonnet 4 для базовых задач |
-| 4. macOS build | **GPT-5.2 Codex** | Sonnet 4.5 — для сложной адаптации | Sonnet 4 для базовых задач |
-| Тестирование | **Gemini 3 Flash** | Sonnet 4 — для сложных багов | - |
-
-### 💰 Стратегия экономии:
-
-- **Начинай с дешёвых моделей** (Gemini 3 Flash, Sonnet 4)
-- **Переходи на дорогие только при необходимости** (Sonnet 4.5, Opus 4.5)
-- **Подробные рекомендации:** см. [AI_WORKFLOW.md](AI_WORKFLOW.md)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      src/core/                              │
+│         (общая бизнес-логика для всех платформ)             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
+│  │ models.py│  │services.py│  │ config.py│  │repository│    │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+         ┌────────────┴────────────┐
+         │                         │
+         ▼                         ▼
+┌─────────────────┐       ┌─────────────────┐
+│    DESKTOP      │       │      WEB        │
+│  DesktopConfig  │       │   WebConfig     │
+│  SQLite (local) │       │  PostgreSQL     │
+│  No auth        │       │  OAuth + Email  │
+│  Free           │       │  Subscriptions  │
+│  pywebview      │       │  gunicorn       │
+└─────────────────┘       └─────────────────┘
+```
 
 ---
 
-## Что уже сделано
+## Текущий статус
 
-- [x] Удалены дублирующиеся файлы (QtWebEngine, Native версии)
-- [x] Обновлён requirements.txt
-- [x] Созданы подробные инструкции
-- [x] Написан гайд по работе с AI
-- [x] **Этап 1: Создана новая структура папок** (2026-01-26)
-  - src/core/ — модели, конфигурация, сервисы
-  - src/api/ — Flask API с blueprints
-  - src/desktop/ — desktop wrapper
-  - assets/ — ресурсы (logo, templates)
-  - frontend/, installers/, tests/ — заготовки
+### ✅ Выполнено
 
-## Что нужно сделать
+- [x] Удалены дублирующиеся файлы
+- [x] **STEP_1:** Структура папок создана
+  - `src/core/` — models, config, services
+  - `src/api/` — Flask blueprints
+  - `src/desktop/` — pywebview wrapper
+  - `assets/`, `frontend/`, `installers/`, `tests/`
 
-- [x] Этап 1: Создать новую структуру папок ✅
-- [ ] Этап 2: Разбить frontend на модули
-- [ ] Этап 3: Создать Windows установщик
-- [ ] Этап 4: Создать macOS сборку
-- [ ] Тестирование на обеих платформах
+### 🔴 Критические проблемы (STEP_1B)
+
+- [ ] Routes используют raw sqlite3 вместо SQLAlchemy
+- [ ] Путь к БД: рядом с exe вместо AppData
+- [ ] SQLAlchemy не инициализирован с Flask
+- [ ] Дублирование функций в routes
+
+### ⏳ Ожидает (STEP_1C)
+
+- [ ] Модели: user_id FK вместо user_email
+- [ ] OAuth поля: google_id, yandex_id
+- [ ] Модель Subscription
+- [ ] WebConfig для PostgreSQL
+
+### ⏳ Будущие этапы
+
+- [ ] STEP_2: Frontend модули
+- [ ] STEP_3: Windows installer
+- [ ] STEP_4: macOS build
+- [ ] STEP_5: Web deployment
+
+---
+
+## Рекомендуемые модели AI
+
+| Этап | 🎯 Основная | 💡 Сложные задачи |
+|------|-------------|-------------------|
+| 1, 1B, 1C | **Sonnet 4** | Opus 4.5 для архитектуры |
+| 2 Frontend | **Gemini 3 Flash** | Sonnet 4.5 для компонентов |
+| 3, 4 Build | **GPT-5.2 Codex** | Sonnet 4.5 для адаптации |
+| 5 Web | **Sonnet 4.5** | Opus 4.5 для безопасности |
+
+---
+
+## Быстрый старт для AI агента
+
+### Контекст для нового чата:
+
+```
+Проект: UTMka — генератор UTM-ссылок
+Цель: Кроссплатформенное приложение (Desktop + Web)
+
+Текущий этап: STEP_1B — SQLAlchemy интеграция
+
+Критические файлы:
+- docs/migration/STEP_1B_SQLALCHEMY.md — инструкции
+- src/core/models.py — модели БД
+- src/api/routes/*.py — нужно переписать на SQLAlchemy
+- src/api/__init__.py — добавить db.init_app()
+
+Долгосрочные цели:
+1. Desktop: Windows + macOS, SQLite, pywebview
+2. Web: PostgreSQL, OAuth (Google/Яндекс), подписки
+3. Максимальное быстродействие
+
+Ограничения:
+- Не ломать совместимость с текущей БД
+- Поэтапная миграция
+```
+
+---
+
+## Ветвление (опционально)
+
+Если потребуется изоляция:
+
+```bash
+main          # стабильная desktop версия
+├── develop   # разработка
+├── web       # web-версия (после STEP_5)
+└── release/* # релизы
+```
+
+Пока рекомендуется работать в `main` — разделение не требуется до STEP_5.
