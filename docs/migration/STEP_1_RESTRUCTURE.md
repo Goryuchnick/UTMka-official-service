@@ -381,9 +381,50 @@ mv templates_example*.csv assets/templates/
 
 ## Чек-лист завершения этапа
 
-- [ ] Создана структура папок
-- [ ] `src/core/` содержит модели и конфигурацию
-- [ ] `src/api/` содержит Flask приложение
-- [ ] `src/desktop/` содержит wrapper
-- [ ] Ресурсы перенесены в `assets/`
-- [ ] Приложение запускается командой `python -m src.desktop.main`
+- [x] Создана структура папок
+- [x] `src/core/` содержит модели и конфигурацию
+- [x] `src/api/` содержит Flask приложение
+- [x] `src/desktop/` содержит wrapper
+- [x] Ресурсы перенесены в `assets/`
+- [x] Flask приложение импортируется: `from src.api import create_app`
+- [ ] Приложение запускается командой `python -m src.desktop.main` (требует pywebview)
+
+---
+
+## Статус выполнения
+
+**Дата:** 2026-01-26
+
+### Что выполнено:
+
+1. **Структура папок создана:**
+   - `src/core/` — бизнес-логика (models.py, config.py, services.py)
+   - `src/api/` — Flask API с blueprints
+   - `src/api/routes/` — main.py, history.py, templates.py
+   - `src/desktop/` — desktop wrapper (main.py, utils.py)
+   - `frontend/` — заготовка для модульного фронтенда
+   - `installers/` — заготовка для установщиков
+   - `assets/logo/` — иконки приложения
+   - `assets/templates/` — примеры шаблонов
+   - `tests/` — заготовка для тестов
+
+2. **Core модули:**
+   - `config.py` — конфигурация с путями для разных ОС
+   - `models.py` — SQLAlchemy модели (User, History, Template)
+   - `services.py` — UTMService для работы с UTM-параметрами
+
+3. **API routes (blueprints):**
+   - `main.py` — главная страница, favicon
+   - `history.py` — CRUD история + экспорт/импорт
+   - `templates.py` — CRUD шаблоны + экспорт/импорт
+
+4. **Desktop wrapper:**
+   - `main.py` — точка входа Flask + pywebview
+   - `utils.py` — find_free_port, wait_for_server, get_resource_path
+
+5. **Ресурсы скопированы в assets/**
+
+### Что осталось:
+
+- Тестирование запуска через `python -m src.desktop.main` (требует установки pywebview)
+- Оригинальный `app.py` и `index.html` пока не удалены (работают как fallback)

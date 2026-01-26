@@ -75,10 +75,16 @@ ARCHITECTURE.md → STEP_1 → STEP_2 → STEP_3 → STEP_4
 - [x] Обновлён requirements.txt
 - [x] Созданы подробные инструкции
 - [x] Написан гайд по работе с AI
+- [x] **Этап 1: Создана новая структура папок** (2026-01-26)
+  - src/core/ — модели, конфигурация, сервисы
+  - src/api/ — Flask API с blueprints
+  - src/desktop/ — desktop wrapper
+  - assets/ — ресурсы (logo, templates)
+  - frontend/, installers/, tests/ — заготовки
 
 ## Что нужно сделать
 
-- [ ] Этап 1: Создать новую структуру папок
+- [x] Этап 1: Создать новую структуру папок ✅
 - [ ] Этап 2: Разбить frontend на модули
 - [ ] Этап 3: Создать Windows установщик
 - [ ] Этап 4: Создать macOS сборку
