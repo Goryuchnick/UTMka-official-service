@@ -5,12 +5,7 @@ __pycache__/
 *.so
 .Python
 *.egg-info/
-dist/
-build/
 *.egg
-
-# PyInstaller
-*.spec
 
 # Virtual environments
 venv/
@@ -21,6 +16,7 @@ ENV/
 # IDEs
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
@@ -30,19 +26,20 @@ ENV/
 Thumbs.db
 desktop.ini
 
-# Application specific
+# Application data
 utm_data.db
-downloads/*
-!downloads/.gitkeep
+utm_data.db-shm
+utm_data.db-wal
 
 # Build artifacts
-*.exe
-UTMka_Setup.exe
-UTMka_QtWebEngine_Setup.exe
-UTMka_Native_Setup.exe
-app.zip
-*.zip
+build/
+dist/
 dist_qtwebengine/
+*.exe
+*.zip
+
+# PyInstaller (except installers/)
+/*.spec
 
 # Logs
 *.log
@@ -51,78 +48,15 @@ dist_qtwebengine/
 *.tmp
 *.temp
 temp_*
+nul
 
-# System files and directories (should not be in project)
-.android/
-.antigravity/
-.bash_history
-.cursor/
-.dotnet/
-.fontconfig/
-.gemini/
-.git-for-windows-updater
-.gitconfig
-.gnupg/
-.gradle/
-.javacpp/
-.kivy/
-.lesshst
-.librarymanager/
-.local/
-.matplotlib/
-.node_repl_history
-.skiko/
-.ssh/
-.thumbnails/
-.vscode/
-3D Objects/
-AndroidStudioProjects/
-AppData/
-Contacts/
-/Desktop/
-Documents/
-Downloads/
-Favorites/
-Links/
-Music/
-OneDrive/
-Pictures/
-PyProjects/
-Saved Games/
-Searches/
-Videos/
-*.jpg
-*.mp3
-*.xml
-*.json
-!templates_example*.json
-!package.json
-*.dat
-*.bin
-*.log
-*.log1
-*.log2
-*.blf
-*.regtrans-ms
-*.ini
-ntuser.*
-NTUSER.*
-Key
-Key.pub
-bs-list.json
-e-country.json
-e-user.json
-ex-list
-ex-list2.json
+# Node
 node_modules/
 package-lock.json
-privacy_policy*.docx
-setup.dat
-software-*.dat
-storage-*.bin
-source/
-uTorrent*.dat
-"Разбивашка/"
 
-# Release notes
+# Template examples — track these
+!templates_example*.json
+!templates_example*.csv
+
+# Release notes — not tracked
 RELEASE_*.md

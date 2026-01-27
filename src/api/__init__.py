@@ -5,7 +5,9 @@ import os
 import sys
 from flask import Flask
 
-from src.core.config import Config, DesktopConfig, DevelopmentConfig
+from src.core.config import (
+    Config, DesktopConfig, DevelopmentConfig, WebConfig, ProductionConfig
+)
 from src.core.models import db
 
 
@@ -23,15 +25,15 @@ def create_app(config_name: str = 'development') -> Flask:
     Фабрика приложений Flask
     
     Args:
-        config_name: Имя конфигурации ('development', 'desktop')
+        config_name: Имя конфигурации ('development', 'desktop', 'web', 'production')
     
     Returns:
         Настроенное Flask приложение
     """
-    # Определяем пути
-    static_folder = get_resource_path('.')
-    template_folder = get_resource_path('.')
-    
+    # Все режимы используют frontend/ (модульный ES6)
+    static_folder = get_resource_path('frontend')
+    template_folder = get_resource_path('frontend')
+
     app = Flask(
         __name__,
         static_url_path='',
@@ -43,6 +45,8 @@ def create_app(config_name: str = 'development') -> Flask:
     configs = {
         'development': DevelopmentConfig,
         'desktop': DesktopConfig,
+        'web': WebConfig,
+        'production': ProductionConfig,
         'default': Config
     }
     app.config.from_object(configs.get(config_name, Config))
@@ -57,9 +61,11 @@ def create_app(config_name: str = 'development') -> Flask:
     from src.api.routes.main import main_bp
     from src.api.routes.history import history_bp
     from src.api.routes.templates import templates_bp
-    
+    from src.api.routes.auth import auth_bp
+
     app.register_blueprint(main_bp)
     app.register_blueprint(history_bp)
     app.register_blueprint(templates_bp)
+    app.register_blueprint(auth_bp)
     
     return app

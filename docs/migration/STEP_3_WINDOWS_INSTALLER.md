@@ -4,15 +4,39 @@
 
 Создать профессиональный установщик для Windows с правильным размещением файлов.
 
-## Время: 2-3 дня
+## Статус: Готов к выполнению
+
+---
+
+## Предварительные условия (выполнены)
+
+- ✅ **STEP_1:** Структура папок `src/` создана
+- ✅ **STEP_1B:** SQLAlchemy ORM интегрирован
+- ✅ **STEP_1C:** Модели расширены для Web (User, Subscription)
+- ✅ **STEP_2:** Frontend модульный (ES6 modules в `frontend/`)
+- ✅ Backend API routes протестированы
+- ✅ Desktop entry point: `src/desktop/main.py`
+
+---
+
+## Что изменилось с v2.0
+
+| Компонент | v2.0 | v3.0 (текущий) |
+|-----------|------|----------------|
+| Entry point | `app.py` (legacy) | `src/desktop/main.py` |
+| Frontend | `index.html` (3589 строк) | `frontend/` (ES6 modules) |
+| Backend | Монолитный `app.py` | `src/api/` (blueprints) |
+| Config | Хардкод в коде | `src/core/config.py` (DesktopConfig) |
+
+**Важно:** Старый `UTMka.spec` в корне указывает на `app.py` — нужно создать новый с `src/desktop/main.py`
 
 ---
 
 ## Требования
 
 - [Inno Setup](https://jrsoftware.org/isinfo.php) (бесплатный)
-- PyInstaller (уже установлен)
-- Python 3.8+
+- PyInstaller 6.15.0+ (в requirements.txt)
+- Python 3.12+ (текущая версия проекта)
 
 ---
 
@@ -21,22 +45,67 @@
 ```
 C:\Program Files\UTMka\              # Приложение (read-only)
 ├── UTMka.exe
-├── _internal\                       # Зависимости Python
-├── frontend\                        # Frontend файлы
+├── _internal\                       # Зависимости PyInstaller
+├── frontend\                        # Frontend модули (ES6)
 │   ├── index.html
 │   ├── css\
-│   └── js\
-└── assets\
-    ├── logo\
-    └── templates\
+│   │   └── main.css
+│   ├── js\
+│   │   ├── app.js
+│   │   ├── ui.js
+│   │   ├── api.js
+│   │   ├── translations.js
+│   │   └── utils.js
+│   └── logo\
+│       └── logoutm.png
+├── logo\                            # Logo для favicon route
+│   └── logoutm.png
+└── *.json, *.csv                    # Примеры шаблонов
 
 C:\Users\<user>\AppData\Roaming\UTMka\   # Данные (read-write)
 ├── databases\
-│   └── utmka.db
-├── exports\
-├── logs\
-└── config.json
+│   └── utmka.db                     # SQLite база
+├── exports\                         # Экспортированные файлы
+├── downloads\                       # Скачанные файлы
+└── logs\                            # Логи (будущее)
 ```
+
+---
+
+## Важные моменты перед началом
+
+### 1. Старый `UTMka.spec` в корне
+
+В корне проекта есть старый `UTMka.spec` который использует:
+```python
+['app.py'],  # ❌ Старый entry point
+datas=[('index.html', '.'), ...],  # ❌ Монолитный HTML
+```
+
+**Нужно:** Создать новый spec в `installers/windows/UTMka.spec` с правильными путями (см. ниже).
+
+### 2. Конфигурация путей
+
+`src/core/config.py` → `DesktopConfig` правильно настроен:
+```python
+data_dir = Path.home() / "AppData" / "Roaming" / "UTMka"
+db_path = data_dir / "databases" / "utmka.db"
+exports_dir = data_dir / "exports"
+downloads_dir = data_dir / "downloads"
+```
+
+### 3. Desktop vs Development mode
+
+- **Desktop mode** (`create_app('desktop')`): служит root index.html (legacy, 3589 строк)
+- **Development mode** (`create_app('development')`): служит frontend/ (ES6, 742 строк)
+
+Для сборки используется **desktop mode** — но нужно обновить чтобы использовал `frontend/`.
+
+**TODO:** Обновить `src/api/__init__.py` чтобы desktop mode тоже использовал `frontend/` (сейчас только web/development используют).
+
+### 4. Текущее состояние базы
+
+Старая `utm_data.db` в корне не имеет новых колонок (`google_id`, `yandex_id`) в `users`. Не критично — desktop не использует User model, но для чистоты можно удалить перед сборкой.
 
 ---
 
@@ -56,7 +125,7 @@ import sys
 # Пути
 PROJECT_ROOT = os.path.abspath(os.path.join(SPECPATH, '..', '..'))
 FRONTEND_PATH = os.path.join(PROJECT_ROOT, 'frontend')
-ASSETS_PATH = os.path.join(PROJECT_ROOT, 'assets')
+LOGO_PATH = os.path.join(PROJECT_ROOT, 'logo')
 
 block_cipher = None
 
@@ -65,19 +134,28 @@ a = Analysis(
     pathex=[PROJECT_ROOT],
     binaries=[],
     datas=[
-        # Frontend файлы
+        # Frontend модули (ES6)
         (FRONTEND_PATH, 'frontend'),
-        # Ресурсы
-        (ASSETS_PATH, 'assets'),
+        # Лого (для favicon route в src/api/routes/main.py)
+        (LOGO_PATH, 'logo'),
+        # Примеры шаблонов (для download_template route)
+        (os.path.join(PROJECT_ROOT, 'templates_example.json'), '.'),
+        (os.path.join(PROJECT_ROOT, 'templates_example_ru.json'), '.'),
+        (os.path.join(PROJECT_ROOT, 'templates_example_en.json'), '.'),
+        (os.path.join(PROJECT_ROOT, 'templates_example.csv'), '.'),
     ],
     hiddenimports=[
         'flask',
         'flask_sqlalchemy',
+        'sqlalchemy',
+        'sqlalchemy.orm',
+        'werkzeug.security',
         'webview',
-        'webview.platforms.winforms',  # Windows WebView
-        'clr',  # .NET для WebView2
+        'webview.platforms.winforms',  # Windows WebView2
+        'clr',  # pythonnet для WebView2
         'sqlite3',
         'marshmallow',
+        'jaraco.text',  # Для PyInstaller
     ],
     hookspath=[],
     hooksconfig={},
@@ -114,7 +192,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=os.path.join(ASSETS_PATH, 'logo', 'logoutm.ico'),
+    icon=os.path.join(PROJECT_ROOT, 'logo', 'logoutm.ico'),
     version='version_info.txt',  # Информация о версии
 )
 
@@ -206,7 +284,7 @@ SolidCompression=yes
 
 ; Внешний вид
 WizardStyle=modern
-SetupIconFile=..\..\assets\logo\logoutm.ico
+SetupIconFile=..\..\logo\logoutm.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 ; Требования
@@ -426,8 +504,54 @@ if __name__ == '__main__':
 
 ## Чек-лист завершения этапа
 
-- [ ] PyInstaller spec файл создан и работает
-- [ ] Inno Setup скрипт создан
-- [ ] Установщик создаётся без ошибок
-- [ ] Приложение работает после установки
-- [ ] Данные хранятся в AppData
+### Подготовка
+
+- [ ] Убедиться что `src/api/__init__.py` desktop mode использует `frontend/` (сейчас — root)
+- [ ] Проверить что все dependencies установлены (`pip install -r requirements.txt`)
+- [ ] Удалить старую `utm_data.db` или убедиться что свежая схема создаётся
+
+### Сборка
+
+- [ ] Создать `installers/windows/UTMka.spec` (новый, не редактировать старый в корне)
+- [ ] Создать `installers/windows/version_info.txt`
+- [ ] Создать `installers/windows/setup.iss` (обновить GUID!)
+- [ ] Создать `installers/windows/build.py`
+- [ ] Запустить `python installers/windows/build.py`
+- [ ] PyInstaller завершается без ошибок
+- [ ] Inno Setup создаёт установщик
+
+### Тестирование
+
+- [ ] Установщик запускается без ошибок
+- [ ] Файлы копируются в `C:\Program Files\UTMka\`
+- [ ] Frontend модули присутствуют в `frontend/`
+- [ ] Logo присутствует в `logo/`
+- [ ] Примеры шаблонов (.json, .csv) в корне
+- [ ] Приложение запускается (`UTMka.exe`)
+- [ ] БД создаётся в `%AppData%\Roaming\UTMka\databases\`
+- [ ] Генератор UTM работает
+- [ ] История сохраняется и отображается
+- [ ] Шаблоны создаются и применяются
+- [ ] Экспорт history/templates работает
+- [ ] Импорт templates работает
+- [ ] Короткие ссылки (clck.ru) работают
+- [ ] QR-коды генерируются
+- [ ] Темная/светлая тема переключается
+- [ ] RU/EN язык переключается
+
+### Обновление
+
+- [ ] Установка поверх старой версии работает
+- [ ] Данные пользователя сохраняются при обновлении
+
+### Удаление
+
+- [ ] Приложение удаляется полностью
+- [ ] Опция удаления данных предлагается
+- [ ] Данные удаляются если пользователь выбирает "Да"
+
+---
+
+## Следующий этап
+
+После успешного завершения STEP_3 → переход к **STEP_4: macOS Build** (аналогичный процесс с PyInstaller + DMG)

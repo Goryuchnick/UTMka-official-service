@@ -1,10 +1,10 @@
-# Этап 2: Разбиение Frontend
+# Этап 2: Разбиение Frontend ✅ ВЫПОЛНЕНО
 
 ## Цель
 
 Разбить монолитный `index.html` (3590 строк) на модульные компоненты.
 
-## Время: 3-5 дней
+## Статус: ВЫПОЛНЕНО
 
 ---
 
@@ -707,9 +707,36 @@ input:focus, textarea:focus, select:focus {
 
 ## Чек-лист завершения этапа
 
-- [ ] CSS извлечён в отдельные файлы
-- [ ] JavaScript разбит на модули
-- [ ] Компоненты работают независимо
-- [ ] Tailwind CDN удалён
-- [ ] Lucide CDN удалён (иконки локально или emoji)
-- [ ] Приложение работает без внешних зависимостей
+- [x] CSS извлечён в отдельные файлы (`frontend/css/main.css`)
+- [x] JavaScript разбит на ES6 модули (`app.js`, `ui.js`, `api.js`, `translations.js`, `utils.js`)
+- [x] Модули работают с корректными import/export
+- [ ] Tailwind CDN удалён — **отложено** (требует npm + build tooling)
+- [ ] Lucide CDN удалён — **отложено** (требует локальные иконки)
+- [ ] Flatpickr CDN удалён — **отложено**
+- [x] `frontend/index.html` — 742 строки чистого HTML (было 3589)
+- [x] Backend routing: `src/api/__init__.py` обновлён (web → `frontend/`, desktop → root)
+- [x] Все API routes протестированы через Flask test client
+
+## Реализованная структура
+
+```
+frontend/
+├── index.html              # 742 строк (чистый HTML, без inline JS)
+├── css/
+│   └── main.css            # 186 строк (glassmorphism, animations)
+├── js/
+│   ├── app.js              # 1130 строк (entry point + все обработчики)
+│   ├── ui.js               # 314 строк (state, rendering)
+│   ├── api.js              # 258 строк (fetch, initialization)
+│   ├── translations.js     # 210 строк (i18n RU/EN)
+│   ├── utils.js            # 128 строк (helpers)
+│   └── components/         # (зарезервировано для будущего разбиения)
+└── logo/
+    └── logoutm.png         # Логотип
+```
+
+## Отличия от первоначального плана
+
+Вместо создания отдельных component файлов (generator.js, onboarding.js, modals.js, history.js, templates.js), все обработчики событий консолидированы в `app.js`. Причина: обработчики тесно связаны через общий state и перекрёстные вызовы, разделение привело бы к циклическим зависимостям.
+
+CDN зависимости (Tailwind, Lucide, Flatpickr) сохранены — их удаление требует npm + build tooling (Vite/Webpack), что выходит за рамки этого этапа.

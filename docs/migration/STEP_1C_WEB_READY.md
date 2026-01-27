@@ -6,7 +6,7 @@
 
 ## Время: 2-4 часа
 
-## Статус: ⏳ Ожидает (готов к началу)
+## Статус: ✅ Выполнено
 
 ## Предусловия
 
@@ -305,13 +305,13 @@ def migrate():
 
 ## Чек-лист завершения
 
-- [ ] User модель расширена (OAuth поля)
-- [ ] Subscription модель добавлена
-- [ ] WebConfig добавлен в config.py
-- [ ] ProductionConfig добавлен
-- [ ] auth.py routes добавлены (заготовка)
-- [ ] create_app() обновлён для web/production
-- [ ] Документация обновлена
+- [x] User модель расширена (OAuth поля)
+- [x] Subscription модель добавлена
+- [x] WebConfig добавлен в config.py
+- [x] ProductionConfig добавлен
+- [x] auth.py routes добавлены (заготовка)
+- [x] create_app() обновлён для web/production
+- [x] Документация обновлена
 
 ---
 

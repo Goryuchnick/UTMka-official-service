@@ -1,19 +1,33 @@
 # Целевая архитектура UTMka 3.0
 
-## Текущая структура (проблемы)
+## Текущая структура (после STEP_1 + STEP_2 + STEP_3)
 
 ```
 utmKA-2.0-2/
-├── app.py                    # 830 строк - Flask + WebView (всё в одном)
-├── index.html                # 3590 строк - HTML + CSS + JS (всё в одном)
-├── web/app/                  # Отдельный Flask API (дублирование!)
-└── ...
+├── src/                          # ✅ Модульный backend
+│   ├── core/                     # models.py, config.py, services.py
+│   ├── api/                      # Flask create_app() + blueprints
+│   └── desktop/                  # pywebview wrapper
+├── frontend/                     # ✅ Модульный frontend (ES6)
+│   ├── index.html                # 742 строки (чистый HTML)
+│   ├── css/main.css              # Стили
+│   └── js/                       # app.js, ui.js, api.js, translations.js, utils.js
+├── app.py                        # ⚠️ Legacy (для текущих desktop билдов)
+├── index.html                    # ⚠️ Legacy (3589 строк, для desktop билдов)
+└── web/app/                      # ⚠️ Legacy (будет заменено src/api/)
 ```
 
-**Проблемы:**
-1. Дублирование: `app.py` и `web/app/` делают одно и то же
-2. Монолитный frontend: весь JS в одном HTML файле
-3. Данные рядом с exe: при обновлении теряются
+**Решённые проблемы:**
+1. ~~Дублирование~~ → Единый `src/api/` для desktop и web ✅
+2. ~~Монолитный frontend~~ → ES6 модули в `frontend/js/` ✅
+3. ~~Данные рядом с exe~~ → Config с AppData путями (DesktopConfig) ✅
+4. ~~PyInstaller spec~~ → Обновлён на `src/desktop/main.py` ✅
+5. ~~Windows установщик~~ → Готов (dist/UTMka-Setup-3.0.0.exe) ✅
+
+**Оставшиеся задачи:**
+- macOS сборка (STEP_4)
+- Удаление CDN зависимостей (требует build tooling)
+- Web deployment (STEP_5)
 
 ---
 
@@ -44,23 +58,19 @@ utmka/
 │       ├── main.py                # Точка входа
 │       └── utils.py               # Платформо-зависимые функции
 │
-├── frontend/                      # Frontend (модульный)
-│   ├── index.html                 # Только разметка
+├── frontend/                      # Frontend (модульный ES6)
+│   ├── index.html                 # 742 строки (HTML, без inline JS)
 │   ├── css/
-│   │   ├── main.css              # Базовые стили
-│   │   ├── components.css        # Компоненты
-│   │   └── utilities.css         # Tailwind-подобные утилиты
-│   └── js/
-│       ├── main.js               # Точка входа
-│       ├── api.js                # HTTP клиент
-│       ├── state.js              # Состояние приложения
-│       ├── router.js             # Навигация
-│       └── components/
-│           ├── generator.js      # UTM генератор
-│           ├── history.js        # История
-│           ├── templates.js      # Шаблоны
-│           ├── toast.js          # Уведомления
-│           └── modal.js          # Модальные окна
+│   │   └── main.css              # Glassmorphism, анимации, утилиты
+│   ├── js/
+│   │   ├── app.js                # Entry point + обработчики событий (1130 строк)
+│   │   ├── ui.js                 # State management + rendering (314 строк)
+│   │   ├── api.js                # HTTP fetch + initialization (258 строк)
+│   │   ├── translations.js       # i18n RU/EN (210 строк)
+│   │   ├── utils.js              # Helpers (128 строк)
+│   │   └── components/           # (зарезервировано)
+│   └── logo/
+│       └── logoutm.png           # Логотип
 │
 ├── installers/                    # Установщики
 │   ├── windows/
@@ -157,13 +167,13 @@ C:\Users\<user>\AppData\Roaming\UTMka\
 
 ## Преимущества новой архитектуры
 
-| Аспект | Было | Станет |
-|--------|------|--------|
-| Код backend | 2 версии (app.py и web/app) | 1 версия в src/api |
-| Frontend | 3590 строк в 1 файле | Модули по 100-200 строк |
-| Данные | Рядом с exe (теряются) | В AppData (сохраняются) |
-| Обновление | Полная переустановка | Только exe, данные целы |
-| Тестирование | Невозможно | Unit тесты |
+| Аспект | Было | Стало |
+|--------|------|-------|
+| Код backend | 2 версии (app.py и web/app) | ✅ 1 версия в src/api |
+| Frontend | 3590 строк в 1 файле | ✅ 5 ES6 модулей + чистый HTML |
+| Данные | Рядом с exe (теряются) | ✅ В AppData (сохраняются) |
+| Обновление | Полная переустановка | ✅ Только exe, данные целы |
+| Тестирование | Невозможно | ⏳ Структура готова (tests/) |
 
 ---
 
