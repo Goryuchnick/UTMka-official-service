@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Read(//d/Programmes projects/utmKA-2.0-2/**)",
+      "Bash(\"C:/Program Files \\(x86\\)/Inno Setup 6/ISCC.exe\":*)",
+      "Bash(xargs:*)",
+      "Bash(tree:*)",
+      "Bash(git push)"
+    ]
+  }
+}
