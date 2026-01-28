@@ -48,7 +48,8 @@ def main():
         width=1200,
         height=900,
         resizable=True,
-        min_size=(800, 600)
+        min_size=(800, 600),
+        maximized=True
     )
     
     # Запускаем GUI

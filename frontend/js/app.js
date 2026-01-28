@@ -3,6 +3,32 @@ import { translations } from './translations.js';
 import { initAppForUser, fetchData } from './api.js';
 import { parseDate, getTextColorForBg, parseCSV, ONBOARDING_KEY } from './utils.js';
 
+// --- Preferences API helpers ---
+async function fetchPreferences() {
+    try {
+        const res = await fetch('/api/preferences', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) return await res.json();
+    } catch (e) {
+        console.warn('Не удалось загрузить настройки с сервера, используем localStorage:', e);
+    }
+    return null;
+}
+
+async function savePreference(key, value) {
+    try {
+        await fetch('/api/preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ [key]: value })
+        });
+    } catch (e) {
+        console.warn('Не удалось сохранить настройку:', key, e);
+    }
+}
+
 // Global error handling
 window.addEventListener('error', (e) => {
     console.error('Глобальная ошибка:', e.message, e.filename, e.lineno);
@@ -65,9 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isDark) {
                 htmlEl.classList.remove('dark');
                 localStorage.setItem('theme', 'light');
+                savePreference('theme', 'light');
             } else {
                 htmlEl.classList.add('dark');
                 localStorage.setItem('theme', 'dark');
+                savePreference('theme', 'dark');
             }
 
             setTimeout(() => {
@@ -218,12 +246,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (helpTelegramBtn && dict.help_telegram_btn) helpTelegramBtn.textContent = dict.help_telegram_btn;
         if (helpWebsiteBtn && dict.help_website_btn) helpWebsiteBtn.textContent = dict.help_website_btn;
         if (helpGithubBtn && dict.help_github_btn) helpGithubBtn.textContent = dict.help_github_btn;
+
+        // Donate translations
+        const donateFooterText = document.getElementById('donateFooterText');
+        if (donateFooterText && dict.donate_footer) donateFooterText.textContent = dict.donate_footer;
+        const helpDonateBtn = document.getElementById('helpDonateBtn');
+        if (helpDonateBtn && dict.help_donate_btn) helpDonateBtn.textContent = dict.help_donate_btn;
+        const donateNavLink = document.getElementById('donateNavLink');
+        if (donateNavLink && dict.donate_btn) donateNavLink.title = dict.donate_btn;
     }
 
     if (langToggle) {
         langToggle.addEventListener('click', () => {
             state.lang = state.lang === 'ru' ? 'en' : 'ru';
             localStorage.setItem('utmka_lang', state.lang);
+            savePreference('lang', state.lang);
             applyTranslations(state.lang);
             if (typeof renderTemplates === 'function') renderTemplates();
             if (typeof renderHistory === 'function') renderHistory();
@@ -250,6 +287,39 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.error('Error applying translations:', e);
     }
+
+    // --- Async server preferences (overrides localStorage if available) ---
+    fetchPreferences().then(prefs => {
+        if (!prefs) return;
+
+        // Theme
+        const serverTheme = prefs.theme || 'dark';
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        if (serverTheme !== currentTheme) {
+            if (serverTheme === 'dark') htmlEl.classList.add('dark');
+            else htmlEl.classList.remove('dark');
+            localStorage.setItem('theme', serverTheme);
+            setTimeout(() => {
+                if (typeof renderHistory === 'function') renderHistory();
+                if (typeof renderTemplates === 'function') renderTemplates();
+            }, 100);
+        }
+
+        // Language
+        const serverLang = prefs.lang || 'ru';
+        if (serverLang !== state.lang) {
+            state.lang = serverLang;
+            localStorage.setItem('utmka_lang', serverLang);
+            applyTranslations(state.lang);
+            if (typeof renderTemplates === 'function') renderTemplates();
+            if (typeof renderHistory === 'function') renderHistory();
+        }
+
+        // Onboarding
+        if (prefs.onboarding_done) {
+            localStorage.setItem(ONBOARDING_KEY, 'true');
+        }
+    });
 
     const loader = document.getElementById('loader');
     const mainContent = document.getElementById('main-content');
@@ -278,6 +348,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     initHelpButton();
                     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+
+                    // Показать приложение после полной загрузки
+                    const app = document.getElementById('app');
+                    if (app) app.classList.add('loaded');
                 } catch (e) { console.error('Error reinitializing help button:', e); }
             }, 300);
 
@@ -776,10 +850,10 @@ document.addEventListener('DOMContentLoaded', () => {
             templates = templates.filter(t => (t.name || '').toLowerCase().includes(q) || (t.utm_source || '').toLowerCase().includes(q));
         }
         container.innerHTML = templates.map(t => `
-            <div class="p-3 border dark:border-slate-700 rounded-lg flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <div class="p-3 border border-slate-200 dark:border-slate-700 rounded-lg flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 <div>
-                    <p class="font-medium text-sm">${t.name}</p>
-                    <p class="text-xs text-slate-500">${t.utm_source || '-'} / ${t.utm_medium || '-'}</p>
+                    <p class="font-medium text-sm text-slate-900 dark:text-white">${t.name}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">${t.utm_source || '-'} / ${t.utm_medium || '-'}</p>
                 </div>
                 <button data-id="${t.id}" class="modal-apply-template-btn px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-500 transition-colors">Применить</button>
             </div>
@@ -994,6 +1068,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let onboardingStep = 0;
     const totalSteps = 5;
     const onboardingOverlay = document.getElementById('onboardingOverlay');
+    const onboardingMask = document.getElementById('onboardingMask');
+    const onboardingHighlight = document.getElementById('onboardingHighlight');
+    const onboardingCard = document.getElementById('onboardingCard');
+
+    // Целевые элементы для каждого шага
+    const ONBOARDING_TARGETS = [
+        { selector: '#navbar', position: 'below' },
+        { selector: '[data-target="generator"]', position: 'below' },
+        { selector: '[data-target="history"]', position: 'below' },
+        { selector: '[data-target="templates"]', position: 'below' },
+        { selector: 'footer', position: 'above' }
+    ];
 
     function showOnboarding() {
         if (!onboardingOverlay) return;
@@ -1006,6 +1092,65 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!onboardingOverlay) return;
         onboardingOverlay.classList.add('hidden');
         localStorage.setItem(ONBOARDING_KEY, 'true');
+        savePreference('onboarding_done', true);
+    }
+
+    function updateSpotlight() {
+        if (!onboardingMask || !onboardingCard || !onboardingHighlight) return;
+
+        const target = ONBOARDING_TARGETS[onboardingStep];
+        const el = document.querySelector(target.selector);
+
+        if (!el) {
+            // Если элемент не найден — центрировать карточку, убрать вырезку
+            onboardingMask.style.clipPath = '';
+            onboardingHighlight.style.display = 'none';
+            onboardingCard.style.left = '50%';
+            onboardingCard.style.top = '50%';
+            onboardingCard.style.bottom = '';
+            onboardingCard.style.transform = 'translate(-50%, -50%)';
+            return;
+        }
+
+        const rect = el.getBoundingClientRect();
+        const pad = 8;
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+
+        // Вырезка в overlay через clip-path polygon
+        const x1 = rect.left - pad;
+        const y1 = rect.top - pad;
+        const x2 = rect.right + pad;
+        const y2 = rect.bottom + pad;
+
+        onboardingMask.style.clipPath = `polygon(
+            0% 0%, 0% 100%,
+            ${x1}px 100%, ${x1}px ${y1}px,
+            ${x2}px ${y1}px, ${x2}px ${y2}px,
+            ${x1}px ${y2}px, ${x1}px 100%,
+            100% 100%, 100% 0%
+        )`;
+
+        // Рамка подсветки
+        onboardingHighlight.style.display = 'block';
+        onboardingHighlight.style.left = (rect.left - pad) + 'px';
+        onboardingHighlight.style.top = (rect.top - pad) + 'px';
+        onboardingHighlight.style.width = (rect.width + pad * 2) + 'px';
+        onboardingHighlight.style.height = (rect.height + pad * 2) + 'px';
+
+        // Позиционирование карточки
+        const cardMaxWidth = 420;
+        onboardingCard.style.transform = 'none';
+
+        if (target.position === 'below') {
+            onboardingCard.style.top = (rect.bottom + 16) + 'px';
+            onboardingCard.style.bottom = '';
+            onboardingCard.style.left = Math.max(16, Math.min(rect.left, W - cardMaxWidth - 16)) + 'px';
+        } else {
+            onboardingCard.style.top = '';
+            onboardingCard.style.bottom = (H - rect.top + 16) + 'px';
+            onboardingCard.style.left = Math.max(16, Math.min(rect.left, W - cardMaxWidth - 16)) + 'px';
+        }
     }
 
     function updateOnboardingStep() {
@@ -1042,7 +1187,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update language label in onboarding
         const onboardingLangLabel = document.getElementById('onboardingLangLabel');
         if (onboardingLangLabel) onboardingLangLabel.textContent = state.lang.toUpperCase();
+
+        // Обновить spotlight
+        updateSpotlight();
     }
+
+    // Пересчёт при изменении размера окна
+    window.addEventListener('resize', () => {
+        if (onboardingOverlay && !onboardingOverlay.classList.contains('hidden')) {
+            updateSpotlight();
+        }
+    });
 
     document.getElementById('onboardingNext')?.addEventListener('click', () => {
         if (onboardingStep < totalSteps - 1) { onboardingStep++; updateOnboardingStep(); }
@@ -1058,14 +1213,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('onboardingLangToggle')?.addEventListener('click', () => {
         state.lang = state.lang === 'ru' ? 'en' : 'ru';
         localStorage.setItem('utmka_lang', state.lang);
+        savePreference('lang', state.lang);
         applyTranslations(state.lang);
         updateOnboardingStep();
     });
 
-    // Show onboarding on first visit
-    if (!localStorage.getItem(ONBOARDING_KEY)) {
-        setTimeout(showOnboarding, 500);
-    }
+    // Show onboarding on first visit (delay for server preferences to load)
+    setTimeout(() => {
+        if (!localStorage.getItem(ONBOARDING_KEY)) {
+            showOnboarding();
+        }
+    }, 800);
 
     // --- Help Button ---
     function initHelpButton() {

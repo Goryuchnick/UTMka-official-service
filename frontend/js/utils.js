@@ -1,7 +1,7 @@
 // Constants
 export const PRESET_COLORS = [
-    '#dbeafe', '#dcfce7', '#fef3c7', '#fce7f3', '#e0e7ff',
-    '#f0f9ff', '#f0fdf4', '#fefce8', '#fef2f2', '#f5f3ff'
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+    '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'
 ];
 
 export const ONBOARDING_KEY = 'utmka_onboarding_done_v1';
@@ -104,6 +104,15 @@ export function getTextColorForBg(hexColor) {
     if (!hexColor || hexColor.length < 7) return '#374151';
 
     const colorMap = {
+        '#3b82f6': '#ffffff',
+        '#10b981': '#ffffff',
+        '#f59e0b': '#1c1917',
+        '#ef4444': '#ffffff',
+        '#8b5cf6': '#ffffff',
+        '#ec4899': '#ffffff',
+        '#06b6d4': '#1c1917',
+        '#f97316': '#1c1917',
+        // Обратная совместимость со старыми пастельными цветами
         '#dbeafe': '#1e40af',
         '#dcfce7': '#166534',
         '#fef3c7': '#92400e',

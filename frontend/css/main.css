@@ -184,3 +184,16 @@
 .delay-0 { animation-delay: 0s; }
 .delay-neg-2 { animation-delay: -2s; }
 .delay-neg-4 { animation-delay: -4s; }
+
+/* Onboarding spotlight transitions */
+#onboardingMask {
+    transition: clip-path 0.5s ease;
+}
+
+#onboardingHighlight {
+    transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease;
+}
+
+#onboardingCard {
+    transition: top 0.5s ease, left 0.5s ease, bottom 0.5s ease;
+}
