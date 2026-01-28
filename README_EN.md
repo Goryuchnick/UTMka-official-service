@@ -21,7 +21,7 @@ The interface features a modern design (Tailwind, light/dark theme) while functi
 #### Method 1: Installation via Installer (Recommended)
 
 1. **Run the installer**:
-   - Open `UTMka-Setup-3.0.0.exe`
+   - Open `UTMka-Setup-2.1.0.exe`
    - Follow the installation wizard instructions
    - By default, the application will be installed to `C:\Program Files\UTMka`
 
@@ -39,8 +39,8 @@ The interface features a modern design (Tailwind, light/dark theme) while functi
 
 ### macOS
 
-#### Coming Soon
-macOS build is planned for STEP_4 of the migration.
+#### Under Development
+macOS build is planned after Windows version stabilization (STEP_4 of migration).
 
 ---
 
@@ -69,9 +69,9 @@ python run_desktop.py
 
 ## 🔨 Building the Application for Windows
 
-### Modern Modular Architecture (v3.0+)
+### Modern Modular Architecture (v2.0+)
 
-Starting from version 3.0, the project uses modular architecture:
+The project uses modular architecture with separation into core, api, and desktop components:
 
 **Quick rebuild** (after changes):
 ```bash
@@ -85,8 +85,8 @@ python installers/windows/build.py
 ```
 
 Results:
-- `dist/UTMka/UTMka.exe` — application (9.9 MB)
-- `dist/UTMka-Setup-3.0.0.exe` — installer (32 MB)
+- `dist/UTMka/UTMka.exe` — application
+- `dist/UTMka-Setup-2.1.0.exe` — installer (~30 MB)
 
 > **Requirements**: [PyInstaller 6.0+](https://pyinstaller.org/) and [Inno Setup 6](https://jrsoftware.org/isinfo.php)
 

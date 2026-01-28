@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Скрипт сборки Windows версии UTMka
 """
@@ -8,6 +9,11 @@ import sys
 import shutil
 import subprocess
 from pathlib import Path
+
+# Ensure UTF-8 output on Windows
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
 
 # Пути
 SCRIPT_DIR = Path(__file__).parent
@@ -94,7 +100,7 @@ def main():
 
     print("\n" + "=" * 50)
     print("✓ Сборка завершена!")
-    print(f"  Установщик: {DIST_DIR / 'UTMka-Setup-3.0.0.exe'}")
+    print(f"  Установщик: {DIST_DIR / 'UTMka-Setup-2.1.0.exe'}")
     print("=" * 50)
 
 if __name__ == '__main__':

@@ -82,5 +82,65 @@ package-lock.json
 !templates_example*.json
 !templates_example*.csv
 
-# Release notes — not tracked
+# Windows build artifacts
+*.exe
+*.msi
+*.msix
+
+# macOS build artifacts
+*.dmg
+*.pkg
+*.app
+
+# Distribution packages
+*.zip
+*.tar.gz
+*.rar
+
+# Backup files
+*.bak
+*.backup
+*~
+.*.swp
+
+# Local development
+.venv/
+.virtualenv/
+__pypackages__/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# User preferences and local settings
+preferences.json
+settings.json
+config.local.json
+
+# Release notes (generated, not tracked in git)
 RELEASE_*.md
+
+# Windows system files
+desktop.ini
+$RECYCLE.BIN/
+
+# Thumbnails
+._*
+.Spotlight-V100
+.Trashes
+
+# Development tools
+.history/
+*.code-workspace
+
+# Logs and debug
+*.log.*
+debug.log
+error.log
+
+# Claude artifacts (AI assistant files)
+.claude/
+claude_*.md

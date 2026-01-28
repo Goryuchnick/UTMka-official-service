@@ -2,7 +2,7 @@
 ; Inno Setup 6.x
 
 #define MyAppName "UTMka"
-#define MyAppVersion "3.0.0"
+#define MyAppVersion "2.1.0"
 #define MyAppPublisher "UTMka"
 #define MyAppURL "https://utmka.ru"
 #define MyAppExeName "UTMka.exe"
