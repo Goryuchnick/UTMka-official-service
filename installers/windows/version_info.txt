@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(2, 1, 0, 0),
-    prodvers=(2, 1, 0, 0),
+    filevers=(2, 1, 1, 0),
+    prodvers=(2, 1, 1, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -16,12 +16,12 @@ VSVersionInfo(
         [
           StringStruct(u'CompanyName', u'UTMka'),
           StringStruct(u'FileDescription', u'UTMka - UTM Link Generator'),
-          StringStruct(u'FileVersion', u'2.1.0'),
+          StringStruct(u'FileVersion', u'2.1.1'),
           StringStruct(u'InternalName', u'UTMka'),
           StringStruct(u'LegalCopyright', u'Copyright (c) 2024-2026 UTMka'),
           StringStruct(u'OriginalFilename', u'UTMka.exe'),
           StringStruct(u'ProductName', u'UTMka'),
-          StringStruct(u'ProductVersion', u'2.1.0')
+          StringStruct(u'ProductVersion', u'2.1.1')
         ]
       )
     ]),

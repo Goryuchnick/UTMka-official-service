@@ -100,7 +100,7 @@ def main():
 
     print("\n" + "=" * 50)
     print("✓ Сборка завершена!")
-    print(f"  Установщик: {DIST_DIR / 'UTMka-Setup-2.1.0.exe'}")
+    print(f"  Установщик: {DIST_DIR / 'UTMka-Setup-2.1.1.exe'}")
     print("=" * 50)
 
 if __name__ == '__main__':

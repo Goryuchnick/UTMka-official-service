@@ -3,6 +3,94 @@ import { translations } from './translations.js';
 import { initAppForUser, fetchData } from './api.js';
 import { parseDate, getTextColorForBg, parseCSV, ONBOARDING_KEY } from './utils.js';
 
+// --- Сохранение файла через нативный диалог или браузерный fallback ---
+async function saveFileWithDialog(filename, content) {
+    if (window.pywebview && window.pywebview.api) {
+        const fileExt = filename.split('.').pop().toLowerCase();
+        const fileTypes = fileExt === 'json'
+            ? ['JSON files (*.json)', 'All files (*.*)']
+            : ['CSV files (*.csv)', 'All files (*.*)'];
+        const result = await window.pywebview.api.save_file(filename, content, fileTypes);
+        return result;
+    }
+    // Fallback для dev-режима (браузер)
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    return { success: true };
+}
+
+// --- QR-код: модальное окно с сохранением PNG/SVG ---
+let currentQRSvgString = '';
+
+function showQRModal(url) {
+    const container = document.getElementById('qrCodeContainer');
+    const modal = document.getElementById('qrCodeModal');
+    container.innerHTML = '';
+
+    // Генерация QR через qrcode-svg
+    // eslint-disable-next-line no-undef
+    const qr = new QRCode({ content: url, width: 300, height: 300, padding: 4, color: '#000000', background: '#ffffff', ecl: 'M' });
+    currentQRSvgString = qr.svg();
+    container.innerHTML = currentQRSvgString;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeQRModal() {
+    const modal = document.getElementById('qrCodeModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+async function saveQRAsSvg() {
+    if (!currentQRSvgString) return;
+    const svgContent = '<?xml version="1.0" encoding="UTF-8"?>\n' + currentQRSvgString;
+    const result = await saveFileWithDialog('qrcode.svg', svgContent);
+    if (result.success) showToast('QR-код сохранён как SVG');
+    else if (!result.cancelled) showToast(result.error || 'Ошибка сохранения', 'error');
+}
+
+async function saveQRAsPng() {
+    if (!currentQRSvgString) return;
+    try {
+        const svgBlob = new Blob([currentQRSvgString], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        const img = new Image();
+        img.onload = async () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = 600;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 600, 600);
+            ctx.drawImage(img, 0, 0, 600, 600);
+            URL.revokeObjectURL(svgUrl);
+
+            if (window.pywebview && window.pywebview.api) {
+                const dataUrl = canvas.toDataURL('image/png');
+                const base64 = dataUrl.split(',')[1];
+                const result = await window.pywebview.api.save_binary_file('qrcode.png', base64, ['PNG images (*.png)', 'All files (*.*)']);
+                if (result.success) showToast('QR-код сохранён как PNG');
+                else if (!result.cancelled) showToast(result.error || 'Ошибка сохранения', 'error');
+            } else {
+                // Fallback для dev-режима
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'qrcode.png';
+                a.click();
+                showToast('QR-код сохранён как PNG');
+            }
+        };
+        img.src = svgUrl;
+    } catch (error) { showToast(`Ошибка: ${error.message}`, 'error'); }
+}
+
 // --- Preferences API helpers ---
 async function fetchPreferences() {
     try {
@@ -448,11 +536,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Save to history
                 try {
-                    await fetch('/history', {
+                    const historyData = { user_email: currentUser.email, url: finalUrl };
+                    if (pendingTagFromTemplate) {
+                        historyData.tag_name = pendingTagFromTemplate.tag_name;
+                        historyData.tag_color = pendingTagFromTemplate.tag_color;
+                    }
+                    const historyRes = await fetch('/history', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_email: currentUser.email, url: finalUrl })
+                        body: JSON.stringify(historyData)
                     });
+                    if (historyRes.ok) {
+                        const historyResult = await historyRes.json();
+                        lastHistoryId = historyResult.id || null;
+                    }
+                    pendingTagFromTemplate = null;
                     await fetchData();
                     renderAll();
                     showToast('Ссылка создана и сохранена!');
@@ -473,6 +571,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (utmForm) utmForm.reset();
             if (resultUrl) resultUrl.value = '';
             if (addToTemplateBtn) addToTemplateBtn.disabled = true;
+            pendingTagFromTemplate = null;
+            lastHistoryId = null;
         });
     }
 
@@ -513,8 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
         qrCodeButton.addEventListener('click', () => {
             const url = resultUrl?.value;
             if (!url) { showToast('Сначала сгенерируйте ссылку', 'error'); return; }
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
-            window.open(qrUrl, '_blank');
+            showQRModal(url);
         });
     }
 
@@ -557,6 +656,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(template)
             });
             if (res.ok) {
+                // Обновляем тег в последней записи истории
+                if (lastHistoryId && tagName) {
+                    try {
+                        await fetch(`/history/${lastHistoryId}/tag`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ tag_name: tagName, tag_color: tagColor })
+                        });
+                    } catch (e) {
+                        console.warn('Не удалось обновить тег в истории:', e);
+                    }
+                }
                 await fetchData();
                 renderAll();
                 showToast('Шаблон сохранён!');
@@ -565,8 +676,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('newTemplateNameInput').value = '';
                 document.getElementById('newTemplateTagNameInput').value = '';
                 document.getElementById('newTemplateTagColorInput').value = '';
+                // Сбрасываем палитру цветов в модале
+                document.getElementById('newTemplateColorPalette')?.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
             }
         } catch (err) { showToast('Ошибка сохранения шаблона', 'error'); }
+    });
+
+    // --- Клик по подсказке тега (популярные/недавние) ---
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.tag-suggestion-btn');
+        if (!btn) return;
+
+        const tagName = btn.dataset.tagName;
+        const tagColor = btn.dataset.tagColor;
+        const targetName = btn.dataset.targetName;
+        const targetColor = btn.dataset.targetColor;
+        const targetPalette = btn.dataset.targetPalette;
+
+        const nameInput = document.getElementById(targetName);
+        const colorInput = document.getElementById(targetColor);
+        if (nameInput) nameInput.value = tagName;
+        if (colorInput) colorInput.value = tagColor;
+
+        // Выделяем соответствующий цвет в палитре
+        const palette = document.getElementById(targetPalette);
+        if (palette) {
+            palette.querySelectorAll('.color-dot').forEach(dot => {
+                dot.classList.toggle('selected', dot.dataset.color === tagColor);
+            });
+        }
     });
 
     // --- Template Form (create new) ---
@@ -661,7 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (qrBtn) {
             e.stopPropagation();
             const url = qrBtn.dataset.url;
-            window.open(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`, '_blank');
+            showQRModal(url);
             return;
         }
 
@@ -737,6 +875,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Хранение тега шаблона для записи в историю при генерации ---
+    let pendingTagFromTemplate = null;
+    let lastHistoryId = null;
+
     // --- Helper: Apply template to form ---
     function applyTemplateToForm(item) {
         const fields = { utm_source: 'utm_source', utm_medium: 'utm_medium', utm_campaign: 'utm_campaign', utm_content: 'utm_content', utm_term: 'utm_term' };
@@ -751,6 +893,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('url').value = urlObj.host + urlObj.pathname + (urlObj.search ? '' : '');
             } catch {}
         }
+        // Сохраняем тег шаблона для записи в историю при генерации
+        if (item.tag_name) {
+            pendingTagFromTemplate = { tag_name: item.tag_name, tag_color: item.tag_color || '' };
+        } else {
+            pendingTagFromTemplate = null;
+        }
     }
 
     // --- URL Detail Modal ---
@@ -760,6 +908,18 @@ document.addEventListener('DOMContentLoaded', () => {
         currentDetailItem = item;
         const modal = document.getElementById('urlDetailModal');
         document.getElementById('fullUrlText').value = item.full_url || item.url || '';
+
+        // Display tag if exists
+        const tagContainer = document.getElementById('urlDetailTag');
+        if (tagContainer) {
+            if (item.tag_name) {
+                const textColor = getTextColorForBg(item.tag_color);
+                tagContainer.innerHTML = `<div class="flex items-center gap-2"><span class="text-sm text-slate-500">Тег:</span><span class="px-3 py-1.5 text-sm font-medium rounded-full shadow-sm inline-block" style="background-color:${item.tag_color || '#f1f5f9'}; color: ${textColor};">${item.tag_name}</span></div>`;
+            } else {
+                tagContainer.innerHTML = '';
+            }
+        }
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     }
@@ -812,7 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('qrCodeModalBtn')?.addEventListener('click', () => {
         if (!currentDetailItem) return;
         const url = currentDetailItem.short_url || currentDetailItem.full_url || currentDetailItem.url;
-        window.open(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`, '_blank');
+        showQRModal(url);
     });
 
     document.getElementById('applyFromModalBtn')?.addEventListener('click', () => {
@@ -822,6 +982,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('urlDetailModal').classList.remove('flex');
         switchView('generator');
         currentDetailItem = null;
+    });
+
+    // --- QR Code Modal handlers ---
+    document.getElementById('closeQrModalX')?.addEventListener('click', closeQRModal);
+    document.getElementById('closeQrModalBtn')?.addEventListener('click', closeQRModal);
+    document.getElementById('saveQrPng')?.addEventListener('click', saveQRAsPng);
+    document.getElementById('saveQrSvg')?.addEventListener('click', saveQRAsSvg);
+    document.getElementById('qrCodeModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'qrCodeModal') closeQRModal();
     });
 
     // --- All Templates Modal ---
@@ -935,7 +1104,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const result = await response.json();
             if (response.ok && result.success) {
-                showToast(`Файл сохранен в: ${result.folder_path}\\${result.filename}`);
+                const saveResult = await saveFileWithDialog(result.filename, result.file_content);
+                if (saveResult.success) showToast('Файл сохранён');
+                else if (saveResult.cancelled) showToast('Сохранение отменено');
+                else throw new Error(saveResult.error || 'Ошибка сохранения');
             } else { throw new Error(result.error || 'Ошибка при скачивании файла'); }
         } catch (error) { showToast(`Ошибка: ${error.message}`, 'error'); }
     });
@@ -949,7 +1121,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const result = await response.json();
             if (response.ok && result.success) {
-                showToast(`Файл сохранен в: ${result.folder_path}\\${result.filename}`);
+                const saveResult = await saveFileWithDialog(result.filename, result.file_content);
+                if (saveResult.success) showToast('Файл сохранён');
+                else if (saveResult.cancelled) showToast('Сохранение отменено');
+                else throw new Error(saveResult.error || 'Ошибка сохранения');
             } else { throw new Error(result.error || 'Ошибка при скачивании файла'); }
         } catch (error) { showToast(`Ошибка: ${error.message}`, 'error'); }
     });
@@ -1008,8 +1183,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ user_email: currentUser.email, format })
             });
             const result = await response.json();
-            if (result.success) showToast(`Файл сохранен: ${result.filename}`);
-            else showToast(result.error || 'Ошибка экспорта', 'error');
+            if (result.success) {
+                const saveResult = await saveFileWithDialog(result.filename, result.file_content);
+                if (saveResult.success) showToast('Файл сохранён');
+                else if (saveResult.cancelled) showToast('Сохранение отменено');
+                else showToast(saveResult.error || 'Ошибка сохранения', 'error');
+            } else showToast(result.error || 'Ошибка экспорта', 'error');
         } catch (error) { showToast(`Ошибка: ${error.message}`, 'error'); }
     }
 
@@ -1025,8 +1204,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ user_email: currentUser.email, format })
             });
             const result = await response.json();
-            if (result.success) showToast(`Файл сохранен: ${result.filename}`);
-            else showToast(result.error || 'Ошибка экспорта', 'error');
+            if (result.success) {
+                const saveResult = await saveFileWithDialog(result.filename, result.file_content);
+                if (saveResult.success) showToast('Файл сохранён');
+                else if (saveResult.cancelled) showToast('Сохранение отменено');
+                else showToast(saveResult.error || 'Ошибка сохранения', 'error');
+            } else showToast(result.error || 'Ошибка экспорта', 'error');
         } catch (error) { showToast(`Ошибка: ${error.message}`, 'error'); }
     }
 

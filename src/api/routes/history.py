@@ -44,7 +44,9 @@ def add_history():
         utm_medium=utm_params.get('utm_medium'),
         utm_campaign=utm_params.get('utm_campaign'),
         utm_content=utm_params.get('utm_content'),
-        utm_term=utm_params.get('utm_term')
+        utm_term=utm_params.get('utm_term'),
+        tag_name=data.get('tag_name'),
+        tag_color=data.get('tag_color')
     )
     
     db.session.add(history)
@@ -58,6 +60,17 @@ def delete_history(item_id):
     """Удаляет запись из истории."""
     history = History.query.get_or_404(item_id)
     db.session.delete(history)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@history_bp.route('/history/<int:item_id>/tag', methods=['PUT'])
+def update_history_tag(item_id):
+    """Обновляет тег для записи в истории."""
+    data = request.json
+    history = History.query.get_or_404(item_id)
+    history.tag_name = data.get('tag_name', '')
+    history.tag_color = data.get('tag_color', '')
     db.session.commit()
     return jsonify({'success': True})
 
@@ -99,30 +112,26 @@ def export_history():
             d.pop(key, None)
         export_data.append(d)
     
-    downloads_dir = get_downloads_dir()
-    
     if format_type == 'json':
         filename = f'utm_history_{user_email.replace("@", "_")}.json'
-        filepath = downloads_dir / filename
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(export_data, f, ensure_ascii=False, indent=2)
+        file_content = json.dumps(export_data, ensure_ascii=False, indent=2)
     elif format_type == 'csv':
         import csv
+        import io
         filename = f'utm_history_{user_email.replace("@", "_")}.csv'
-        filepath = downloads_dir / filename
-        with open(filepath, 'w', encoding='utf-8', newline='') as f:
-            if export_data:
-                writer = csv.DictWriter(f, fieldnames=export_data[0].keys())
-                writer.writeheader()
-                writer.writerows(export_data)
+        output = io.StringIO()
+        if export_data:
+            writer = csv.DictWriter(output, fieldnames=export_data[0].keys())
+            writer.writeheader()
+            writer.writerows(export_data)
+        file_content = output.getvalue()
     else:
         return jsonify({'error': 'Invalid format'}), 400
-    
+
     return jsonify({
         'success': True,
         'filename': filename,
-        'folder_path': str(downloads_dir),
-        'file_path': str(filepath),
+        'file_content': file_content,
         'count': len(export_data)
     })
 
@@ -144,7 +153,9 @@ def import_history():
                 utm_medium=item.get('utm_medium'),
                 utm_campaign=item.get('utm_campaign'),
                 utm_content=item.get('utm_content'),
-                utm_term=item.get('utm_term')
+                utm_term=item.get('utm_term'),
+                tag_name=item.get('tag_name'),
+                tag_color=item.get('tag_color')
             )
             db.session.add(history)
             imported_count += 1

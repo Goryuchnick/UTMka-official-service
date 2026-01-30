@@ -105,6 +105,8 @@ export const translations = {
         onboarding_btn_back: 'Назад',
         onboarding_btn_next: 'Далее',
         onboarding_btn_done: 'Готово',
+        popular_tags: 'Популярные',
+        recent_tags: 'Недавние',
     },
     en: {
         nav_generator: 'Generator',
@@ -212,5 +214,7 @@ export const translations = {
         onboarding_btn_back: 'Back',
         onboarding_btn_next: 'Next',
         onboarding_btn_done: 'Done',
+        popular_tags: 'Popular',
+        recent_tags: 'Recent',
     }
 };

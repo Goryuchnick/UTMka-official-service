@@ -79,8 +79,10 @@ class History(db.Model):
     utm_content = db.Column(db.String(255))
     utm_term = db.Column(db.String(255))
     short_url = db.Column(db.String(500))
+    tag_name = db.Column(db.String(100))
+    tag_color = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    
+
     def to_dict(self) -> dict:
         return {
             'id': self.id,
@@ -93,6 +95,8 @@ class History(db.Model):
             'utm_content': self.utm_content,
             'utm_term': self.utm_term,
             'short_url': self.short_url,
+            'tag_name': self.tag_name,
+            'tag_color': self.tag_color,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 

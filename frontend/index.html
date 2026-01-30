@@ -33,6 +33,9 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js" defer onerror="console.warn('Flatpickr ru locale failed to load'); this.onerror=null;"></script>
 
+    <!-- QR Code SVG -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-svg@1.1.0/lib/qrcode.min.js" defer onerror="console.warn('QRCode SVG failed to load')"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -386,6 +389,7 @@
                                             class="glass-input w-full px-3 py-2 rounded-lg text-sm">
                                         <input type="hidden" id="template_tag_color">
                                         <div id="templateColorPalette" class="flex flex-wrap gap-2 pt-1"></div>
+                                        <div id="templateTagSuggestions"></div>
                                     </div>
 
                                     <div class="space-y-3 pt-2">
@@ -611,6 +615,7 @@
             <div class="p-6">
                 <textarea id="fullUrlText" readonly aria-label="Full URL"
                     class="w-full text-sm font-mono p-4 rounded-xl bg-slate-50 dark:bg-[#0B1120] border border-slate-200 dark:border-white/10 h-32 resize-y focus:ring-2 focus:ring-indigo-500/50 outline-none"></textarea>
+                <div id="urlDetailTag" class="mt-3"></div>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-[#0B1120]/50 flex flex-wrap justify-between gap-3 rounded-b-lg">
                 <button id="closeUrlDetailModal"
@@ -672,6 +677,7 @@
                             class="glass-input w-full px-3 py-2 rounded-lg text-sm mb-2">
                         <input type="hidden" id="newTemplateTagColorInput">
                         <div id="newTemplateColorPalette" class="flex flex-wrap gap-2"></div>
+                        <div id="modalTagSuggestions"></div>
                     </div>
                 </div>
             </div>
@@ -752,6 +758,37 @@
                     class="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Закрыть</button>
                 <button id="applyTemplateBtn"
                     class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-colors">Применить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrCodeModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+        <div class="glass-card w-full max-w-md rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
+            <div class="p-6 border-b border-slate-200/50 dark:border-white/10 flex justify-between items-center">
+                <h3 class="text-xl font-bold dark:text-white">QR-код</h3>
+                <button id="closeQrModalX"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 flex justify-center">
+                <div id="qrCodeContainer" class="bg-white p-4 rounded-xl"></div>
+            </div>
+            <div class="p-4 bg-slate-50 dark:bg-[#0B1120]/50 flex justify-between gap-3 rounded-b-lg">
+                <button id="closeQrModalBtn"
+                    class="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Закрыть</button>
+                <div class="flex gap-2">
+                    <button id="saveQrPng"
+                        class="px-4 py-2 bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5">
+                        <i data-lucide="image" class="w-4 h-4"></i>
+                        PNG
+                    </button>
+                    <button id="saveQrSvg"
+                        class="px-4 py-2 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5">
+                        <i data-lucide="file-code" class="w-4 h-4"></i>
+                        SVG
+                    </button>
+                </div>
             </div>
         </div>
     </div>

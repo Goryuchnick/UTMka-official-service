@@ -21,7 +21,7 @@
 #### Способ 1: Установка через установщик (рекомендуется)
 
 1. **Запустите установщик**:
-   - Откройте файл `UTMka-Setup-2.1.0.exe`
+   - Откройте файл `UTMka-Setup-2.1.1.exe`
    - Следуйте инструкциям мастера установки
    - По умолчанию приложение установится в `C:\Program Files\UTMka`
 
@@ -93,7 +93,7 @@ python installers/windows/build.py
 
 Результат:
 - `dist/UTMka/UTMka.exe` — приложение
-- `dist/UTMka-Setup-2.1.0.exe` — установщик (~30 MB)
+- `dist/UTMka-Setup-2.1.1.exe` — установщик (~30 MB)
 
 > **Требования**: [PyInstaller 6.0+](https://pyinstaller.org/) и [Inno Setup 6](https://jrsoftware.org/isinfo.php)
 

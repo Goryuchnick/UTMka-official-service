@@ -56,6 +56,23 @@ def create_app(config_name: str = 'development') -> Flask:
     
     with app.app_context():
         db.create_all()
+
+        # Миграция: добавление tag_name и tag_color в history_new
+        import sqlalchemy
+        inspector = sqlalchemy.inspect(db.engine)
+        if 'history_new' in inspector.get_table_names():
+            columns = [col['name'] for col in inspector.get_columns('history_new')]
+            with db.engine.connect() as conn:
+                if 'tag_name' not in columns:
+                    conn.execute(sqlalchemy.text(
+                        'ALTER TABLE history_new ADD COLUMN tag_name VARCHAR(100)'
+                    ))
+                    conn.commit()
+                if 'tag_color' not in columns:
+                    conn.execute(sqlalchemy.text(
+                        'ALTER TABLE history_new ADD COLUMN tag_color VARCHAR(20)'
+                    ))
+                    conn.commit()
     
     # Регистрируем blueprints
     from src.api.routes.main import main_bp

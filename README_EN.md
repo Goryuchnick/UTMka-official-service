@@ -21,7 +21,7 @@ The interface features a modern design (Tailwind, light/dark theme) while functi
 #### Method 1: Installation via Installer (Recommended)
 
 1. **Run the installer**:
-   - Open `UTMka-Setup-2.1.0.exe`
+   - Open `UTMka-Setup-2.1.1.exe`
    - Follow the installation wizard instructions
    - By default, the application will be installed to `C:\Program Files\UTMka`
 
@@ -86,7 +86,7 @@ python installers/windows/build.py
 
 Results:
 - `dist/UTMka/UTMka.exe` — application
-- `dist/UTMka-Setup-2.1.0.exe` — installer (~30 MB)
+- `dist/UTMka-Setup-2.1.1.exe` — installer (~30 MB)
 
 > **Requirements**: [PyInstaller 6.0+](https://pyinstaller.org/) and [Inno Setup 6](https://jrsoftware.org/isinfo.php)
 

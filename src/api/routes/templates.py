@@ -2,11 +2,10 @@
 Маршруты для работы с шаблонами UTM
 """
 import json
-import shutil
 from flask import Blueprint, request, jsonify, send_from_directory
 
 from src.core.models import db, Template
-from src.core.config import get_downloads_dir, get_resource_path
+from src.core.config import get_resource_path
 
 templates_bp = Blueprint('templates', __name__)
 
@@ -94,21 +93,17 @@ def download_template_with_folder():
         return jsonify({'error': 'Invalid filename'}), 400
     
     source_path = get_resource_path(filename)
-    
+
     if not source_path.exists():
         return jsonify({'error': 'File not found'}), 404
-    
-    downloads_dir = get_downloads_dir()
-    destination_path = downloads_dir / filename
-    
-    if source_path.resolve() != destination_path.resolve():
-        shutil.copy2(source_path, destination_path)
-    
+
+    with open(source_path, 'r', encoding='utf-8') as f:
+        file_content = f.read()
+
     return jsonify({
         'success': True,
         'filename': filename,
-        'folder_path': str(downloads_dir),
-        'file_path': str(destination_path)
+        'file_content': file_content
     })
 
 
@@ -132,29 +127,25 @@ def export_templates():
             d.pop(key, None)
         export_data.append(d)
     
-    downloads_dir = get_downloads_dir()
-    
     if format_type == 'json':
         filename = f'utm_templates_{user_email.replace("@", "_")}.json'
-        filepath = downloads_dir / filename
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(export_data, f, ensure_ascii=False, indent=2)
+        file_content = json.dumps(export_data, ensure_ascii=False, indent=2)
     elif format_type == 'csv':
         import csv
+        import io
         filename = f'utm_templates_{user_email.replace("@", "_")}.csv'
-        filepath = downloads_dir / filename
-        with open(filepath, 'w', encoding='utf-8', newline='') as f:
-            if export_data:
-                writer = csv.DictWriter(f, fieldnames=export_data[0].keys())
-                writer.writeheader()
-                writer.writerows(export_data)
+        output = io.StringIO()
+        if export_data:
+            writer = csv.DictWriter(output, fieldnames=export_data[0].keys())
+            writer.writeheader()
+            writer.writerows(export_data)
+        file_content = output.getvalue()
     else:
         return jsonify({'error': 'Invalid format'}), 400
-    
+
     return jsonify({
         'success': True,
         'filename': filename,
-        'folder_path': str(downloads_dir),
-        'file_path': str(filepath),
+        'file_content': file_content,
         'count': len(export_data)
     })
