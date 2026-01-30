@@ -378,6 +378,70 @@ rm "dist/UTMka.zip"
 
 ---
 
+## Шаг 4.4: Автообновления для macOS
+
+### Подход 1: Sparkle Framework (рекомендуется)
+
+**Sparkle** — стандартное решение для автообновлений в macOS.
+
+**Установка:**
+```bash
+# Добавить Sparkle в .app bundle
+# Скачать: https://sparkle-project.org/
+```
+
+**Интеграция:**
+1. Встроить Sparkle.framework в `UTMka.app/Contents/Frameworks/`
+2. Создать `appcast.xml` с информацией о релизах
+3. Хостить appcast.xml на GitHub Pages или CDN
+4. Sparkle автоматически проверяет обновления при запуске
+
+**Преимущества:**
+- Автоматическая проверка и установка
+- Подпись обновлений для безопасности
+- Нативный UI macOS
+
+### Подход 2: Ручной DMG (проще, без Sparkle)
+
+Использовать существующую логику в `src/core/updater.py`:
+
+```python
+# updater.py уже содержит платформу-специфичный код:
+if sys.platform == 'darwin':
+    # Скачать .dmg из GitHub Releases
+    # subprocess.Popen(['open', dmg_path])
+    # Показать инструкцию в модалке
+```
+
+**Модалка для macOS** (frontend):
+```
+"Скачано обновление UTMka-3.0.1.dmg
+1. Откройте DMG
+2. Перетащите UTMka.app в Applications
+3. Перезапустите приложение"
+```
+
+### Изменения в `src/core/updater.py`
+
+Функция `check_for_updates()` уже ищет `.dmg` для macOS:
+```python
+platform_suffix = '.exe' if sys.platform == 'win32' else '.dmg'
+```
+
+Функция `install_update()` уже поддерживает macOS:
+```python
+elif sys.platform == 'darwin':
+    subprocess.Popen(['open', installer_path])
+```
+
+### GitHub Releases формат
+
+При создании релиза включать оба файла:
+- `UTMka-Setup-3.0.1.exe` (Windows)
+- `UTMka-3.0.1-macOS.dmg` (macOS)
+
+---
+
 ## Чек-лист завершения этапа
 
 - [ ] .app bundle создаётся
@@ -385,3 +449,4 @@ rm "dist/UTMka.zip"
 - [ ] DMG создаётся
 - [ ] Данные хранятся в ~/Library/Application Support/
 - [ ] Инструкция по обходу Gatekeeper написана
+- [ ] Автообновления работают (Sparkle или ручной DMG)

@@ -41,6 +41,10 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 
+; Автообновления
+CloseApplications=force
+RestartApplications=yes
+
 ; Лицензия (опционально)
 ; LicenseFile=LICENSE.txt
 

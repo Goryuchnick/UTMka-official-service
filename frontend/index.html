@@ -762,6 +762,64 @@
         </div>
     </div>
 
+    <!-- Update Modal -->
+    <div id="updateModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+        <div class="glass-card w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
+            <!-- Заголовок -->
+            <div class="p-6 border-b border-slate-200/50 dark:border-white/10 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                    <i data-lucide="download" class="w-5 h-5 text-indigo-600"></i>
+                </div>
+                <h3 id="updateModalTitle" class="text-lg font-bold dark:text-white">Доступно обновление</h3>
+            </div>
+
+            <!-- Тело -->
+            <div class="p-6 space-y-4">
+                <div>
+                    <p id="updateModalVersion" class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Версия 0.0.0
+                    </p>
+                    <p id="updateModalNotes" class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">
+                        Описание изменений...
+                    </p>
+                </div>
+
+                <!-- Прогресс-бар -->
+                <div id="updateProgress" class="hidden">
+                    <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
+                        <span id="updateProgressLabel">Скачивание...</span>
+                        <span id="updateProgressPercent">0%</span>
+                    </div>
+                    <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div id="updateProgressBar"
+                            class="h-full bg-indigo-500 rounded-full transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Футер -->
+            <div class="p-4 bg-slate-50 dark:bg-[#0B1120]/50 flex justify-between gap-2 rounded-b-lg">
+                <button id="updateWhatsNewBtn"
+                    class="px-3 py-2 text-xs text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                    <span id="updateWhatsNewLabel">Что нового</span>
+                </button>
+                <div class="flex gap-2">
+                    <button id="updateLaterBtn"
+                        class="px-3 py-2 text-xs border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                        <span id="updateLaterLabel">Позже</span>
+                    </button>
+                    <button id="updateInstallBtn"
+                        class="px-4 py-2 text-xs bg-indigo-600 text-white rounded-lg font-medium shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-colors">
+                        <span id="updateInstallLabel">Установить</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- QR Code Modal -->
     <div id="qrCodeModal"
         class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">

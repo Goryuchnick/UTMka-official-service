@@ -432,6 +432,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 initAppForUser().catch(e => console.error('Error in initAppForUser:', e));
             }
 
+            // Проверяем обновления (фоново, не блокируем UI)
+            setTimeout(() => checkForUpdates(), 2000);
+
             setTimeout(() => {
                 try {
                     initHelpButton();
@@ -1468,4 +1471,118 @@ document.addEventListener('DOMContentLoaded', () => {
             try { startApp(); } catch (e) { console.error('Fallback error:', e); }
         }
     }, 2000);
+
+    // ============================================
+    // Автообновления
+    // ============================================
+
+    let updateData = null;
+
+    async function checkForUpdates() {
+        try {
+            const resp = await fetch('/api/update/check');
+            if (!resp.ok) return;
+
+            const data = await resp.json();
+            if (data.available) {
+                updateData = data;
+                showUpdateModal(data);
+            }
+        } catch (e) {
+            // Молча игнорируем ошибки (нет сети и т.д.)
+            console.log('Update check failed:', e);
+        }
+    }
+
+    function showUpdateModal(data) {
+        const modal = document.getElementById('updateModal');
+        const t = translations[state.lang];
+
+        // Обновляем тексты
+        document.getElementById('updateModalTitle').textContent = t.update_available;
+        document.getElementById('updateModalVersion').textContent = t.update_version.replace('{version}', data.latest_version);
+        document.getElementById('updateModalNotes').textContent = data.release_notes || '';
+        document.getElementById('updateWhatsNewLabel').textContent = t.update_whats_new;
+        document.getElementById('updateLaterLabel').textContent = t.update_later;
+        document.getElementById('updateInstallLabel').textContent = t.update_install;
+        document.getElementById('updateProgressLabel').textContent = t.update_downloading;
+
+        // Показываем модалку
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        // Обновляем иконки
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
+    }
+
+    function closeUpdateModal() {
+        const modal = document.getElementById('updateModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    async function startUpdate() {
+        if (!updateData || !updateData.download_url) return;
+
+        const t = translations[state.lang];
+        const progressDiv = document.getElementById('updateProgress');
+        const progressBar = document.getElementById('updateProgressBar');
+        const progressPercent = document.getElementById('updateProgressPercent');
+        const progressLabel = document.getElementById('updateProgressLabel');
+        const installBtn = document.getElementById('updateInstallBtn');
+
+        try {
+            // Показываем прогресс-бар
+            progressDiv.classList.remove('hidden');
+            installBtn.disabled = true;
+            installBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Скачиваем
+            progressLabel.textContent = t.update_downloading;
+            const downloadResp = await fetch('/api/update/download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: updateData.download_url })
+            });
+
+            if (!downloadResp.ok) throw new Error('Download failed');
+
+            const downloadData = await downloadResp.json();
+
+            // Устанавливаем
+            progressLabel.textContent = t.update_installing;
+            progressBar.style.width = '100%';
+            progressPercent.textContent = '100%';
+
+            await fetch('/api/update/install', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: downloadData.installer_path })
+            });
+
+            // Приложение будет закрыто sys.exit(0) на бэкенде
+        } catch (e) {
+            console.error('Update error:', e);
+            showToast(t.update_error, 'error');
+            progressDiv.classList.add('hidden');
+            installBtn.disabled = false;
+            installBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    function openWhatsNew() {
+        if (!updateData || !updateData.release_url) return;
+        // PyWebView автоматически откроет URL в системном браузере
+        window.open(updateData.release_url, '_blank');
+    }
+
+    // Event listeners для модалки обновления
+    document.getElementById('updateLaterBtn')?.addEventListener('click', closeUpdateModal);
+    document.getElementById('updateInstallBtn')?.addEventListener('click', startUpdate);
+    document.getElementById('updateWhatsNewBtn')?.addEventListener('click', openWhatsNew);
+    document.getElementById('updateModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'updateModal') closeUpdateModal();
+    });
 });

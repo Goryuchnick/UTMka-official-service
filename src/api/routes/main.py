@@ -3,7 +3,8 @@
 """
 import os
 import sys
-from flask import Blueprint, render_template, make_response, send_file, Response
+from flask import Blueprint, render_template, make_response, send_file, Response, jsonify
+from src.core.version import __version__
 
 main_bp = Blueprint('main', __name__)
 
@@ -35,10 +36,16 @@ def favicon():
         favicon_path = resource_path('logo/logoutm.png')
         if not os.path.exists(favicon_path):
             return Response(status=204)
-        
+
         response = send_file(favicon_path, mimetype='image/png')
         response.cache_control.max_age = 31536000
         response.cache_control.public = True
         return response
     except Exception:
         return Response(status=204)
+
+
+@main_bp.route('/api/version')
+def get_version():
+    """Возвращает текущую версию приложения."""
+    return jsonify({'version': __version__})

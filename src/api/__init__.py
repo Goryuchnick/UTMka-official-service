@@ -80,11 +80,13 @@ def create_app(config_name: str = 'development') -> Flask:
     from src.api.routes.templates import templates_bp
     from src.api.routes.auth import auth_bp
     from src.api.routes.preferences import preferences_bp
+    from src.api.routes.update import update_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(history_bp)
     app.register_blueprint(templates_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(preferences_bp)
+    app.register_blueprint(update_bp)
     
     return app

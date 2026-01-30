@@ -107,6 +107,14 @@ export const translations = {
         onboarding_btn_done: 'Готово',
         popular_tags: 'Популярные',
         recent_tags: 'Недавние',
+        update_available: 'Доступно обновление',
+        update_version: 'Версия {version}',
+        update_install: 'Установить',
+        update_later: 'Позже',
+        update_whats_new: 'Что нового',
+        update_downloading: 'Скачивание...',
+        update_installing: 'Установка...',
+        update_error: 'Ошибка обновления',
     },
     en: {
         nav_generator: 'Generator',
@@ -216,5 +224,13 @@ export const translations = {
         onboarding_btn_done: 'Done',
         popular_tags: 'Popular',
         recent_tags: 'Recent',
+        update_available: 'Update available',
+        update_version: 'Version {version}',
+        update_install: 'Install',
+        update_later: 'Later',
+        update_whats_new: "What's new",
+        update_downloading: 'Downloading...',
+        update_installing: 'Installing...',
+        update_error: 'Update error',
     }
 };
