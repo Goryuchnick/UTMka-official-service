@@ -141,3 +141,6 @@ error.log
 # Claude artifacts (AI assistant files)
 .claude/
 claude_*.md
+
+# Release notes
+RELEASE_*.md

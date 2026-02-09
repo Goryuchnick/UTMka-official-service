@@ -444,9 +444,37 @@ elif sys.platform == 'darwin':
 
 ## Чек-лист завершения этапа
 
-- [ ] .app bundle создаётся
-- [ ] Приложение запускается на macOS
-- [ ] DMG создаётся
-- [ ] Данные хранятся в ~/Library/Application Support/
-- [ ] Инструкция по обходу Gatekeeper написана
-- [ ] Автообновления работают (Sparkle или ручной DMG)
+- [x] .app bundle создаётся
+- [x] Приложение запускается на macOS
+- [x] DMG создаётся
+- [x] Данные хранятся в ~/Library/Application Support/
+- [x] Инструкция по обходу Gatekeeper написана
+- [x] Автообновления работают (ручной DMG через updater.py)
+
+## Статус выполнения
+
+✅ **Этап 4 выполнен**
+
+Созданы файлы:
+- `installers/macos/UTMka.spec` — PyInstaller spec для macOS
+- `installers/macos/build.py` — скрипт сборки с автосинхронизацией версии
+- `installers/macos/sign_and_notarize.sh` — скрипт подписи и нотаризации
+- `installers/macos/README.md` — документация по сборке
+- `installers/macos/build_all_archs.py` — скрипт для сборки обеих архитектур
+
+**Особенности:**
+- Поддержка arm64 (Apple Silicon) и x86_64 (Intel)
+- Автоматическая синхронизация версии из `src/core/version.py`
+- Создание DMG через `hdiutil` (с опциональной поддержкой `create-dmg`)
+- Интеграция с OTA обновлениями (уже реализовано в `src/core/updater.py`)
+- Скрипт подписи и нотаризации для Apple Developer Account
+
+**Использование:**
+```bash
+# Сборка для текущей архитектуры
+python installers/macos/build.py
+
+# Результат:
+# - dist/UTMka.app
+# - dist/UTMka-2.2.0-macOS.dmg
+```
