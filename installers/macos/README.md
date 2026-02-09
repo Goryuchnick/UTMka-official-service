@@ -79,6 +79,70 @@ python installers/macos/build.py
    - Системные настройки → Безопасность
    - "Всё равно открыть" рядом с UTMka
 
+## Запуск через терминал (без подписи)
+
+Для запуска приложения через терминал без предупреждений Gatekeeper:
+
+### Способ 1: Скрипт-лаунчер
+
+```bash
+# Сделайте скрипт исполняемым (уже сделано)
+chmod +x installers/macos/launch_utmka.sh
+
+# Запуск из /Applications
+./installers/macos/launch_utmka.sh
+
+# Запуск из указанного пути
+./installers/macos/launch_utmka.sh /path/to/UTMka.app
+```
+
+Скрипт автоматически:
+- Проверяет существование приложения
+- Удаляет карантин (quarantine) если есть
+- Запускает приложение
+
+### Способ 2: Ручное удаление карантина
+
+```bash
+# Удалить карантин
+xattr -d com.apple.quarantine /Applications/UTMka.app
+
+# Запустить приложение
+open /Applications/UTMka.app
+```
+
+### Способ 3: Прямой запуск исполняемого файла
+
+```bash
+# Сначала удалите карантин
+xattr -d com.apple.quarantine /path/to/UTMka.app
+
+# Затем запустите напрямую
+/path/to/UTMka.app/Contents/MacOS/UTMka
+```
+
+## Автоматическая установка из DMG
+
+Для автоматической установки приложения из DMG через терминал:
+
+```bash
+# Сделайте скрипт исполняемым (уже сделано)
+chmod +x installers/macos/install_from_dmg.sh
+
+# Автоматическая установка (ищет DMG в dist/)
+./installers/macos/install_from_dmg.sh
+
+# Или укажите путь к DMG
+./installers/macos/install_from_dmg.sh /path/to/UTMka-2.2.1-macOS-x86_64.dmg
+```
+
+Скрипт автоматически:
+- Удалит карантин с DMG и приложения
+- Смонтирует DMG
+- Скопирует приложение в `/Applications`
+- Отмонтирует DMG
+- Предложит запустить приложение
+
 ## Автообновления
 
 OTA обновления уже настроены в `src/core/updater.py`:
@@ -96,7 +160,10 @@ OTA обновления уже настроены в `src/core/updater.py`:
 installers/macos/
 ├── UTMka.spec          # PyInstaller spec
 ├── build.py            # Скрипт сборки
+├── build_release.py    # Сборка для обеих архитектур
 ├── sign_and_notarize.sh # Подпись и нотаризация
+├── launch_utmka.sh     # Скрипт запуска без предупреждений
+├── install_from_dmg.sh # Автоматическая установка из DMG
 └── README.md           # Эта инструкция
 ```
 
@@ -134,9 +201,27 @@ codesign -dv --verbose=4 dist/UTMka.app
 ```
 
 ### Приложение не запускается
-Проверьте логи:
+
+**Через терминал:**
+```bash
+# Используйте скрипт-лаунчер
+./installers/macos/launch_utmka.sh /path/to/UTMka.app
+
+# Или вручную удалите карантин и запустите
+xattr -d com.apple.quarantine /path/to/UTMka.app
+open /path/to/UTMka.app
+```
+
+**Проверка логов:**
 ```bash
 open -a Console
 # Или через терминал:
 ./dist/UTMka.app/Contents/MacOS/UTMka
+```
+
+**Проверка карантина:**
+```bash
+xattr -l /path/to/UTMka.app
+# Если видите com.apple.quarantine — удалите его:
+xattr -d com.apple.quarantine /path/to/UTMka.app
 ```
