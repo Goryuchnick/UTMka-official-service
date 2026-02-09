@@ -41,11 +41,7 @@ No linter, formatter, or test runner is configured. Pytest is in requirements.tx
 - **Config**: `src/core/config.py` — `DevelopmentConfig` (SQLite, debug), `DesktopConfig` (SQLite, no debug), `WebConfig`/`ProductionConfig` (PostgreSQL, OAuth, payments — future web version).
 - **Models**: `src/core/models.py` — SQLAlchemy models: `User`, `History` (table `history_new`), `Template`, `Subscription`. DB auto-created on startup via `db.create_all()`.
 - **Services**: `src/core/services.py` — `UTMService` with static methods for parsing/building UTM URLs.
-- **API routes** (Blueprints in `src/api/routes/`):
-  - `main.py` — serves `index.html` and favicon
-  - `history.py` — CRUD for link history
-  - `templates.py` — CRUD for templates
-  - `auth.py` — auth placeholder for future web version
+- **API routes**: See "API Routes" section below.
 
 ### Frontend (Vanilla JS / ES6 modules)
 
@@ -77,6 +73,26 @@ External libs loaded via CDN: Tailwind CSS, Lucide Icons, Flatpickr, QRCode.js.
 ### Resource Resolution
 
 `get_resource_path()` in `src/core/config.py` resolves paths relative to `sys._MEIPASS` when frozen (PyInstaller) or relative to project root in dev mode. Use this for any file that must be accessible in both dev and packaged builds.
+
+### Versioning & OTA Updates
+
+- **Single source of truth**: `src/core/version.py` — `__version__ = "X.Y.Z"`. Change only this file when bumping version.
+- **Auto-sync on build**: `installers/windows/build.py` reads `__version__` and patches `setup.iss` (`MyAppVersion`) and `version_info.txt` (`filevers`, `prodvers`, `FileVersion`, `ProductVersion`) before building.
+- **OTA flow**: On startup, frontend calls `GET /api/update/check` → backend (`src/core/updater.py`) queries GitHub Releases API → compares semver → if newer version found with `.exe` asset, shows update modal.
+- **GitHub Release tag must match `__version__`**: e.g., if `__version__ = "2.2.0"`, the GitHub Release tag should be `v2.2.0` (or `2.2.0`). The leading `v` is stripped during comparison.
+- **Release workflow**:
+  1. Bump version in `src/core/version.py`
+  2. Run `python installers/windows/build.py` (auto-syncs all version files)
+  3. Upload `dist/UTMka-Setup-X.Y.Z.exe` to GitHub Release with tag `vX.Y.Z`
+
+### API Routes
+
+Blueprints in `src/api/routes/`:
+- `main.py` — serves `index.html`, favicon, `GET /api/version`
+- `history.py` — CRUD for link history
+- `templates.py` — CRUD for templates
+- `update.py` — `GET /api/update/check`, `POST /api/update/download`, `POST /api/update/install`
+- `auth.py` — auth placeholder for future web version
 
 ## Key Patterns
 

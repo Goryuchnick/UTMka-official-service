@@ -120,9 +120,6 @@ preferences.json
 settings.json
 config.local.json
 
-# Release notes (generated, not tracked in git)
-RELEASE_*.md
-
 # Windows system files
 desktop.ini
 $RECYCLE.BIN/

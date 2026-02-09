@@ -432,6 +432,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 initAppForUser().catch(e => console.error('Error in initAppForUser:', e));
             }
 
+            // Загружаем и отображаем версию
+            fetch('/api/version').then(r => r.json()).then(d => {
+                const el = document.getElementById('appVersionLabel');
+                if (el && d.version) el.textContent = 'UTMka v' + d.version;
+            }).catch(() => {});
+
             // Проверяем обновления (фоново, не блокируем UI)
             setTimeout(() => checkForUpdates(), 2000);
 
@@ -1501,7 +1507,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Обновляем тексты
         document.getElementById('updateModalTitle').textContent = t.update_available;
         document.getElementById('updateModalVersion').textContent = t.update_version.replace('{version}', data.latest_version);
-        document.getElementById('updateModalNotes').textContent = data.release_notes || '';
+        const notes = data.release_notes || '';
+        const maxLen = 150;
+        document.getElementById('updateModalNotes').textContent = notes.length > maxLen
+            ? notes.substring(0, maxLen) + '…'
+            : notes;
         document.getElementById('updateWhatsNewLabel').textContent = t.update_whats_new;
         document.getElementById('updateLaterLabel').textContent = t.update_later;
         document.getElementById('updateInstallLabel').textContent = t.update_install;

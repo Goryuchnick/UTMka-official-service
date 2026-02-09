@@ -2,7 +2,7 @@
 ; Inno Setup 6.x
 
 #define MyAppName "UTMka"
-#define MyAppVersion "2.1.1"
+#define MyAppVersion "2.2.0"
 #define MyAppPublisher "UTMka"
 #define MyAppURL "https://utmka.ru"
 #define MyAppExeName "UTMka.exe"
@@ -68,7 +68,10 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 ; Запустить после установки
+; Интерактивная установка: чекбокс "Запустить UTMka"
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+; Тихая установка (автообновление): запустить приложение автоматически
+Filename: "{app}\{#MyAppExeName}"; Flags: nowait skipifnotsilent runasoriginaluser
 
 [Code]
 // Создание папки данных при установке

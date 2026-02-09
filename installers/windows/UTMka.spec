@@ -40,6 +40,11 @@ a = Analysis(
         'sqlite3',
         'marshmallow',
         'jaraco.text',  # Для PyInstaller
+        'platformdirs',  # Для jaraco.text
+        'requests',  # Для автообновлений
+        'urllib3',  # Зависимость requests
+        'certifi',  # SSL сертификаты
+        'charset_normalizer',  # Для requests
     ],
     hookspath=[],
     hooksconfig={},
