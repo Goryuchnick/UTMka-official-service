@@ -33,7 +33,16 @@
 
 ### macOS
 
-В разработке. macOS сборка планируется после стабилизации Windows-версии.
+См. подробную инструкцию: **[INSTALL_MACOS.md](INSTALL_MACOS.md)**
+
+**Кратко:**
+1. Скачайте DMG для вашей архитектуры из [релизов](https://github.com/Goryuchnick/UTMka-official-service/releases):
+   - `UTMka-X.Y.Z-macOS-x86_64.dmg` — для Intel Mac
+   - `UTMka-X.Y.Z-macOS-arm64.dmg` — для Apple Silicon (M1/M2/M3)
+2. Откройте DMG и перетащите `UTMka.app` в Applications
+3. При первом запуске: **ПКМ на приложение → "Открыть" → "Открыть"** в диалоге
+
+> **Примечание:** Приложение не подписано, поэтому macOS покажет предупреждение. Это нормально — используйте ПКМ → "Открыть" для первого запуска.
 
 ### Автоматические обновления
 
@@ -234,7 +243,16 @@ The interface features a modern design (Tailwind, light/dark theme) while functi
 
 ### macOS
 
-Under development. macOS build is planned after Windows version stabilization.
+See detailed instructions: **[INSTALL_MACOS.md](INSTALL_MACOS.md)**
+
+**Quick start:**
+1. Download DMG for your architecture from [releases](https://github.com/Goryuchnick/UTMka-official-service/releases):
+   - `UTMka-X.Y.Z-macOS-x86_64.dmg` — for Intel Mac
+   - `UTMka-X.Y.Z-macOS-arm64.dmg` — for Apple Silicon (M1/M2/M3)
+2. Open DMG and drag `UTMka.app` to Applications
+3. On first launch: **Right-click app → "Open" → "Open"** in dialog
+
+> **Note:** The app is unsigned, so macOS will show a warning. This is normal — use Right-click → "Open" for first launch.
 
 ### Automatic Updates
 

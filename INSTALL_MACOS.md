@@ -1,244 +1,319 @@
-# Инструкция по установке UTMka для macOS
+# Установка UTMka для macOS
 
-## Системные требования
+## 📦 Скачивание
 
-- macOS 10.13 (High Sierra) или новее
-- Процессор: Apple Silicon (M1/M2/M3) или Intel (x86_64)
-- Свободное место на диске: ~200 МБ
+Все установочные файлы доступны в [последних релизах](https://github.com/Goryuchnick/UTMka-official-service/releases).
 
-## Выбор версии
+Выберите версию для вашей архитектуры:
+- **UTMka-X.Y.Z-macOS-x86_64.dmg** — для Intel Mac
+- **UTMka-X.Y.Z-macOS-arm64.dmg** — для Apple Silicon (M1/M2/M3)
 
-Выберите версию в зависимости от вашего Mac:
-
-- **UTMka-2.0.0-macOS-ARM.dmg** — для Mac с процессором Apple Silicon (M1, M2, M3 и новее)
-- **UTMka-2.0.0-macOS-Intel.dmg** — для Mac с процессором Intel
-
-Чтобы узнать, какой процессор у вашего Mac:
-1. Нажмите на логотип Apple в левом верхнем углу
-2. Выберите "Об этом Mac"
-3. Посмотрите на строку "Процессор" или "Чип"
-
-## Установка
-
-### Способ 1: Установка через DMG (рекомендуется)
-
-1. **Скачайте DMG файл** для вашей архитектуры
-2. **Откройте DMG файл** — он появится в Finder
-3. **Перетащите UTMka.app** в папку Applications
-   - Или дважды кликните на приложение для запуска без установки
-4. **Закройте окно DMG** после установки
-
-### Способ 2: Портативная версия (без установки)
-
-1. **Скачайте DMG файл** для вашей архитектуры
-2. **Откройте DMG файл**
-3. **Дважды кликните на UTMka.app** для запуска
-4. Приложение будет работать из DMG, все данные сохраняются рядом с приложением
-
-## Первый запуск
-
-### Если macOS показывает предупреждение о безопасности
-
-При первом запуске macOS может показать сообщение:
-> "UTMka не может быть открыт, так как разработчик не может быть проверен"
-
-**Решение:**
-
-1. Откройте **Системные настройки** (System Preferences)
-2. Перейдите в **Безопасность и конфиденциальность** (Security & Privacy)
-3. В разделе "Общие" найдите сообщение о UTMka
-4. Нажмите **"Открыть в любом случае"** (Open Anyway)
-5. Подтвердите действие
-
-### Альтернативный способ (через Terminal)
-
-Если предупреждение не появляется или вы хотите обойти его сразу:
-
-1. Откройте **Terminal** (Терминал)
-2. Выполните команду:
-   ```bash
-   xattr -cr /Applications/UTMka.app
-   ```
-   (Если приложение не в Applications, укажите полный путь к нему)
-3. Запустите приложение
-
-## Запуск приложения
-
-После установки вы можете запустить UTMka следующими способами:
-
-1. **Из папки Applications:**
-   - Откройте Finder
-   - Перейдите в Applications
-   - Найдите и запустите UTMka
-
-2. **Через Spotlight:**
-   - Нажмите `Cmd + Space`
-   - Введите "UTMka"
-   - Нажмите Enter
-
-3. **Из Launchpad:**
-   - Откройте Launchpad
-   - Найдите UTMka
-   - Кликните для запуска
-
-## Удаление приложения
-
-1. Откройте Finder
-2. Перейдите в Applications
-3. Найдите UTMka.app
-4. Перетащите в Корзину или нажмите `Cmd + Delete`
-5. Очистите Корзину
-
-**Примечание:** Данные приложения (база данных, шаблоны, история) хранятся в папке приложения. При удалении они также будут удалены. Если хотите сохранить данные, скопируйте файл `utm_data.db` и папку `downloads` перед удалением.
-
-## Решение проблем
-
-### Приложение не запускается
-
-1. Убедитесь, что вы используете правильную версию для вашей архитектуры
-2. Проверьте, что macOS 10.13 или новее
-3. Попробуйте удалить расширенные атрибуты (см. "Альтернативный способ" выше)
-
-### Приложение работает медленно
-
-1. Убедитесь, что используете версию для вашей архитектуры (ARM для Apple Silicon, Intel для Intel)
-2. Закройте другие приложения для освобождения памяти
-
-### Ошибки при первом запуске
-
-1. Убедитесь, что у приложения есть права на запись в папку, где оно находится
-2. Проверьте свободное место на диске
-
-## Дополнительная информация
-
-- **Версия:** 2.0.0
-- **Разработчик:** UTMka Team
-- **Лицензия:** Свободное использование
-
-Для получения поддержки и обновлений посетите:
-- GitHub: [ссылка на репозиторий]
-- Сайт разработчика: [ссылка на сайт]
+> **Как узнать архитектуру?** Apple → Об этом Mac → посмотрите "Чип" или "Процессор"
 
 ---
 
-## Installation Instructions for macOS (English)
+## 🚀 Установка
 
-### System Requirements
+### Способ 1: Через DMG (рекомендуется)
 
-- macOS 10.13 (High Sierra) or later
-- Processor: Apple Silicon (M1/M2/M3) or Intel (x86_64)
-- Free disk space: ~200 MB
+1. **Скачайте DMG** для вашей архитектуры из [релизов](https://github.com/Goryuchnick/UTMka-official-service/releases)
+2. **Откройте DMG** (двойной клик)
+3. **Перетащите UTMka.app** в папку Applications
+4. **Закройте окно DMG**
 
-### Choosing the Version
+### Способ 2: Автоматическая установка через терминал
 
-Choose the version based on your Mac:
+Если вы предпочитаете терминал, используйте скрипт:
 
-- **UTMka-2.0.0-macOS-ARM.dmg** — for Macs with Apple Silicon (M1, M2, M3 and newer)
-- **UTMka-2.0.0-macOS-Intel.dmg** — for Macs with Intel processors
+```bash
+# Клонируйте репозиторий или скачайте скрипт
+git clone https://github.com/Goryuchnick/UTMka-official-service.git
+cd UTMka-official-service
 
-To find out which processor your Mac has:
-1. Click the Apple logo in the top-left corner
-2. Select "About This Mac"
-3. Look at the "Processor" or "Chip" line
+# Запустите скрипт установки
+./installers/macos/install_from_dmg.sh /path/to/UTMka-X.Y.Z-macOS-x86_64.dmg
+```
 
-### Installation
+Скрипт автоматически:
+- Удалит карантин с DMG и приложения
+- Установит приложение в `/Applications`
+- Предложит запустить приложение
 
-#### Method 1: Install via DMG (Recommended)
+---
 
-1. **Download the DMG file** for your architecture
-2. **Open the DMG file** — it will appear in Finder
-3. **Drag UTMka.app** to the Applications folder
-   - Or double-click the app to run without installation
-4. **Close the DMG window** after installation
+## 🔓 Первый запуск (обход предупреждения Gatekeeper)
 
-#### Method 2: Portable Version (No Installation)
+Приложение не подписано Apple Developer сертификатом, поэтому macOS покажет предупреждение о безопасности. Это нормально — приложение безопасно.
 
-1. **Download the DMG file** for your architecture
-2. **Open the DMG file**
-3. **Double-click UTMka.app** to run
-4. The app will run from the DMG, all data is saved next to the app
+### Вариант 1: Через контекстное меню (самый простой) ⭐
 
-### First Launch
+1. Найдите `UTMka.app` в Applications
+2. **Кликните правой кнопкой мыши** (или Control+клик)
+3. Выберите **"Открыть"**
+4. В диалоге нажмите **"Открыть"**
 
-#### If macOS Shows a Security Warning
+✅ После этого приложение будет запускаться обычным способом
 
-On first launch, macOS may show a message:
-> "UTMka cannot be opened because the developer cannot be verified"
+### Вариант 2: Через Системные настройки
 
-**Solution:**
+1. Попробуйте открыть приложение (появится предупреждение)
+2. Откройте **Системные настройки** → **Безопасность и конфиденциальность**
+3. В разделе "Общие" найдите: "UTMka заблокирован, так как его не удалось проверить"
+4. Нажмите **"Всё равно открыть"**
 
-1. Open **System Preferences**
-2. Go to **Security & Privacy**
-3. In the "General" section, find the message about UTMka
-4. Click **"Open Anyway"**
-5. Confirm the action
+### Вариант 3: Через терминал (для продвинутых)
 
-#### Alternative Method (via Terminal)
+**Использование скрипта-лаунчера:**
+```bash
+# Клонируйте репозиторий или скачайте скрипт
+git clone https://github.com/Goryuchnick/UTMka-official-service.git
+cd UTMka-official-service
 
-If the warning doesn't appear or you want to bypass it immediately:
+# Запустите скрипт
+./installers/macos/launch_utmka.sh
+```
 
-1. Open **Terminal**
-2. Run the command:
+**Или вручную через терминал:**
+```bash
+# Удалить карантин
+xattr -d com.apple.quarantine /Applications/UTMka.app
+
+# Запустить приложение
+open /Applications/UTMka.app
+```
+
+---
+
+## 📍 Где хранятся данные?
+
+Все данные приложения хранятся в:
+```
+~/Library/Application Support/UTMka/
+├── databases/
+│   └── utmka.db
+├── exports/
+├── logs/
+└── config.json
+```
+
+> **Важно:** При удалении приложения данные сохраняются. Для полного удаления также удалите эту папку.
+
+---
+
+## 🗑️ Удаление
+
+1. Перетащите `UTMka.app` из Applications в Корзину
+2. (Опционально) Удалите данные:
    ```bash
-   xattr -cr /Applications/UTMka.app
+   rm -rf ~/Library/Application\ Support/UTMka
    ```
-   (If the app is not in Applications, specify the full path to it)
-3. Launch the application
 
-### Launching the Application
+---
 
-After installation, you can launch UTMka in the following ways:
+## ❓ Решение проблем
 
-1. **From Applications folder:**
-   - Open Finder
-   - Go to Applications
-   - Find and launch UTMka
+### Приложение не запускается
 
-2. **Via Spotlight:**
-   - Press `Cmd + Space`
-   - Type "UTMka"
-   - Press Enter
+1. **Убедитесь, что используете правильную версию:**
+   - x86_64 для Intel Mac
+   - arm64 для Apple Silicon (M1/M2/M3)
 
-3. **From Launchpad:**
-   - Open Launchpad
-   - Find UTMka
-   - Click to launch
+2. **Удалите карантин через терминал:**
+   ```bash
+   xattr -d com.apple.quarantine /Applications/UTMka.app
+   ```
 
-### Uninstalling the Application
+3. **Проверьте версию macOS:** требуется 10.13 (High Sierra) или новее
 
-1. Open Finder
-2. Go to Applications
-3. Find UTMka.app
-4. Drag to Trash or press `Cmd + Delete`
-5. Empty Trash
+### Предупреждение появляется каждый раз
 
-**Note:** Application data (database, templates, history) is stored in the app folder. When uninstalling, it will also be deleted. If you want to save data, copy the `utm_data.db` file and `downloads` folder before uninstalling.
+Это означает, что карантин не был удалён. Используйте **Вариант 3** (терминал) для постоянного решения.
 
-### Troubleshooting
+### Приложение работает медленно
 
-#### Application Won't Launch
+- Убедитесь, что используете версию для вашей архитектуры
+- Закройте другие приложения для освобождения памяти
 
-1. Make sure you're using the correct version for your architecture
-2. Check that macOS 10.13 or later is installed
-3. Try removing extended attributes (see "Alternative Method" above)
+---
 
-#### Application Runs Slowly
+## 📚 Дополнительная информация
 
-1. Make sure you're using the version for your architecture (ARM for Apple Silicon, Intel for Intel)
-2. Close other applications to free up memory
+- **Системные требования:** macOS 10.13 (High Sierra) или новее
+- **Размер:** ~50-55 MB
+- **Автообновления:** Приложение автоматически проверяет обновления при запуске
+- **Версия:** 2.2.1+
 
-#### Errors on First Launch
+---
 
-1. Make sure the app has write permissions in the folder where it's located
-2. Check available disk space
+## 🔄 Обновление
 
-### Additional Information
+Приложение автоматически проверяет наличие обновлений при запуске. При обнаружении новой версии появится модальное окно с предложением обновиться.
 
-- **Version:** 2.0.0
-- **Developer:** UTMka Team
-- **License:** Free to use
+Также можно обновить вручную:
+1. Скачайте новую версию DMG из [релизов](https://github.com/Goryuchnick/UTMka-official-service/releases)
+2. Установите поверх старой версии (данные сохранятся)
 
-For support and updates, visit:
-- GitHub: [repository link]
-- Developer website: [website link]
+---
 
+**Нужна помощь?** Создайте [Issue на GitHub](https://github.com/Goryuchnick/UTMka-official-service/issues)
+
+---
+
+# Installation Instructions for macOS (English)
+
+## 📦 Download
+
+All installer files are available in the [latest releases](https://github.com/Goryuchnick/UTMka-official-service/releases).
+
+Choose the version for your architecture:
+- **UTMka-X.Y.Z-macOS-x86_64.dmg** — for Intel Mac
+- **UTMka-X.Y.Z-macOS-arm64.dmg** — for Apple Silicon (M1/M2/M3)
+
+> **How to check your architecture?** Apple → About This Mac → look at "Chip" or "Processor"
+
+---
+
+## 🚀 Installation
+
+### Method 1: Via DMG (Recommended)
+
+1. **Download DMG** for your architecture from [releases](https://github.com/Goryuchnick/UTMka-official-service/releases)
+2. **Open DMG** (double-click)
+3. **Drag UTMka.app** to Applications folder
+4. **Close DMG window**
+
+### Method 2: Automatic Installation via Terminal
+
+If you prefer terminal, use the script:
+
+```bash
+# Clone repository or download script
+git clone https://github.com/Goryuchnick/UTMka-official-service.git
+cd UTMka-official-service
+
+# Run installation script
+./installers/macos/install_from_dmg.sh /path/to/UTMka-X.Y.Z-macOS-x86_64.dmg
+```
+
+The script automatically:
+- Removes quarantine from DMG and app
+- Installs app to `/Applications`
+- Offers to launch the app
+
+---
+
+## 🔓 First Launch (Bypassing Gatekeeper Warning)
+
+The app is not signed with an Apple Developer certificate, so macOS will show a security warning. This is normal — the app is safe.
+
+### Option 1: Via Context Menu (Easiest) ⭐
+
+1. Find `UTMka.app` in Applications
+2. **Right-click** (or Control+click)
+3. Select **"Open"**
+4. Click **"Open"** in the dialog
+
+✅ After this, the app will launch normally
+
+### Option 2: Via System Settings
+
+1. Try to open the app (warning will appear)
+2. Open **System Settings** → **Privacy & Security**
+3. In "General" section, find: "UTMka was blocked because it is from an unidentified developer"
+4. Click **"Open Anyway"**
+
+### Option 3: Via Terminal (for advanced users)
+
+**Using launcher script:**
+```bash
+# Clone repository or download script
+git clone https://github.com/Goryuchnick/UTMka-official-service.git
+cd UTMka-official-service
+
+# Run script
+./installers/macos/launch_utmka.sh
+```
+
+**Or manually via terminal:**
+```bash
+# Remove quarantine
+xattr -d com.apple.quarantine /Applications/UTMka.app
+
+# Launch app
+open /Applications/UTMka.app
+```
+
+---
+
+## 📍 Where Data is Stored
+
+All app data is stored in:
+```
+~/Library/Application Support/UTMka/
+├── databases/
+│   └── utmka.db
+├── exports/
+├── logs/
+└── config.json
+```
+
+> **Important:** When uninstalling the app, data is preserved. For complete removal, also delete this folder.
+
+---
+
+## 🗑️ Uninstallation
+
+1. Drag `UTMka.app` from Applications to Trash
+2. (Optional) Delete data:
+   ```bash
+   rm -rf ~/Library/Application\ Support/UTMka
+   ```
+
+---
+
+## ❓ Troubleshooting
+
+### App Won't Launch
+
+1. **Make sure you're using the correct version:**
+   - x86_64 for Intel Mac
+   - arm64 for Apple Silicon (M1/M2/M3)
+
+2. **Remove quarantine via terminal:**
+   ```bash
+   xattr -d com.apple.quarantine /Applications/UTMka.app
+   ```
+
+3. **Check macOS version:** requires 10.13 (High Sierra) or later
+
+### Warning Appears Every Time
+
+This means quarantine wasn't removed. Use **Option 3** (terminal) for a permanent solution.
+
+### App Runs Slowly
+
+- Make sure you're using the version for your architecture
+- Close other apps to free up memory
+
+---
+
+## 📚 Additional Information
+
+- **System Requirements:** macOS 10.13 (High Sierra) or later
+- **Size:** ~50-55 MB
+- **Auto-updates:** App automatically checks for updates on startup
+- **Version:** 2.2.1+
+
+---
+
+## 🔄 Updating
+
+The app automatically checks for updates on startup. When a new version is found, a modal will appear offering to update.
+
+You can also update manually:
+1. Download new DMG version from [releases](https://github.com/Goryuchnick/UTMka-official-service/releases)
+2. Install over the old version (data will be preserved)
+
+---
+
+**Need help?** Create an [Issue on GitHub](https://github.com/Goryuchnick/UTMka-official-service/issues)
