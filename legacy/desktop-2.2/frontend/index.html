@@ -24,8 +24,10 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com" onerror="console.warn('Tailwind CDN failed to load')"></script>
 
-    <!-- Icons -->
+    <!-- Icons: lucide + pixel-icons overlay (patches lucide.createIcons to emit pixel SVG) -->
     <script src="https://unpkg.com/lucide@latest" async defer onerror="console.warn('Lucide CDN failed to load')"></script>
+    <script src="js/stroke-glyphs.js" defer></script>
+    <script src="js/pixel-icons.js" defer></script>
 
     <!-- Flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <style>
+    .lo-fg { fill: #E08000; }
+    .lo-sh { fill: #C26210; }
+    @media (prefers-color-scheme: dark) {
+      .lo-fg { fill: #FFB000; }
+      .lo-sh { fill: #8C5A14; }
+    }
+  </style>
+
+  <!-- Упрощённый силуэт: U + link-стрелка (pixel) -->
+  <rect class="lo-sh" x="3" y="3" width="1" height="7"/>
+  <rect class="lo-sh" x="7" y="3" width="1" height="7"/>
+  <rect class="lo-sh" x="4" y="9" width="3" height="1"/>
+  <rect class="lo-fg" x="2" y="2" width="1" height="7"/>
+  <rect class="lo-fg" x="6" y="2" width="1" height="7"/>
+  <rect class="lo-fg" x="3" y="8" width="3" height="1"/>
+
+  <rect class="lo-sh" x="11" y="2" width="3" height="1"/>
+  <rect class="lo-sh" x="13" y="3" width="1" height="3"/>
+  <rect class="lo-sh" x="10" y="6" width="1" height="1"/>
+  <rect class="lo-sh" x="11" y="5" width="1" height="1"/>
+  <rect class="lo-sh" x="12" y="4" width="1" height="1"/>
+
+  <rect class="lo-fg" x="10" y="1" width="3" height="1"/>
+  <rect class="lo-fg" x="12" y="2" width="1" height="3"/>
+  <rect class="lo-fg" x="9" y="5" width="1" height="1"/>
+  <rect class="lo-fg" x="10" y="4" width="1" height="1"/>
+  <rect class="lo-fg" x="11" y="3" width="1" height="1"/>
+</svg>

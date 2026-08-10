@@ -162,29 +162,32 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error initializing lucide icons:', e);
     }
 
-    // --- Theme toggle ---
+    // --- Theme toggle (data-theme="light|dark") ---
     const themeToggle = document.getElementById('theme-toggle');
     const htmlEl = document.documentElement;
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = localStorage.getItem('theme') || 'light';
 
-    if (savedTheme === 'dark') {
-        htmlEl.classList.add('dark');
-    } else {
-        htmlEl.classList.remove('dark');
+    function applyTheme(theme) {
+        htmlEl.setAttribute('data-theme', theme);
+        htmlEl.classList.toggle('dark', theme === 'dark');
+        // Switch toggle icon visibility
+        const lightIcon = document.querySelector('[data-theme-icon="light"]');
+        const darkIcon = document.querySelector('[data-theme-icon="dark"]');
+        if (lightIcon && darkIcon) {
+            lightIcon.classList.toggle('hidden', theme !== 'light');
+            darkIcon.classList.toggle('hidden', theme !== 'dark');
+        }
     }
+
+    applyTheme(savedTheme);
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
-            const isDark = htmlEl.classList.contains('dark');
-            if (isDark) {
-                htmlEl.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-                savePreference('theme', 'light');
-            } else {
-                htmlEl.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-                savePreference('theme', 'dark');
-            }
+            const current = htmlEl.getAttribute('data-theme') || 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+            localStorage.setItem('theme', next);
+            savePreference('theme', next);
 
             setTimeout(() => {
                 if (typeof renderHistory === 'function') renderHistory();
@@ -381,11 +384,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!prefs) return;
 
         // Theme
-        const serverTheme = prefs.theme || 'dark';
-        const currentTheme = localStorage.getItem('theme') || 'dark';
+        const serverTheme = prefs.theme || 'light';
+        const currentTheme = localStorage.getItem('theme') || 'light';
         if (serverTheme !== currentTheme) {
-            if (serverTheme === 'dark') htmlEl.classList.add('dark');
-            else htmlEl.classList.remove('dark');
+            applyTheme(serverTheme);
             localStorage.setItem('theme', serverTheme);
             setTimeout(() => {
                 if (typeof renderHistory === 'function') renderHistory();
@@ -426,7 +428,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const footer = document.querySelector('footer');
-            if (footer) footer.style.display = '';
+            if (footer) { footer.classList.remove('hidden'); footer.style.display = ''; }
+
+            // Swap old PNG logo to pixel-amber SVG without touching markup
+            document.querySelectorAll('img[src*="logoutm.png"]').forEach(img => {
+                img.src = 'logo/logoutm.svg';
+                img.style.imageRendering = 'pixelated';
+            });
 
             if (typeof initAppForUser === 'function') {
                 initAppForUser().catch(e => console.error('Error in initAppForUser:', e));

@@ -31,7 +31,7 @@ def index():
 
 @main_bp.route('/favicon.ico')
 def favicon():
-    """Отдает favicon."""
+    """Отдает favicon (legacy PNG для .ico-запросов браузера)."""
     try:
         favicon_path = resource_path('logo/logoutm.png')
         if not os.path.exists(favicon_path):
@@ -43,6 +43,31 @@ def favicon():
         return response
     except Exception:
         return Response(status=204)
+
+
+@main_bp.route('/logo/<path:filename>')
+def logo_asset(filename: str):
+    """Отдаёт файлы из папки logo/ в корне проекта (SVG-лого, favicon, PNG)."""
+    try:
+        # безопасность: не даём выйти из папки logo
+        if '..' in filename or filename.startswith('/') or filename.startswith('\\'):
+            return Response(status=404)
+        logo_path = resource_path(os.path.join('logo', filename))
+        if not os.path.exists(logo_path):
+            return Response(status=404)
+        ext = filename.lower().rsplit('.', 1)[-1]
+        mime = {
+            'svg': 'image/svg+xml',
+            'png': 'image/png',
+            'ico': 'image/x-icon',
+            'icns': 'image/x-icns',
+        }.get(ext, 'application/octet-stream')
+        response = send_file(logo_path, mimetype=mime)
+        response.cache_control.max_age = 3600
+        response.cache_control.public = True
+        return response
+    except Exception:
+        return Response(status=404)
 
 
 @main_bp.route('/api/version')
