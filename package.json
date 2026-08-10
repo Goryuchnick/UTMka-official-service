@@ -1,0 +1,18 @@
+{
+  "name": "utmka",
+  "version": "3.0.0-dev",
+  "private": true,
+  "description": "UTMka 3.0 — конструктор UTM-меток: общий слой правил + веб-приложение",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

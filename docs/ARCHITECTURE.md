@@ -287,6 +287,8 @@ templates (
   name       text not null,
   base_url   text not null default '',
   params     jsonb not null,              -- {source, medium, campaign, content, term}
+  tag_name   text,                        -- тег и его цвет — паритет с 2.2,
+  tag_color  text,                        -- палитра из восьми цветов
   preset_id  text,                        -- id пресета площадки из core, не FK
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -311,6 +313,9 @@ links (                                   -- история, потолок 500 
   url        text not null,
   base_url   text not null,
   params     jsonb not null,
+  short_url  text,                        -- появляется после сокращения (как в 2.2)
+  tag_name   text,
+  tag_color  text,
   origin     text not null check (origin in ('single','batch','brief','parse')),
   batch_id   uuid,                        -- группирует пакетный прогон
   created_at timestamptz not null default now()
