@@ -86,7 +86,7 @@ export function BatchScreen() {
           <span className="qchip">
             <PixelIcon name="grid" />
           </span>
-          <span className="qtitle">Пакетный режим</span>
+          <span className="qtitle qtitle--magenta">Пакетный режим</span>
         </div>
 
         <div className="grid2">

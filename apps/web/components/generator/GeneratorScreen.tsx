@@ -30,6 +30,7 @@ import { PixelIcon } from '@/components/PixelIcon'
 import { useSetMascotLine } from '@/lib/mascot'
 import { useGeneratorMode } from '@/lib/mode'
 import { IssueList } from './IssueList'
+import { ValueField } from './ValueField'
 import { PresetTiles } from './PresetTiles'
 import { ResultCard } from './ResultCard'
 
@@ -44,14 +45,6 @@ const LINES = {
   broken: 'Тут есть что поправить: ниже написал, что именно сломается в отчёте.',
   pro: 'Все поля перед вами. Проверяю на ходу и говорю, если что-то разъедется.',
 } as const
-
-const FIELD_LABELS: Record<UtmKey, string> = {
-  source: 'Источник — площадка',
-  medium: 'Канал — тип трафика',
-  campaign: 'Кампания',
-  content: 'Содержание',
-  term: 'Ключевое слово',
-}
 
 type Step = 1 | 2 | 3 | 4
 
@@ -243,7 +236,7 @@ function SimpleMode({
             <div className="glass">
               <div className="qhead">
                 <span className={chipTone[current]}>{current}</span>
-                <span className="qtitle">{titles[current]}</span>
+                <span className={`qtitle ${current === 2 ? 'qtitle--magenta' : current === 3 ? 'qtitle--teal' : 'qtitle--amber'}`}>{titles[current]}</span>
               </div>
 
               {current === 1 && (
@@ -283,19 +276,17 @@ function SimpleMode({
 
               {current === 3 && (
                 <>
-                  <div className="input">
-                    <input
-                      type="text"
-                      value={draft.params.campaign ?? ''}
-                      onChange={(event) => onParam('campaign', event.target.value)}
-                      placeholder="osenniy_nabor"
-                      aria-label="Название кампании"
-                      autoComplete="off"
-                      spellCheck={false}
-                    />
-                  </div>
+                  <ValueField
+                    field="campaign"
+                    value={draft.params.campaign ?? ''}
+                    onChange={(value) => onParam('campaign', value)}
+                    bare
+                  />
                   <IssueList issues={validateValue('campaign', draft.params.campaign ?? '')} onFix={onTidy} />
-                  <p className="hint">Латиницей, без пробелов — иначе отчёт разъедется.</p>
+                  <p className="hint">
+                    Латиницей, без пробелов. Кнопка календаря дописывает дату — она не заменяет
+                    название, а добавляется через подчёркивание.
+                  </p>
                   <div className="result-row">
                     <button type="button" className="btn btn--main" onClick={() => onStep(4)}>
                       Дальше
@@ -351,9 +342,7 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
           <span className="qchip">
             <PixelIcon name="link" />
           </span>
-          <span className="qtitle" style={{ fontSize: 16 }}>
-            Параметры ссылки
-          </span>
+          <span className="qtitle qtitle--amber">Параметры ссылки</span>
         </div>
 
         <div className="field">
@@ -374,15 +363,29 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
 
         <div className="grid2">
           {(['source', 'medium'] as const).map((key) => (
-            <Field key={key} draft={draft} field={key} onParam={onParam} />
+            <ValueField
+              key={key}
+              field={key}
+              value={draft.params[key] ?? ''}
+              onChange={(value) => onParam(key, value)}
+            />
           ))}
         </div>
 
-        <Field draft={draft} field="campaign" onParam={onParam} />
+        <ValueField
+          field="campaign"
+          value={draft.params.campaign ?? ''}
+          onChange={(value) => onParam('campaign', value)}
+        />
 
         <div className="grid2">
           {(['content', 'term'] as const).map((key) => (
-            <Field key={key} draft={draft} field={key} onParam={onParam} />
+            <ValueField
+              key={key}
+              field={key}
+              value={draft.params[key] ?? ''}
+              onChange={(value) => onParam(key, value)}
+            />
           ))}
         </div>
 
@@ -419,38 +422,6 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
               : 'Заполните адрес и хотя бы источник с каналом.'}
           </p>
         )}
-      </div>
-    </div>
-  )
-}
-
-interface FieldProps {
-  draft: LinkDraft
-  field: UtmKey
-  onParam: (key: UtmKey, value: string) => void
-}
-
-function Field({ draft, field, onParam }: FieldProps) {
-  const value = draft.params[field] ?? ''
-  const fieldIssues = validateValue(field, value)
-  const worst = fieldIssues.find((issue) => issue.level === 'error')
-    ? 'input--err'
-    : fieldIssues.length > 0
-      ? 'input--warn'
-      : ''
-
-  return (
-    <div className="field">
-      <span className="field-label">{FIELD_LABELS[field]}</span>
-      <div className={`input ${worst}`.trim()}>
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => onParam(field, event.target.value)}
-          aria-label={FIELD_LABELS[field]}
-          autoComplete="off"
-          spellCheck={false}
-        />
       </div>
     </div>
   )

@@ -1,0 +1,63 @@
+/**
+ * Сокращение ссылки. Запрос идёт с сервера, а не из браузера: у clck.ru нет
+ * CORS-заголовков, и прямой вызов из страницы падал бы.
+ *
+ * Провайдер — Яндекс (clck.ru), тот же, что в десктопе 2.2: российский,
+ * без ключей и лимитов на регистрацию.
+ *
+ * ⚠️ Тот же класс риска, что у проверки редиректов: сервер ходит по адресу,
+ * который прислал пользователь. Поэтому адрес проверяется предохранителями
+ * ядра (`assertPublicUrl`) — только http/https и никаких внутренних сетей.
+ */
+
+import { assertPublicUrl, normalizeBaseUrl } from '@utmka/core'
+
+const TIMEOUT_MS = 5000
+
+export async function POST(request: Request): Promise<Response> {
+  let url: string
+  try {
+    const body: unknown = await request.json()
+    url = typeof body === 'object' && body !== null && 'url' in body ? String(body.url) : ''
+  } catch {
+    return Response.json({ error: 'Не удалось прочитать запрос' }, { status: 400 })
+  }
+
+  const normalized = normalizeBaseUrl(url)
+  if (!normalized) {
+    return Response.json({ error: 'Пустая ссылка' }, { status: 400 })
+  }
+
+  const guard = assertPublicUrl(normalized)
+  if (!guard.ok) {
+    return Response.json(
+      { error: 'Сокращаем только публичные http и https-адреса' },
+      { status: 400 },
+    )
+  }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+  try {
+    const response = await fetch(`https://clck.ru/--?url=${encodeURIComponent(normalized)}`, {
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+
+    if (!response.ok) {
+      return Response.json({ error: `Сервис ответил ${response.status}` }, { status: 502 })
+    }
+
+    const short = (await response.text()).trim()
+    if (!/^https?:\/\//.test(short)) {
+      return Response.json({ error: 'Сервис вернул не ссылку' }, { status: 502 })
+    }
+
+    return Response.json({ short })
+  } catch {
+    return Response.json({ error: 'Сервис сокращения не ответил' }, { status: 504 })
+  } finally {
+    clearTimeout(timer)
+  }
+}

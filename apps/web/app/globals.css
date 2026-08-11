@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Karmatic Arcade — пиксельный акцентный шрифт «ПРОНИН-ОС».
+   Файл тот же, что на сайте (public/fonts/ka1.ttf). Используется точечно:
+   заголовки экранов, кикеры, номера шагов — там, где нужен характер,
+   а не читаемость длинного текста. */
+@font-face {
+  font-family: 'Karmatic Arcade';
+  src: url('/fonts/ka1.ttf') format('truetype');
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    UTMka 3.0 — визуальный слой «ПРОНИН-ОС».
 
@@ -39,6 +51,7 @@
 
   --hv2-mono: 'Cascadia Code', 'Cascadia Mono', Consolas, 'IBM Plex Mono', ui-monospace, monospace;
   --hv2-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --hv2-pixel: 'Karmatic Arcade', 'Press Start 2P', monospace;
 
   /* Стекло и скругления. Заливка плотная: прозрачное стекло на мобилке,
      где backdrop-filter часто отключён экономией батареи, превращалось
@@ -589,17 +602,47 @@ html[data-theme='light'] .crt {
   background: color-mix(in srgb, var(--hv2-success) 12%, transparent);
 }
 
+/* Заголовки — пиксельным шрифтом. Он широкий и без строчных выносов,
+   поэтому кегль ниже, а межбуквенное расстояние чуть плотнее обычного. */
 .qtitle {
-  font-size: 20px;
-  font-weight: 700;
+  font-family: var(--hv2-pixel);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
   color: var(--hv2-fg);
-  line-height: 1.2;
+  line-height: 1.35;
 }
 
 @media (max-width: 767px) {
   .qtitle {
-    font-size: 17px;
+    font-size: 12px;
   }
+}
+
+/* Акцентные цвета заголовков — чередуются по экранам, как секции /services. */
+.qtitle--amber {
+  color: var(--hv2-primary);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+}
+
+.qtitle--magenta {
+  color: var(--hv2-course);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hv2-course) 38%, transparent);
+}
+
+.qtitle--teal {
+  color: var(--hv2-teal);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hv2-teal) 34%, transparent);
+}
+
+/* Номер шага и метки в чипах — тем же пиксельным шрифтом. */
+.qchip {
+  font-family: var(--hv2-pixel);
+  font-size: 11px;
+}
+
+.step-done .qchip {
+  font-size: 9px;
 }
 
 /* ═══════════ ШАГИ ═══════════ */
@@ -1432,6 +1475,76 @@ html[data-theme='light'] .crt {
 
 .batch-row--warning .batch-note {
   color: var(--hv2-primary);
+}
+
+/* ═══════════ QR И КОРОТКАЯ ССЫЛКА ═══════════ */
+
+.linktools {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--g-line);
+}
+
+.qrbox {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+}
+
+@media (max-width: 767px) {
+  .qrbox {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Белая подложка обязательна: сканеры плохо читают код на тёмном. */
+.qrbox canvas {
+  flex: none;
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.qrbox-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.shortbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid color-mix(in srgb, var(--hv2-teal) 34%, transparent);
+  background: color-mix(in srgb, var(--hv2-teal) 8%, transparent);
+}
+
+.shortbox-url {
+  font-family: var(--hv2-mono);
+  font-size: 15px;
+  color: var(--hv2-teal);
+  word-break: break-all;
+  min-width: 0;
+}
+
+.hint--examples {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+}
+
+.hint--error {
+  color: var(--hv2-destructive);
 }
 
 /* ═══════════ ПУСТОЕ СОСТОЯНИЕ ═══════════ */

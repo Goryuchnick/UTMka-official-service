@@ -60,7 +60,7 @@ export function ParseScreen() {
           <span className="qchip">
             <PixelIcon name="search" />
           </span>
-          <span className="qtitle">Разбор чужой ссылки</span>
+          <span className="qtitle qtitle--amber">Разбор чужой ссылки</span>
         </div>
 
         <div className="input">
@@ -106,9 +106,7 @@ export function ParseScreen() {
               <span className="qchip qchip--teal">
                 <PixelIcon name="grid" />
               </span>
-              <span className="qtitle" style={{ fontSize: 17 }}>
-                Что в ссылке
-              </span>
+              <span className="qtitle qtitle--teal">Что в ссылке</span>
             </div>
 
             <div className="params">

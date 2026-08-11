@@ -10,13 +10,16 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { PixelIcon } from '@/components/PixelIcon'
+import { LinkTools } from './LinkTools'
 import { UrlPreview } from './UrlPreview'
 
 interface ResultCardProps {
   url: string
+  /** QR и короткая ссылка. Скрываются там, где ссылка показана справочно. */
+  tools?: boolean
 }
 
-export function ResultCard({ url }: ResultCardProps) {
+export function ResultCard({ url, tools = true }: ResultCardProps) {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -45,6 +48,7 @@ export function ResultCard({ url }: ResultCardProps) {
         </button>
         <span className="result-len">{url.length} символов</span>
       </div>
+      {tools ? <LinkTools url={url} /> : null}
     </div>
   )
 }
