@@ -1,11 +1,5 @@
-import { Soon } from '@/components/Soon'
+import { BatchScreen } from '@/components/BatchScreen'
 
 export default function BatchPage() {
-  return (
-    <Soon
-      title="Пакетный режим"
-      line="Здесь соберём двадцать ссылок за заход — таблицей."
-      what="Таблица площадок, импорт списка и выгрузка в CSV. Логика уже в ядре (batch.ts), собираю экран."
-    />
-  )
+  return <BatchScreen />
 }

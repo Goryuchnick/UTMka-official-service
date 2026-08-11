@@ -3,18 +3,19 @@
 /**
  * DeviceFrame — рамка устройства «ПРОНИН-ОС» для инструмента.
  *
- * Панель разделов приклеена к верхней кромке экрана, строка состояния — к нижней;
- * обе стеклянные и размывают контент под собой. На мобилке разделы уезжают
- * в плавающий док под экраном (как DeviceShell на сайте).
+ * Шапка экрана состоит из двух планок: разделы с инструментами и планка
+ * помощника под ней. Обе стеклянные, прибиты к верхней кромке экрана и
+ * не зависят от содержимого — контент прокручивается под ними.
  *
- * Инструменты (QR, короткая ссылка, проверка) живут в той же панели — экран
- * остаётся под одно главное действие.
+ * На мобилке разделы из шапки убраны совсем: они живут в нижнем доке,
+ * который сворачивается в кнопку — как меню на главной сайта.
  */
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
+import { MascotBar } from './Mascot'
 import { PixelIcon, type IconName } from './PixelIcon'
 import { useTheme } from '@/lib/theme'
 
@@ -40,16 +41,18 @@ interface DeviceFrameProps {
 export function DeviceFrame({ children }: DeviceFrameProps) {
   const pathname = usePathname()
   const { theme, toggle } = useTheme()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const isCurrent = (href: string): boolean =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
   return (
-    <div className="dev">
+    <div className={`dev${menuOpen ? '' : ' dev--menuclosed'}`}>
       <div className="screen">
         <div className="crt" aria-hidden="true" />
 
         <div className="topbar">
+          {/* На мобилке этот блок скрыт — разделы уезжают в нижний док. */}
           <nav className="nav" aria-label="Разделы">
             {SECTIONS.map((section) => (
               <Link
@@ -80,9 +83,12 @@ export function DeviceFrame({ children }: DeviceFrameProps) {
           </button>
           <Link href="/login" className="keybtn">
             <PixelIcon name="key" />
-            Кодовая фраза
+            <span className="keybtn__full">Кодовая фраза</span>
+            <span className="keybtn__short">Фраза</span>
           </Link>
         </div>
+
+        <MascotBar />
 
         {children}
 
@@ -99,18 +105,33 @@ export function DeviceFrame({ children }: DeviceFrameProps) {
         </div>
       </div>
 
-      <nav className="mdock" aria-label="Разделы">
-        {SECTIONS.slice(0, 4).map((section) => (
-          <Link
-            key={section.href}
-            href={section.href}
-            aria-current={isCurrent(section.href) ? 'page' : undefined}
-          >
-            <PixelIcon name={section.icon} />
-            {section.short}
-          </Link>
-        ))}
-      </nav>
+      {/* Мобильный док: сворачивается в кнопку, как меню на главной сайта. */}
+      <div className="mdock-wrap">
+        <nav className="mdock" aria-label="Разделы">
+          {SECTIONS.map((section) => (
+            <Link
+              key={section.href}
+              href={section.href}
+              aria-current={isCurrent(section.href) ? 'page' : undefined}
+              onClick={() => setMenuOpen(false)}
+            >
+              <PixelIcon name={section.icon} />
+              {section.short}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
+      <button
+        type="button"
+        className="mdock-fab"
+        onClick={() => setMenuOpen((open) => !open)}
+        aria-expanded={menuOpen}
+        aria-label={menuOpen ? 'Свернуть меню' : 'Открыть меню'}
+      >
+        <PixelIcon name={menuOpen ? 'check' : 'grid'} />
+        {menuOpen ? 'Свернуть' : 'Разделы'}
+      </button>
     </div>
   )
 }

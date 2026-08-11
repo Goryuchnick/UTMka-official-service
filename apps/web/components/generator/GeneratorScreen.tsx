@@ -26,8 +26,8 @@ import {
   type UtmKey,
 } from '@utmka/core'
 
-import { Mascot } from '@/components/Mascot'
 import { PixelIcon } from '@/components/PixelIcon'
+import { useSetMascotLine } from '@/lib/mascot'
 import { useGeneratorMode } from '@/lib/mode'
 import { IssueList } from './IssueList'
 import { PresetTiles } from './PresetTiles'
@@ -96,10 +96,10 @@ export function GeneratorScreen() {
     return blocking.length > 0 ? LINES.broken : LINES.done
   })()
 
+  useSetMascotLine(line)
+
   return (
     <div className="screen-scroll">
-      <Mascot line={line} />
-
       <div className="result-row">
         <div
           role="group"
@@ -345,15 +345,7 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
   const blocking = issues.filter((issue) => issue.level !== 'info')
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.02fr) minmax(0, 0.98fr)',
-        gap: 18,
-        alignItems: 'start',
-      }}
-      className="pro-cols"
-    >
+    <div className="pro-cols">
       <div className="glass">
         <div className="qhead">
           <span className="qchip">

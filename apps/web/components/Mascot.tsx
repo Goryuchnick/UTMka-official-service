@@ -1,23 +1,23 @@
+'use client'
+
 /**
- * Mascot — залипающая шапка экрана: пиксельный помощник и его реплика.
+ * MascotBar — планка помощника, прибитая к нижней кромке шапки устройства.
  *
- * Липнет к верхней кромке .screen-scroll (правило .head в globals.css).
- * ⚠️ При правках раскладки следить, чтобы у родителя не появился
- * `min-height: 0` без `overflow` — он рвёт containing block у sticky,
- * и шапка молча перестаёт липнуть (грабли редизайна pronin-alex).
+ * Высота фиксированная и от длины реплики не зависит: планка — часть шапки,
+ * а не блок контента. Длинный текст обрезается многоточием, полный остаётся
+ * в `title` и доступен скринридеру.
  *
- * Спрайт — временный: настоящий приедет из components/mascot/MascotSprite.tsx
+ * Спрайт временный: настоящий приедет из components/mascot/MascotSprite.tsx
  * сайта при подключении ассетов.
  */
 
-interface MascotProps {
-  /** Реплика помощника. Тексты живут у вызывающего экрана. */
-  line: string
-}
+import { useMascotLine } from '@/lib/mascot'
 
-export function Mascot({ line }: MascotProps) {
+export function MascotBar() {
+  const line = useMascotLine()
+
   return (
-    <div className="head">
+    <div className="mascotbar">
       <svg className="mascot" viewBox="0 0 12 12" role="img" aria-label="Помощник UTMka">
         <rect width="12" height="12" fill="var(--hv2-card)" />
         <g fill="var(--hv2-primary)">
@@ -36,7 +36,7 @@ export function Mascot({ line }: MascotProps) {
         </g>
         <rect x="3" y="3" width="6" height="1" fill="var(--hv2-course)" />
       </svg>
-      <p className="bubble" aria-live="polite">
+      <p className="bubble" title={line} aria-live="polite">
         {line}
       </p>
     </div>

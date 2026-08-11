@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Soon — честная заглушка раздела, пока он не собран.
  *
@@ -5,7 +7,7 @@
  * Удаляется по мере готовности экранов.
  */
 
-import { Mascot } from '@/components/Mascot'
+import { useSetMascotLine } from '@/lib/mascot'
 
 interface SoonProps {
   title: string
@@ -14,9 +16,10 @@ interface SoonProps {
 }
 
 export function Soon({ title, line, what }: SoonProps) {
+  useSetMascotLine(line)
+
   return (
     <div className="screen-scroll">
-      <Mascot line={line} />
       <div className="glass">
         <div className="qhead">
           <span className="qchip">…</span>

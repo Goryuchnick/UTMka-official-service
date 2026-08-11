@@ -14,17 +14,19 @@
 :root {
   color-scheme: dark;
 
-  /* Amber CRT — тёмная тема (основная) */
+  /* Amber CRT — тёмная тема (основная).
+     Текст светлее, чем на сайте (#d4d0c8): там он лежит на чистом фоне,
+     а здесь поверх идёт CRT-стекло, и оно съедает контраст. */
   --hv2-bg: #0a0a08;
   --hv2-bg2: #0d0d0a;
-  --hv2-fg: #d4d0c8;
+  --hv2-fg: #ece8df;
   --hv2-primary: #ffb000;
   --hv2-primary-d: #e08000;
   --hv2-primary-dim: #8b7534;
   --hv2-card: #12120e;
   --hv2-card2: #15140f;
-  --hv2-muted: #8b7534;
-  --hv2-subtle: #6b6b5e;
+  --hv2-muted: #b09a5c;
+  --hv2-subtle: #8e8c7f;
   --hv2-border: #2a2a24;
   --hv2-border2: #3a3a30;
   --hv2-success: #40a040;
@@ -38,9 +40,11 @@
   --hv2-mono: 'Cascadia Code', 'Cascadia Mono', Consolas, 'IBM Plex Mono', ui-monospace, monospace;
   --hv2-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
 
-  /* стекло и скругления */
-  --g-fill: color-mix(in srgb, var(--hv2-card) 52%, transparent);
-  --g-fill-2: color-mix(in srgb, var(--hv2-card2) 62%, transparent);
+  /* Стекло и скругления. Заливка плотная: прозрачное стекло на мобилке,
+     где backdrop-filter часто отключён экономией батареи, превращалось
+     в кашу из наложенного текста. */
+  --g-fill: color-mix(in srgb, var(--hv2-card) 88%, transparent);
+  --g-fill-2: color-mix(in srgb, var(--hv2-card2) 82%, transparent);
   --g-line: color-mix(in srgb, #fff 9%, transparent);
   --g-blur: blur(18px) saturate(1.35);
   --g-inner: inset 0 1px 0 color-mix(in srgb, #fff 11%, transparent);
@@ -73,8 +77,8 @@ html[data-theme='light'] {
   --hv2-onprimary: #fbf6e9;
   --hv2-glow-soft: rgba(184, 115, 14, 0.1);
 
-  --g-fill: color-mix(in srgb, #fff 58%, transparent);
-  --g-fill-2: color-mix(in srgb, #fff 46%, transparent);
+  --g-fill: color-mix(in srgb, #fff 88%, transparent);
+  --g-fill-2: color-mix(in srgb, #fff 80%, transparent);
   --g-line: color-mix(in srgb, #6b5a3a 16%, transparent);
   --g-inner: inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
   --g-drop: 0 12px 34px rgba(90, 70, 40, 0.16);
@@ -141,7 +145,10 @@ button {
   box-shadow: 0 0 0 1px var(--g-line), 0 18px 50px rgba(0, 0, 0, 0.5);
 }
 
-/* CRT-стекло: блик, свечение люминофора, виньетка, сканлайны */
+/* CRT-стекло: блик, свечение люминофора, мягкая виньетка, сканлайны.
+   ⚠️ Слои намеренно легче, чем на сайте: там стекло лежит поверх крупных
+   блоков, а здесь под ним читают мелкий текст — плотные сканлайны и тёмная
+   виньетка съедали контраст, буквы «уходили в серость». */
 .crt {
   position: absolute;
   inset: 0;
@@ -150,14 +157,14 @@ button {
   border-radius: inherit;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 64% 34% at 50% 9%, rgba(255, 250, 235, 0.07) 0%, transparent 72%),
-    radial-gradient(ellipse 80% 72% at 50% 44%, color-mix(in srgb, var(--hv2-primary) 10%, transparent) 0%, transparent 56%),
-    radial-gradient(ellipse 118% 120% at center, transparent 48%, rgba(0, 0, 0, 0.34) 80%, rgba(0, 0, 0, 0.62) 100%),
-    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.17) 2px 3px);
+    radial-gradient(ellipse 64% 34% at 50% 9%, rgba(255, 250, 235, 0.05) 0%, transparent 72%),
+    radial-gradient(ellipse 80% 72% at 50% 44%, color-mix(in srgb, var(--hv2-primary) 7%, transparent) 0%, transparent 56%),
+    radial-gradient(ellipse 130% 132% at center, transparent 62%, rgba(0, 0, 0, 0.16) 88%, rgba(0, 0, 0, 0.3) 100%),
+    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.06) 2px 3px);
   box-shadow:
-    inset 0 0 68px rgba(0, 0, 0, 0.42),
-    inset 0 2px 1px rgba(255, 250, 235, 0.06),
-    inset 0 0 36px color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+    inset 0 0 42px rgba(0, 0, 0, 0.2),
+    inset 0 2px 1px rgba(255, 250, 235, 0.05),
+    inset 0 0 30px color-mix(in srgb, var(--hv2-primary) 9%, transparent);
 }
 
 .crt::before {
@@ -175,7 +182,7 @@ button {
   content: '';
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--hv2-primary) 6%, transparent);
+  background: color-mix(in srgb, var(--hv2-primary) 4%, transparent);
   mix-blend-mode: screen;
   animation: crt-flicker 5s ease-in-out infinite;
 }
@@ -225,6 +232,35 @@ html[data-theme='light'] .crt {
 
 .nav::-webkit-scrollbar {
   display: none;
+}
+
+/* На мобилке разделов в шапке нет совсем — они живут в нижнем доке. */
+@media (max-width: 767px) {
+  .nav {
+    display: none;
+  }
+
+  .topbar {
+    padding: 8px 12px;
+  }
+}
+
+.keybtn__short {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .keybtn__full {
+    display: none;
+  }
+
+  .keybtn__short {
+    display: inline;
+  }
+
+  .keybtn {
+    padding: 0 14px;
+  }
 }
 
 .navbtn {
@@ -416,18 +452,21 @@ html[data-theme='light'] .crt {
   font-weight: 600;
 }
 
-/* ═══════════ МАСКОТ (залипает у верхней кромки) ═══════════ */
+/* ═══════════ ПЛАНКА ПОМОЩНИКА (нижняя кромка шапки) ═══════════
 
-.head {
-  position: sticky;
-  top: 0;
-  z-index: 5;
+   Часть шапки устройства, а не блок контента: высота фиксированная и от длины
+   реплики не зависит — иначе шапка «дышала» бы на каждой смене текста и
+   контент под ней прыгал. Длинная реплика обрезается многоточием. */
+
+.mascotbar {
+  position: relative;
+  z-index: 3;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 14px;
-  flex: none;
-  margin: -22px -26px 0;
-  padding: 16px 26px 14px;
+  height: 76px;
+  padding: 0 18px;
   background: var(--g-fill);
   backdrop-filter: var(--g-blur);
   -webkit-backdrop-filter: var(--g-blur);
@@ -435,15 +474,16 @@ html[data-theme='light'] .crt {
 }
 
 @media (max-width: 767px) {
-  .head {
-    margin: -14px -12px 0;
-    padding: 12px 12px 10px;
+  .mascotbar {
+    height: 62px;
+    padding: 0 12px;
+    gap: 10px;
   }
 }
 
 .mascot {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   flex: none;
   image-rendering: pixelated;
   border-radius: var(--r-md);
@@ -451,32 +491,35 @@ html[data-theme='light'] .crt {
 
 @media (max-width: 767px) {
   .mascot {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
   }
 }
 
 .bubble {
   position: relative;
-  background: var(--g-fill);
-  backdrop-filter: var(--g-blur);
-  -webkit-backdrop-filter: var(--g-blur);
+  margin: 0;
+  background: color-mix(in srgb, var(--hv2-card) 92%, transparent);
   border: 1px solid var(--g-line);
+  border-left: 2px solid var(--hv2-course);
   border-radius: var(--r-md);
-  padding: 12px 16px;
+  padding: 9px 15px;
   font-size: 15px;
+  line-height: 1.35;
   color: var(--hv2-fg);
-  max-width: 62ch;
-  box-shadow:
-    var(--g-inner),
-    0 0 0 1px color-mix(in srgb, var(--hv2-course) 16%, transparent),
-    0 0 30px color-mix(in srgb, var(--hv2-course) 12%, transparent);
+  max-width: 68ch;
+  min-width: 0;
+  /* одна строка: планка не должна расти от длинной реплики */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--hv2-course) 10%, transparent);
 }
 
 @media (max-width: 767px) {
   .bubble {
-    font-size: 14px;
-    padding: 10px 13px;
+    font-size: 13px;
+    padding: 8px 12px;
   }
 }
 
@@ -1134,24 +1177,74 @@ html[data-theme='light'] .crt {
   flex: none;
 }
 
-/* ═══════════ МОБИЛЬНЫЙ ДОК ═══════════ */
+/* ═══════════ МОБИЛЬНЫЙ ДОК (сворачивается в кнопку) ═══════════
 
-.mdock {
+   Повторяет поведение меню на главной сайта: свёрнутый док схлопывается
+   в кнопку, развёрнутый — выезжает над ней. На десктопе не показывается
+   вовсе: там разделы живут в шапке. */
+
+.mdock-wrap,
+.mdock-fab {
   display: none;
-  justify-content: space-between;
-  padding: 8px 10px;
-  flex: none;
-  background: var(--g-fill);
-  backdrop-filter: var(--g-blur);
-  -webkit-backdrop-filter: var(--g-blur);
-  border: 1px solid var(--g-line);
-  border-radius: 999px;
-  box-shadow: var(--g-inner);
 }
 
 @media (max-width: 767px) {
+  .mdock-wrap {
+    display: block;
+    flex: none;
+    overflow: hidden;
+    transition: height 0.22s ease, margin-top 0.22s ease;
+  }
+
   .mdock {
     display: flex;
+    justify-content: space-between;
+    padding: 8px 6px;
+    background: var(--g-fill);
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+    border: 1px solid var(--g-line);
+    border-radius: 22px;
+    box-shadow: var(--g-inner);
+    transform-origin: bottom center;
+    transition: transform 0.22s ease, opacity 0.18s ease;
+  }
+
+  .dev--menuclosed .mdock-wrap {
+    height: 0;
+    margin-top: -10px;
+    pointer-events: none;
+  }
+
+  .dev--menuclosed .mdock {
+    transform: scale(0.16);
+    opacity: 0;
+  }
+
+  .mdock-fab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: center;
+    height: 42px;
+    padding: 0 22px;
+    flex: none;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+    background: color-mix(in srgb, var(--hv2-primary) 15%, var(--g-fill));
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+    color: var(--hv2-fg);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--g-inner);
+  }
+
+  .mdock-fab svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -1165,7 +1258,7 @@ html[data-theme='light'] .crt {
   color: var(--hv2-subtle);
   font-size: 11px;
   cursor: pointer;
-  padding: 4px 12px;
+  padding: 5px 8px;
   border-radius: 999px;
   text-decoration: none;
 }
@@ -1178,6 +1271,167 @@ html[data-theme='light'] .crt {
 .mdock a[aria-current='page'] {
   color: var(--hv2-primary);
   background: color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+}
+
+/* ═══════════ РАСШИРЕННЫЙ РЕЖИМ ═══════════ */
+
+.pro-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  gap: 18px;
+  align-items: start;
+}
+
+/* На узких экранах — одна колонка: две ужимались до нечитаемых полей
+   и накладывались друг на друга. */
+@media (max-width: 900px) {
+  .pro-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ═══════════ РАЗБОР ССЫЛКИ ═══════════ */
+
+.params {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.param {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--hv2-bg2) 45%, transparent);
+}
+
+.param:nth-child(odd) {
+  background: transparent;
+}
+
+.param-name {
+  flex: none;
+  width: 210px;
+  font-size: 13px;
+  color: var(--hv2-muted);
+}
+
+@media (max-width: 767px) {
+  .param {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .param-name {
+    width: auto;
+  }
+}
+
+.param-code {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-subtle);
+}
+
+.param-value {
+  font-family: var(--hv2-mono);
+  font-size: 14px;
+  color: var(--hv2-fg);
+  word-break: break-all;
+  min-width: 0;
+}
+
+.param-value--empty {
+  color: var(--hv2-subtle);
+  font-style: italic;
+}
+
+/* ═══════════ ПАКЕТНЫЙ РЕЖИМ ═══════════ */
+
+.area {
+  width: 100%;
+  background: color-mix(in srgb, var(--hv2-bg2) 62%, transparent);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  color: var(--hv2-fg);
+  font-family: var(--hv2-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.area:focus {
+  border-color: color-mix(in srgb, var(--hv2-primary) 55%, transparent);
+  box-shadow: 0 0 0 3px var(--hv2-glow-soft);
+}
+
+.area::placeholder {
+  color: var(--hv2-subtle);
+}
+
+.batch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.batch-row {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 6px 14px;
+  align-items: baseline;
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+}
+
+@media (max-width: 767px) {
+  .batch-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.batch-row--error {
+  border-color: color-mix(in srgb, var(--hv2-destructive) 45%, transparent);
+}
+
+.batch-row--warning {
+  border-color: color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+}
+
+.batch-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hv2-fg);
+}
+
+.batch-url {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-muted);
+  word-break: break-all;
+  min-width: 0;
+}
+
+.batch-note {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--hv2-destructive);
+}
+
+@media (max-width: 767px) {
+  .batch-note {
+    grid-column: 1;
+  }
+}
+
+.batch-row--warning .batch-note {
+  color: var(--hv2-primary);
 }
 
 /* ═══════════ ПУСТОЕ СОСТОЯНИЕ ═══════════ */
