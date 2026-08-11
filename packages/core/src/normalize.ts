@@ -5,8 +5,8 @@
  * молча. Поэтому все функции возвращают и результат, и список изменений.
  */
 
-import type { IssueField, LinkDraft, NormalizationChange, UtmKey, UtmParams } from './types.js'
-import { UTM_KEYS } from './types.js'
+import type { IssueField, LinkDraft, NormalizationChange, UtmKey, UtmParams } from './types'
+import { UTM_KEYS } from './types'
 
 /**
  * Транслитерация кириллицы. Таблица — практическая, а не ГОСТ: цель в том,

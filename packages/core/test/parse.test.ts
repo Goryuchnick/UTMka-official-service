@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hasUtm, lostParams, parseUrl } from '../src/parse.js'
+import { hasUtm, lostParams, parseUrl } from '../src/parse'
 
 describe('parseUrl', () => {
   it('раскладывает метки по полям', () => {

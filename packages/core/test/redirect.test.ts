@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { assertPublicUrl, explainFailure, followRedirects } from '../src/redirect.js'
-import type { HopResponse } from '../src/redirect.js'
+import { assertPublicUrl, explainFailure, followRedirects } from '../src/redirect'
+import type { HopResponse } from '../src/redirect'
 
 /** Фейковая сеть: карта «адрес → ответ». Ядро не знает про fetch. */
 function fakeNet(map: Record<string, HopResponse>) {

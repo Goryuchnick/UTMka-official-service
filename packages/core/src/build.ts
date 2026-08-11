@@ -14,9 +14,9 @@
  * ошибок новичка (потерянная семантика за весь период).
  */
 
-import { normalizeBaseUrl } from './normalize.js'
-import type { LinkDraft, UtmParams } from './types.js'
-import { UTM_KEYS, UTM_PARAM_NAMES } from './types.js'
+import { normalizeBaseUrl } from './normalize'
+import type { LinkDraft, UtmParams } from './types'
+import { UTM_KEYS, UTM_PARAM_NAMES } from './types'
 
 export interface BuildOptions {
   /** Оставлять `{keyword}` некодированным. По умолчанию да. */

@@ -6,10 +6,10 @@
  * какие дублируются, что осталось от чужой разметки (`yclid`, `gclid`).
  */
 
-import { safeDecode } from './build.js'
-import { normalizeBaseUrl } from './normalize.js'
-import type { UtmKey, UtmParams } from './types.js'
-import { UTM_KEY_BY_PARAM } from './types.js'
+import { safeDecode } from './build'
+import { normalizeBaseUrl } from './normalize'
+import type { UtmKey, UtmParams } from './types'
+import { UTM_KEY_BY_PARAM } from './types'
 
 export interface ParsedLink {
   /** Разобралось ли вообще. */

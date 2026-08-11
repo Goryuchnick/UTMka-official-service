@@ -7,10 +7,10 @@
  * где колонки называются «Источник» и «Канал», а не `utm_source`.
  */
 
-import { buildUrl } from './build.js'
-import { validateDraft } from './validate.js'
-import type { BatchResult, BatchRow, Issue, LinkDraft, UtmKey, UtmParams } from './types.js'
-import { UTM_KEYS, UTM_PARAM_NAMES } from './types.js'
+import { buildUrl } from './build'
+import { validateDraft } from './validate'
+import type { BatchResult, BatchRow, Issue, LinkDraft, UtmKey, UtmParams } from './types'
+import { UTM_KEYS, UTM_PARAM_NAMES } from './types'
 
 /** Заголовки, которые принимаем на импорте. Ключ — поле, значения — синонимы. */
 const COLUMN_ALIASES: Record<UtmKey | 'label' | 'baseUrl', readonly string[]> = {

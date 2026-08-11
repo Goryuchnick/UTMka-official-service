@@ -8,8 +8,8 @@
  * на этом путается большинство (ASSISTANT-SPEC §2.6).
  */
 
-import type { LinkDraft, Preset, UtmParams } from './types.js'
-import { UTM_KEYS } from './types.js'
+import type { LinkDraft, Preset, UtmParams } from './types'
+import { UTM_KEYS } from './types'
 
 export const PRESETS: readonly Preset[] = [
   {

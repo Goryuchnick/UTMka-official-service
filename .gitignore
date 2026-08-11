@@ -147,3 +147,7 @@ RELEASE_*.md
 
 # Marketing materials (private)
 marketing/
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo

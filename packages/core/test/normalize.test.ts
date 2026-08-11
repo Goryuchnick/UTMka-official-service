@@ -6,7 +6,7 @@ import {
   normalizeDraft,
   normalizeValue,
   transliterate,
-} from '../src/normalize.js'
+} from '../src/normalize'
 
 describe('normalizeValue', () => {
   it('приводит к нижнему регистру', () => {

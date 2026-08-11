@@ -6,13 +6,13 @@
  * Один и тот же модуль обслуживает веб и будущий десктоп на Tauri.
  */
 
-export * from './types.js'
-export * from './normalize.js'
-export * from './build.js'
-export * from './parse.js'
-export * from './validate.js'
-export * from './presets.js'
-export * from './dictionary.js'
-export * from './batch.js'
-export * from './redirect.js'
-export * from './repository.js'
+export * from './types'
+export * from './normalize'
+export * from './build'
+export * from './parse'
+export * from './validate'
+export * from './presets'
+export * from './dictionary'
+export * from './batch'
+export * from './redirect'
+export * from './repository'

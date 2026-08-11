@@ -7,7 +7,7 @@ import {
   parseCsv,
   summarizeBatch,
   toCsv,
-} from '../src/batch.js'
+} from '../src/batch'
 
 describe('CSV — паритет с utils.js из 2.2', () => {
   it('экранирует запятые, кавычки и переводы строк', () => {

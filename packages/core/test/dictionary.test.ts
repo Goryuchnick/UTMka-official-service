@@ -9,8 +9,8 @@ import {
   resolveCanonical,
   suggest,
   upsertEntry,
-} from '../src/dictionary.js'
-import type { DictEntry } from '../src/types.js'
+} from '../src/dictionary'
+import type { DictEntry } from '../src/types'
 
 const entry = (value: string, uses = 1, kind: DictEntry['kind'] = 'source'): DictEntry => ({
   kind,

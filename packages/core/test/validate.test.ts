@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseUrl } from '../src/parse.js'
+import { parseUrl } from '../src/parse'
 import {
   fixablePreview,
   isFullyFixable,
@@ -8,8 +8,8 @@ import {
   validateSemantics,
   validateValue,
   worstLevel,
-} from '../src/validate.js'
-import type { Issue, IssueCode, LinkDraft } from '../src/types.js'
+} from '../src/validate'
+import type { Issue, IssueCode, LinkDraft } from '../src/types'
 
 const codes = (issues: readonly Issue[]): IssueCode[] => issues.map((i) => i.code)
 const draft = (baseUrl: string, params: LinkDraft['params'] = {}): LinkDraft => ({ baseUrl, params })

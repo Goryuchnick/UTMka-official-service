@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildUrl, extractBaseUrl, hasAnyParam, urlLength } from '../src/build.js'
-import type { LinkDraft } from '../src/types.js'
+import { buildUrl, extractBaseUrl, hasAnyParam, urlLength } from '../src/build'
+import type { LinkDraft } from '../src/types'
 
 const draft = (baseUrl: string, params: LinkDraft['params'] = {}): LinkDraft => ({ baseUrl, params })
 

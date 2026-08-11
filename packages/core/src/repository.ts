@@ -6,7 +6,7 @@
  * оболочках без развилок «если веб — то так».
  */
 
-import type { DictEntry, DictKind, UtmParams } from './types.js'
+import type { DictEntry, DictKind, UtmParams } from './types'
 
 /** Шаблон: сохранённый набор меток. Поля тега — паритет с 2.2. */
 export interface Template {

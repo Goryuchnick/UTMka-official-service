@@ -7,8 +7,8 @@
  * предупреждение о новом значении, детектор расщепления и сведение алиасов.
  */
 
-import { normalizeValue } from './normalize.js'
-import type { DictEntry, DictKind } from './types.js'
+import { normalizeValue } from './normalize'
+import type { DictEntry, DictKind } from './types'
 
 /**
  * Известные синонимы. Пары ниже — не догадки алгоритма, а то, что человек

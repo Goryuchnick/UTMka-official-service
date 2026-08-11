@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { allPlaceholders, applyPreset, getPreset, matchPreset, PRESETS } from '../src/presets.js'
-import { KNOWN_PLACEHOLDERS, validateDraft } from '../src/validate.js'
-import { buildUrl } from '../src/build.js'
+import { allPlaceholders, applyPreset, getPreset, matchPreset, PRESETS } from '../src/presets'
+import { KNOWN_PLACEHOLDERS, validateDraft } from '../src/validate'
+import { buildUrl } from '../src/build'
 
 describe('набор пресетов', () => {
   it('у каждого есть id, источник, канал и объяснение', () => {

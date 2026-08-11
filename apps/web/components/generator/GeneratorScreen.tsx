@@ -1,0 +1,467 @@
+'use client'
+
+/**
+ * GeneratorScreen — главный экран инструмента.
+ *
+ * Два вида одного генератора (ARCHITECTURE §4.2): простой — пошаговый,
+ * вопросами на человеческом языке; расширенный — все поля сразу, как в 2.2.
+ * Модель данных общая, поэтому переключение ничего не теряет.
+ *
+ * Вся логика — из `@utmka/core`: сборка, валидация, нормализация, пресеты.
+ * Экран только отображает; правила здесь не дублируются.
+ */
+
+import { useCallback, useMemo, useState } from 'react'
+import {
+  applyPreset,
+  buildUrl,
+  hasAnyParam,
+  matchPreset,
+  normalizeDraft,
+  UTM_KEYS,
+  validateDraft,
+  validateValue,
+  type LinkDraft,
+  type Preset,
+  type UtmKey,
+} from '@utmka/core'
+
+import { Mascot } from '@/components/Mascot'
+import { PixelIcon } from '@/components/PixelIcon'
+import { useGeneratorMode } from '@/lib/mode'
+import { IssueList } from './IssueList'
+import { PresetTiles } from './PresetTiles'
+import { ResultCard } from './ResultCard'
+
+const EMPTY: LinkDraft = { baseUrl: '', params: {} }
+
+/** Реплики помощника. Свои, не копия сайта и не копия курса. */
+const LINES = {
+  start: 'Соберём ссылку. Начнём с адреса — куда ведём людей.',
+  platform: 'Теперь площадка. Нажмите плитку — источник и канал заполню сам.',
+  campaign: 'Назовите кампанию, чтобы через полгода понять, что это был за запуск.',
+  done: 'Готово. Фигурные скобки так и должны выглядеть — площадка подставит значения сама.',
+  broken: 'Тут есть что поправить: ниже написал, что именно сломается в отчёте.',
+  pro: 'Все поля перед вами. Проверяю на ходу и говорю, если что-то разъедется.',
+} as const
+
+const FIELD_LABELS: Record<UtmKey, string> = {
+  source: 'Источник — площадка',
+  medium: 'Канал — тип трафика',
+  campaign: 'Кампания',
+  content: 'Содержание',
+  term: 'Ключевое слово',
+}
+
+type Step = 1 | 2 | 3 | 4
+
+export function GeneratorScreen() {
+  const { mode, setMode } = useGeneratorMode()
+  const [draft, setDraft] = useState<LinkDraft>(EMPTY)
+  const [step, setStep] = useState<Step>(1)
+
+  const issues = useMemo(() => validateDraft(draft), [draft])
+  const url = useMemo(() => buildUrl(draft), [draft])
+  const activePreset = useMemo(() => matchPreset(draft.params), [draft.params])
+  const blocking = useMemo(() => issues.filter((issue) => issue.level !== 'info'), [issues])
+  const ready = draft.baseUrl.trim() !== '' && hasAnyParam(draft.params)
+
+  const setBaseUrl = useCallback((baseUrl: string) => {
+    setDraft((prev) => ({ ...prev, baseUrl }))
+  }, [])
+
+  const setParam = useCallback((key: UtmKey, value: string) => {
+    setDraft((prev) => ({ ...prev, params: { ...prev.params, [key]: value } }))
+  }, [])
+
+  const pickPreset = useCallback((preset: Preset) => {
+    setDraft((prev) => applyPreset(prev, preset))
+    setStep(3)
+  }, [])
+
+  const tidy = useCallback(() => {
+    setDraft((prev) => normalizeDraft(prev).draft)
+  }, [])
+
+  const reset = useCallback(() => {
+    setDraft(EMPTY)
+    setStep(1)
+  }, [])
+
+  const line = (() => {
+    if (mode === 'pro') return blocking.length > 0 ? LINES.broken : LINES.pro
+    if (step === 1) return LINES.start
+    if (step === 2) return LINES.platform
+    if (step === 3) return LINES.campaign
+    return blocking.length > 0 ? LINES.broken : LINES.done
+  })()
+
+  return (
+    <div className="screen-scroll">
+      <Mascot line={line} />
+
+      <div className="result-row">
+        <div
+          role="group"
+          aria-label="Режим генератора"
+          style={{ display: 'inline-flex', gap: 6 }}
+        >
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={mode === 'simple'}
+            onClick={() => setMode('simple')}
+            style={mode === 'simple' ? { color: 'var(--hv2-fg)', borderColor: 'var(--hv2-primary)' } : undefined}
+          >
+            Просто
+          </button>
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={mode === 'pro'}
+            onClick={() => setMode('pro')}
+            style={mode === 'pro' ? { color: 'var(--hv2-fg)', borderColor: 'var(--hv2-primary)' } : undefined}
+          >
+            Эксперт
+          </button>
+        </div>
+        <span className="hint">
+          {mode === 'simple'
+            ? 'Эксперт — все пять полей сразу, как в приложении для ПК'
+            : 'Просто — четыре вопроса вместо пяти полей'}
+        </span>
+      </div>
+
+      {mode === 'simple' ? (
+        <SimpleMode
+          draft={draft}
+          step={step}
+          url={url}
+          issues={blocking}
+          activePresetId={activePreset?.id}
+          explain={activePreset?.explain}
+          onStep={setStep}
+          onBaseUrl={setBaseUrl}
+          onParam={setParam}
+          onPreset={pickPreset}
+          onTidy={tidy}
+        />
+      ) : (
+        <ProMode
+          draft={draft}
+          url={url}
+          ready={ready}
+          onBaseUrl={setBaseUrl}
+          onParam={setParam}
+          onTidy={tidy}
+          onReset={reset}
+        />
+      )}
+    </div>
+  )
+}
+
+/* ─────────────────────────── простой режим ─────────────────────────── */
+
+interface SimpleModeProps {
+  draft: LinkDraft
+  step: Step
+  url: string
+  issues: ReturnType<typeof validateDraft>
+  activePresetId: string | undefined
+  explain: string | undefined
+  onStep: (step: Step) => void
+  onBaseUrl: (value: string) => void
+  onParam: (key: UtmKey, value: string) => void
+  onPreset: (preset: Preset) => void
+  onTidy: () => void
+}
+
+function SimpleMode({
+  draft,
+  step,
+  url,
+  issues,
+  activePresetId,
+  explain,
+  onStep,
+  onBaseUrl,
+  onParam,
+  onPreset,
+  onTidy,
+}: SimpleModeProps) {
+  const answers: Record<Step, string> = {
+    1: draft.baseUrl.replace(/^https?:\/\//, ''),
+    2: activePresetId ? (draft.params.source ?? '') : '',
+    3: draft.params.campaign ?? '',
+    4: '',
+  }
+
+  const titles: Record<Step, string> = {
+    1: 'Куда ведёт ссылка?',
+    2: 'Откуда пойдут люди?',
+    3: 'Как назовём кампанию?',
+    4: 'Ссылка готова',
+  }
+
+  const shortTitles: Record<Step, string> = {
+    1: 'Куда ведёт ссылка',
+    2: 'Откуда пойдут люди',
+    3: 'Название кампании',
+    4: 'Готово',
+  }
+
+  const chipTone: Record<Step, string> = {
+    1: 'qchip',
+    2: 'qchip qchip--magenta',
+    3: 'qchip qchip--teal',
+    4: 'qchip',
+  }
+
+  const steps: Step[] = [1, 2, 3, 4]
+
+  return (
+    <div className="steps">
+      {steps.map((current) => {
+        if (current !== step) {
+          const passed = current < step
+          return (
+            <div key={current} className="step" data-state={passed ? 'done' : 'todo'}>
+              <button type="button" className="step-done" onClick={() => onStep(current)}>
+                <span className={passed ? 'qchip qchip--done' : chipTone[current]}>
+                  {passed ? <PixelIcon name="check" /> : current}
+                </span>
+                <span>{shortTitles[current]}</span>
+                {answers[current] ? <b>{answers[current]}</b> : null}
+              </button>
+            </div>
+          )
+        }
+
+        return (
+          <div key={current} className="step" data-state="now">
+            <div className="glass">
+              <div className="qhead">
+                <span className={chipTone[current]}>{current}</span>
+                <span className="qtitle">{titles[current]}</span>
+              </div>
+
+              {current === 1 && (
+                <>
+                  <div className="input">
+                    <span className="scheme">https://</span>
+                    <input
+                      type="text"
+                      value={draft.baseUrl.replace(/^https?:\/\//, '')}
+                      onChange={(event) => onBaseUrl(event.target.value)}
+                      placeholder="studiowelcome.ru/rostov"
+                      aria-label="Адрес страницы"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                  <p className="hint">Схему допишем сами — без неё ссылка не кликается в письмах.</p>
+                  <div className="result-row">
+                    <button
+                      type="button"
+                      className="btn btn--main"
+                      disabled={draft.baseUrl.trim() === ''}
+                      onClick={() => onStep(2)}
+                    >
+                      Дальше
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {current === 2 && (
+                <>
+                  <PresetTiles activeId={activePresetId} onPick={onPreset} />
+                  {explain ? <p className="explain">{explain}</p> : null}
+                </>
+              )}
+
+              {current === 3 && (
+                <>
+                  <div className="input">
+                    <input
+                      type="text"
+                      value={draft.params.campaign ?? ''}
+                      onChange={(event) => onParam('campaign', event.target.value)}
+                      placeholder="osenniy_nabor"
+                      aria-label="Название кампании"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                  <IssueList issues={validateValue('campaign', draft.params.campaign ?? '')} onFix={onTidy} />
+                  <p className="hint">Латиницей, без пробелов — иначе отчёт разъедется.</p>
+                  <div className="result-row">
+                    <button type="button" className="btn btn--main" onClick={() => onStep(4)}>
+                      Дальше
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {current === 4 && (
+                <>
+                  {url ? <ResultCard url={url} /> : <p className="empty">Заполните адрес — и ссылка появится здесь.</p>}
+                  <IssueList issues={issues} onFix={onTidy} />
+                  <div className="invite">
+                    <span>
+                      <b>Сохранить, чтобы не собирать заново?</b> Нужна кодовая фраза — одно поле,
+                      без почты и пароля.
+                    </span>
+                    <a className="btn btn--sm" href="/login">
+                      <PixelIcon name="key" />
+                      Завести фразу
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ─────────────────────────── расширенный режим ─────────────────────────── */
+
+interface ProModeProps {
+  draft: LinkDraft
+  url: string
+  ready: boolean
+  onBaseUrl: (value: string) => void
+  onParam: (key: UtmKey, value: string) => void
+  onTidy: () => void
+  onReset: () => void
+}
+
+function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: ProModeProps) {
+  const issues = useMemo(() => validateDraft(draft), [draft])
+  const blocking = issues.filter((issue) => issue.level !== 'info')
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1.02fr) minmax(0, 0.98fr)',
+        gap: 18,
+        alignItems: 'start',
+      }}
+      className="pro-cols"
+    >
+      <div className="glass">
+        <div className="qhead">
+          <span className="qchip">
+            <PixelIcon name="link" />
+          </span>
+          <span className="qtitle" style={{ fontSize: 16 }}>
+            Параметры ссылки
+          </span>
+        </div>
+
+        <div className="field">
+          <span className="field-label">Адрес страницы</span>
+          <div className="input">
+            <span className="scheme">https://</span>
+            <input
+              type="text"
+              value={draft.baseUrl.replace(/^https?:\/\//, '')}
+              onChange={(event) => onBaseUrl(event.target.value)}
+              placeholder="studiowelcome.ru/rostov"
+              aria-label="Адрес страницы"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+        </div>
+
+        <div className="grid2">
+          {(['source', 'medium'] as const).map((key) => (
+            <Field key={key} draft={draft} field={key} onParam={onParam} />
+          ))}
+        </div>
+
+        <Field draft={draft} field="campaign" onParam={onParam} />
+
+        <div className="grid2">
+          {(['content', 'term'] as const).map((key) => (
+            <Field key={key} draft={draft} field={key} onParam={onParam} />
+          ))}
+        </div>
+
+        <div className="result-row">
+          <button type="button" className="btn btn--sm" onClick={onTidy}>
+            <PixelIcon name="wand" />
+            Привести в порядок
+          </button>
+          <button type="button" className="btn btn--sm" onClick={onReset}>
+            <PixelIcon name="trash" />
+            Очистить
+          </button>
+        </div>
+      </div>
+
+      <div className="glass">
+        {ready && url ? <ResultCard url={url} /> : null}
+
+        <div className="qhead">
+          <span className={blocking.length > 0 ? 'qchip qchip--magenta' : 'qchip qchip--done'}>
+            {blocking.length > 0 ? '!' : <PixelIcon name="check" />}
+          </span>
+          <span className="qtitle" style={{ fontSize: 16 }}>
+            {blocking.length > 0 ? 'Что сломается в отчёте' : 'Замечаний нет'}
+          </span>
+        </div>
+
+        {issues.length > 0 ? (
+          <IssueList issues={issues} onFix={onTidy} />
+        ) : (
+          <p className="empty">
+            {ready
+              ? 'Метки корректны: регистр, разделители и тип трафика на месте.'
+              : 'Заполните адрес и хотя бы источник с каналом.'}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface FieldProps {
+  draft: LinkDraft
+  field: UtmKey
+  onParam: (key: UtmKey, value: string) => void
+}
+
+function Field({ draft, field, onParam }: FieldProps) {
+  const value = draft.params[field] ?? ''
+  const fieldIssues = validateValue(field, value)
+  const worst = fieldIssues.find((issue) => issue.level === 'error')
+    ? 'input--err'
+    : fieldIssues.length > 0
+      ? 'input--warn'
+      : ''
+
+  return (
+    <div className="field">
+      <span className="field-label">{FIELD_LABELS[field]}</span>
+      <div className={`input ${worst}`.trim()}>
+        <input
+          type="text"
+          value={value}
+          onChange={(event) => onParam(field, event.target.value)}
+          aria-label={FIELD_LABELS[field]}
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </div>
+    </div>
+  )
+}
+
+export { UTM_KEYS }

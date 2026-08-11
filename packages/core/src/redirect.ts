@@ -10,8 +10,8 @@
  * (ARCHITECTURE §4.4).
  */
 
-import { parseUrl } from './parse.js'
-import type { UtmKey } from './types.js'
+import { parseUrl } from './parse'
+import type { UtmKey } from './types'
 
 /** Ответ на один запрос: код и заголовок Location, если он был. */
 export interface HopResponse {

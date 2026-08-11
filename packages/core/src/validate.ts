@@ -7,11 +7,11 @@
  * маскоту, экрану разбора и пакетному режиму — и должны совпадать слово в слово.
  */
 
-import { buildUrl } from './build.js'
-import { hasCyrillic, needsNormalization } from './normalize.js'
-import type { ParsedLink } from './parse.js'
-import type { Issue, LinkDraft, UtmKey, UtmParams } from './types.js'
-import { UTM_KEYS, UTM_PARAM_NAMES } from './types.js'
+import { buildUrl } from './build'
+import { hasCyrillic, needsNormalization } from './normalize'
+import type { ParsedLink } from './parse'
+import type { Issue, LinkDraft, UtmKey, UtmParams } from './types'
+import { UTM_KEYS, UTM_PARAM_NAMES } from './types'
 
 /** Порог, после которого ссылки начинают резаться в почте и мессенджерах. */
 const URL_LENGTH_WARN = 2000
