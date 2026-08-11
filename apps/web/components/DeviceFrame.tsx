@@ -17,6 +17,7 @@ import { useState, type ReactNode } from 'react'
 
 import { MascotBar } from './Mascot'
 import { PixelIcon, type IconName } from './PixelIcon'
+import { useAccount } from '@/lib/account'
 import { useTheme } from '@/lib/theme'
 
 interface Section {
@@ -41,7 +42,10 @@ interface DeviceFrameProps {
 export function DeviceFrame({ children }: DeviceFrameProps) {
   const pathname = usePathname()
   const { theme, toggle } = useTheme()
+  const { state: account } = useAccount()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const signedIn = account === 'member'
 
   const isCurrent = (href: string): boolean =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -83,8 +87,8 @@ export function DeviceFrame({ children }: DeviceFrameProps) {
           </button>
           <Link href="/login" className="keybtn">
             <PixelIcon name="key" />
-            <span className="keybtn__full">Кодовая фраза</span>
-            <span className="keybtn__short">Фраза</span>
+            <span className="keybtn__full">{signedIn ? 'Вы вошли' : 'Кодовая фраза'}</span>
+            <span className="keybtn__short">{signedIn ? 'Вход' : 'Фраза'}</span>
           </Link>
         </div>
 
@@ -93,12 +97,12 @@ export function DeviceFrame({ children }: DeviceFrameProps) {
         {children}
 
         <div className="statusbar">
-          <span className="sb-item">
-            <span className="sb-dot sb-dot--off" aria-hidden="true" />
-            Гость
-          </span>
+          <Link href="/login" className="sb-item">
+            <span className={`sb-dot${signedIn ? '' : ' sb-dot--off'}`} aria-hidden="true" />
+            {signedIn ? 'Фраза при вас' : 'Гость'}
+          </Link>
           <span className="sb-item sb-quota">
-            Помощник: <b>нужна фраза</b>
+            Сохранение: <b>{signedIn ? 'включено' : 'нужна фраза'}</b>
           </span>
           <span className="spacer" />
           <span className="sb-item">UTMKA 3.0</span>

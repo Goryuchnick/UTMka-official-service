@@ -1,0 +1,271 @@
+'use client'
+
+/**
+ * История собранных ссылок.
+ *
+ * Паритет с 2.2: поиск, три вида отображения с запоминанием выбора, действия
+ * над записью. Потолок 500 держит сервер, здесь его только объясняем.
+ */
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import type { HistoryItem } from '@utmka/core'
+
+import { PixelIcon } from '@/components/PixelIcon'
+import { EmptyNote, ViewSwitch } from '@/components/ViewSwitch'
+import { VaultGate } from '@/components/VaultGate'
+import { useAccount } from '@/lib/account'
+import { useSetMascotLine } from '@/lib/mascot'
+import { useViewMode } from '@/lib/view'
+import { exportJson, exportCsv, historyToCsv, historyToJson } from '@/lib/exchange'
+
+const ORIGIN_LABEL: Record<HistoryItem['origin'], string> = {
+  single: 'Генератор',
+  batch: 'Пакет',
+  brief: 'Помощник',
+  parse: 'Разбор',
+}
+
+/**
+ * Чтение вынесено из компонента: эффект должен только подписываться на внешний
+ * мир и класть результат в колбэке — тогда React не получает каскад рендеров,
+ * а правило `set-state-in-effect` видит корректный паттерн.
+ */
+async function fetchHistory(): Promise<{ items: HistoryItem[]; error: string }> {
+  try {
+    const response = await fetch('/api/history', { cache: 'no-store' })
+    const data = (await response.json()) as { items?: HistoryItem[]; error?: string }
+    if (!response.ok) {
+      // 401 — не ошибка, а «фразы нет»: об этом говорит отдельный экран.
+      return { items: [], error: response.status === 401 ? '' : (data.error ?? 'Не удалось прочитать историю') }
+    }
+    return { items: data.items ?? [], error: '' }
+  } catch {
+    return { items: [], error: 'Сеть не отвечает' }
+  }
+}
+
+function when(iso: string | undefined): string {
+  if (!iso) return ''
+  const date = new Date(iso)
+  return date.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+export function HistoryScreen() {
+  const router = useRouter()
+  const { state } = useAccount()
+  const { view, setView } = useViewMode('history')
+
+  // null — «ещё не читали». Отдельного флага загрузки нет намеренно: он
+  // требовал бы setState прямо в эффекте, а это лишний каскад рендеров.
+  const [items, setItems] = useState<HistoryItem[] | null>(null)
+  const [query, setQuery] = useState('')
+  const [error, setError] = useState('')
+
+  const busy = state === 'unknown' || (state === 'member' && items === null)
+
+  useSetMascotLine(
+    state === 'member'
+      ? 'Здесь всё, что вы собрали. Поиск идёт и по ссылке, и по меткам.'
+      : 'История живёт за фразой: без неё собранная ссылка исчезает с закрытием вкладки.',
+  )
+
+  useEffect(() => {
+    if (state !== 'member') return undefined
+
+    let alive = true
+    void fetchHistory().then((result) => {
+      if (!alive) return
+      setItems(result.items)
+      setError(result.error)
+    })
+    return () => {
+      alive = false
+    }
+  }, [state])
+
+  const list = useMemo(() => items ?? [], [items])
+
+  const shown = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return list
+    return list.filter((item) => {
+      const haystack = [item.url, ...Object.values(item.params ?? {})].join(' ').toLowerCase()
+      return haystack.includes(needle)
+    })
+  }, [list, query])
+
+  const drop = useCallback(
+    async (id: string) => {
+      setItems((prev) => (prev ?? []).filter((item) => item.id !== id))
+      await fetch(`/api/history?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+    },
+    [],
+  )
+
+  const wipe = useCallback(async () => {
+    setItems([])
+    await fetch('/api/history', { method: 'DELETE' })
+  }, [])
+
+  const reuse = useCallback(
+    (item: HistoryItem) => {
+      const params = new URLSearchParams({ url: item.baseUrl || item.url })
+      for (const [key, value] of Object.entries(item.params ?? {})) {
+        if (value) params.set(key, value)
+      }
+      router.push(`/?${params.toString()}`)
+    },
+    [router],
+  )
+
+  if (state === 'guest') {
+    return (
+      <div className="screen-scroll">
+        <VaultGate
+          title="История"
+          what="Каждая собранная ссылка попадает сюда вместе с метками и датой — можно найти прошлый запуск и повторить его, не собирая заново."
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="screen-scroll">
+      <div className="glass">
+        <div className="qhead">
+          <span className="qchip">
+            <PixelIcon name="clock" />
+          </span>
+          <span className="qtitle qtitle--amber">История</span>
+        </div>
+
+        <div className="field">
+          <div className="input">
+            <PixelIcon name="search" />
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Поиск по ссылке и меткам"
+              aria-label="Поиск по истории"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+
+        <div className="result-row">
+          <ViewSwitch view={view} onChange={setView} />
+          <span className="result-len">
+            {list.length} из 500
+          </span>
+        </div>
+
+        <div className="result-row">
+          <button
+            type="button"
+            className="btn btn--sm"
+            disabled={list.length === 0}
+            onClick={() => exportJson('utmka-history', historyToJson(list))}
+          >
+            <PixelIcon name="save" />
+            Выгрузить JSON
+          </button>
+          <button
+            type="button"
+            className="btn btn--sm"
+            disabled={list.length === 0}
+            onClick={() => exportCsv('utmka-history', historyToCsv(list))}
+          >
+            <PixelIcon name="save" />
+            Выгрузить CSV
+          </button>
+          <button type="button" className="btn btn--sm" disabled={list.length === 0} onClick={wipe}>
+            <PixelIcon name="trash" />
+            Очистить
+          </button>
+        </div>
+
+        {error ? <p className="hint hint--error">{error}</p> : null}
+      </div>
+
+      {busy ? (
+        <p className="empty">Читаю историю…</p>
+      ) : shown.length === 0 ? (
+        <EmptyNote
+          text={
+            list.length === 0
+              ? 'Пока пусто. Соберите ссылку — она сохранится сюда сама.'
+              : 'По этому запросу ничего нет.'
+          }
+        />
+      ) : view === 'table' ? (
+        <div className="glass">
+          <div className="htable" role="table">
+            <div className="htable-head" role="row">
+              <span role="columnheader">Когда</span>
+              <span role="columnheader">Источник</span>
+              <span role="columnheader">Кампания</span>
+              <span role="columnheader">Ссылка</span>
+              <span role="columnheader" />
+            </div>
+            {shown.map((item) => (
+              <div className="htable-row" role="row" key={item.id}>
+                <span role="cell">{when(item.createdAt)}</span>
+                <span role="cell">{item.params?.source ?? '—'}</span>
+                <span role="cell">{item.params?.campaign ?? '—'}</span>
+                <span role="cell" className="htable-url">
+                  {item.shortUrl ?? item.url}
+                </span>
+                <span role="cell" className="htable-acts">
+                  <button type="button" className="ibtn" title="В генератор" onClick={() => reuse(item)}>
+                    <PixelIcon name="wand" />
+                  </button>
+                  <button type="button" className="ibtn" title="Удалить" onClick={() => drop(item.id)}>
+                    <PixelIcon name="trash" />
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className={view === 'grid' ? 'cards' : 'hist'}>
+          {shown.map((item) => (
+            <div className="hist-row" key={item.id}>
+              <div className="hist-main">
+                <div className="hist-name">
+                  {item.params?.campaign || item.params?.source || 'Без названия'}
+                  <span className="hist-tag">{ORIGIN_LABEL[item.origin]}</span>
+                </div>
+                <div className="hist-url">{item.shortUrl ?? item.url}</div>
+              </div>
+              <span className="hist-when">{when(item.createdAt)}</span>
+              <span className="htable-acts">
+                <button
+                  type="button"
+                  className="ibtn"
+                  title="Скопировать"
+                  onClick={() => void navigator.clipboard.writeText(item.shortUrl ?? item.url)}
+                >
+                  <PixelIcon name="copy" />
+                </button>
+                <button type="button" className="ibtn" title="В генератор" onClick={() => reuse(item)}>
+                  <PixelIcon name="wand" />
+                </button>
+                <button type="button" className="ibtn" title="Удалить" onClick={() => drop(item.id)}>
+                  <PixelIcon name="trash" />
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

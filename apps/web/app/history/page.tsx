@@ -1,11 +1,13 @@
-import { Soon } from '@/components/Soon'
+import type { Metadata } from 'next'
+
+import { HistoryScreen } from '@/components/HistoryScreen'
+
+export const metadata: Metadata = {
+  title: 'История ссылок — UTMka',
+  description: 'Собранные ссылки с метками и датой: поиск, повтор запуска, выгрузка в JSON и CSV.',
+  robots: { index: false, follow: false },
+}
 
 export default function HistoryPage() {
-  return (
-    <Soon
-      title="История"
-      line="Сюда попадут собранные ссылки — но только когда заведёте кодовую фразу."
-      what="Всё, что хранится, живёт за фразой: без неё ссылка живёт до закрытия вкладки. Поиск и три вида отображения — как в приложении для ПК."
-    />
-  )
+  return <HistoryScreen />
 }

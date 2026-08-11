@@ -1238,7 +1238,6 @@ html[data-theme='light'] .crt {
   font-size: 13px;
   text-align: left;
   width: 100%;
-  cursor: pointer;
   color: var(--hv2-fg);
   transition: border-color 0.18s, box-shadow 0.18s;
 }
@@ -1248,17 +1247,26 @@ html[data-theme='light'] .crt {
   box-shadow: 0 0 22px color-mix(in srgb, var(--hv2-primary) 12%, transparent);
 }
 
+/* Тег записи — короткая подпись, а не точка: цвет несёт отдельный кружок
+   `.tag-dot`, потому что цветом одним нельзя объяснить, что он значит. */
 .hist-tag {
-  width: 8px;
-  height: 8px;
+  font-family: var(--hv2-pixel);
+  font-size: 7px;
+  letter-spacing: 0.02em;
+  padding: 4px 7px;
   border-radius: 999px;
+  border: 1px solid var(--g-line);
+  color: var(--hv2-muted);
   flex: none;
 }
 
 .hist-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
   color: var(--hv2-fg);
   font-weight: 600;
-  flex: none;
 }
 
 .hist-url {
@@ -1749,6 +1757,181 @@ html[data-theme='light'] .crt {
 
 .hint--error {
   color: var(--hv2-destructive);
+}
+
+/* ═══════════ КОДОВАЯ ФРАЗА ═══════════ */
+
+/* Фраза показывается один раз и её надо переписать — отсюда крупный кегль,
+   моноширинный набор и разрядка: чтобы «л» и «п» не слились при переписывании. */
+.phrase {
+  font-family: var(--hv2-mono);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  word-break: break-word;
+  color: var(--hv2-primary);
+  background: color-mix(in srgb, var(--hv2-primary) 9%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .phrase {
+    font-size: 17px;
+    padding: 14px;
+  }
+}
+
+/* ═══════════ БИБЛИОТЕКА: СПИСКИ, ТАБЛИЦА, СПРАВОЧНИК ═══════════ */
+
+.hist-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tag-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  flex: none;
+  display: inline-block;
+}
+
+/* Плитки — та же карточка, только в сетке. Разметка одна на оба вида. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.cards .hist-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cards .hist-when {
+  margin: 0;
+}
+
+.htable {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.htable-head,
+.htable-row {
+  display: grid;
+  grid-template-columns: 92px 96px 1fr 2fr 74px;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 4px;
+  min-width: 560px;
+}
+
+.htable-head {
+  color: color-mix(in srgb, var(--hv2-subtle) 75%, transparent);
+  border-bottom: 1px solid var(--g-line);
+}
+
+.htable-row + .htable-row {
+  border-top: 1px solid color-mix(in srgb, var(--g-line) 55%, transparent);
+}
+
+.htable-url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--hv2-muted);
+}
+
+.htable-acts {
+  display: inline-flex;
+  gap: 2px;
+  flex: none;
+}
+
+.htable-acts .ibtn {
+  background: none;
+  border: none;
+  color: var(--hv2-subtle);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 5px;
+}
+
+.htable-acts .ibtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.htable-acts .ibtn:hover {
+  color: var(--hv2-primary);
+}
+
+.dict {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.dict-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-fg);
+}
+
+.dict-item b {
+  color: var(--hv2-primary);
+  font-size: 11px;
+}
+
+.dict-item i {
+  font-style: normal;
+  color: var(--hv2-subtle);
+  font-size: 11px;
+}
+
+/* Сведённый алиас гаснет: он больше не предлагается в подсказках. */
+.dict-item--alias {
+  opacity: 0.55;
+}
+
+/* Палитра тегов — восемь кружков, паритет с 2.2. */
+.palette {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch[aria-pressed='true'] {
+  border-color: var(--hv2-fg);
+  box-shadow: 0 0 0 2px var(--hv2-bg2);
 }
 
 /* ═══════════ ПУСТОЕ СОСТОЯНИЕ ═══════════ */

@@ -1,11 +1,14 @@
-import { Soon } from '@/components/Soon'
+import type { Metadata } from 'next'
+
+import { TemplatesScreen } from '@/components/TemplatesScreen'
+
+export const metadata: Metadata = {
+  title: 'Шаблоны и справочник — UTMka',
+  description:
+    'Сохранённые наборы меток с тегами и справочник значений: он показывает, где одно и то же написано по-разному.',
+  robots: { index: false, follow: false },
+}
 
 export default function TemplatesPage() {
-  return (
-    <Soon
-      title="Шаблоны и справочник"
-      line="Шаблоны с тегами и словарь ваших значений — за кодовой фразой."
-      what="Шаблоны с цветными тегами, импорт-экспорт JSON и CSV, справочник значений со сведением расщеплений (dictionary.ts в ядре)."
-    />
-  )
+  return <TemplatesScreen />
 }

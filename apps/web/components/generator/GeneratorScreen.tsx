@@ -12,6 +12,7 @@
  */
 
 import { useCallback, useMemo, useState } from 'react'
+import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation'
 import {
   applyPreset,
   buildUrl,
@@ -33,8 +34,25 @@ import { IssueList } from './IssueList'
 import { ValueField } from './ValueField'
 import { PresetTiles } from './PresetTiles'
 import { ResultCard } from './ResultCard'
+import { SaveBar } from './SaveBar'
 
 const EMPTY: LinkDraft = { baseUrl: '', params: {} }
+
+/**
+ * Заготовка из адресной строки. Так работают кнопки «в генератор» в истории и
+ * шаблонах, и так можно кинуть коллеге готовую ссылку-заготовку:
+ * `/?url=site.ru&source=vk&medium=social`.
+ */
+function draftFromSearch(search: ReadonlyURLSearchParams): LinkDraft | null {
+  const params: LinkDraft['params'] = {}
+  for (const key of UTM_KEYS) {
+    const value = search.get(key)
+    if (value) params[key] = value
+  }
+  const baseUrl = search.get('url') ?? ''
+  if (!baseUrl && Object.keys(params).length === 0) return null
+  return { baseUrl, params }
+}
 
 /** Реплики помощника. Свои, не копия сайта и не копия курса. */
 const LINES = {
@@ -49,9 +67,18 @@ const LINES = {
 type Step = 1 | 2 | 3 | 4
 
 export function GeneratorScreen() {
-  const { mode, setMode } = useGeneratorMode()
-  const [draft, setDraft] = useState<LinkDraft>(EMPTY)
-  const [step, setStep] = useState<Step>(1)
+  const search = useSearchParams()
+  const { mode: savedMode, setMode } = useGeneratorMode()
+
+  // Заготовку берём один раз при монтировании: дальше это обычная форма,
+  // и перезатирать введённое при смене адреса было бы враньём.
+  const [draft, setDraft] = useState<LinkDraft>(() => draftFromSearch(search) ?? EMPTY)
+  const [step, setStep] = useState<Step>(() => (draftFromSearch(search) ? 4 : 1))
+
+  // `?mode=` перебивает сохранённый выбор — чтобы можно было прислать ссылку
+  // «открой сразу в простом» (ARCHITECTURE §4.2).
+  const forced = search.get('mode')
+  const mode = forced === 'pro' || forced === 'simple' ? forced : savedMode
 
   const issues = useMemo(() => validateDraft(draft), [draft])
   const url = useMemo(() => buildUrl(draft), [draft])
@@ -297,16 +324,7 @@ function SimpleMode({
                 <>
                   {url ? <ResultCard url={url} /> : <p className="empty">Заполните адрес — и ссылка появится здесь.</p>}
                   <IssueList issues={issues} onFix={onTidy} />
-                  <div className="invite">
-                    <span>
-                      <b>Сохранить, чтобы не собирать заново?</b> Нужна кодовая фраза — одно поле,
-                      без почты и пароля.
-                    </span>
-                    <a className="btn btn--sm" href="/login">
-                      <PixelIcon name="key" />
-                      Завести фразу
-                    </a>
-                  </div>
+                  {url ? <SaveBar draft={draft} url={url} /> : null}
                 </>
               )}
             </div>
@@ -400,7 +418,12 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
       </div>
 
       <div className="glass">
-        {ready && url ? <ResultCard url={url} /> : null}
+        {ready && url ? (
+          <>
+            <ResultCard url={url} />
+            <SaveBar draft={draft} url={url} />
+          </>
+        ) : null}
 
         <div className="qhead">
           <span className={blocking.length > 0 ? 'qchip qchip--magenta' : 'qchip qchip--done'}>

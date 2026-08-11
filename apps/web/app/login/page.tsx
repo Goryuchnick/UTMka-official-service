@@ -1,11 +1,13 @@
-import { Soon } from '@/components/Soon'
+import type { Metadata } from 'next'
+
+import { LoginScreen } from '@/components/LoginScreen'
+
+export const metadata: Metadata = {
+  title: 'Кодовая фраза — UTMka',
+  description: 'Анонимный вход одной фразой: без почты, пароля и персональных данных.',
+  robots: { index: false, follow: false },
+}
 
 export default function LoginPage() {
-  return (
-    <Soon
-      title="Кодовая фраза"
-      line="Одно поле. Ни почты, ни пароля, ни персональных данных."
-      what="Фраза из пяти слов — она же логин и пароль. Нужна только чтобы сохранять шаблоны и подхватывать их с другого устройства."
-    />
-  )
+  return <LoginScreen />
 }
