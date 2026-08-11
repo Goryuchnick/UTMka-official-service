@@ -19,8 +19,10 @@ RUN npm ci
 
 FROM base AS builder
 WORKDIR /app
+# npm workspaces поднимает все зависимости в корневой node_modules, своей папки
+# у apps/web нет — копируем только корневую. Симлинк @utmka/core внутри неё
+# указывает на packages/core и оживает после COPY исходников ниже.
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
 
 ARG NEXT_PUBLIC_SITE_URL
@@ -39,11 +41,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
-# Раскладка standalone в монорепо: server.js внутри apps/web, node_modules
-# рядом с ним на верхнем уровне.
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# Раскладка standalone в монорепо: Next кладёт его в apps/web/.next/standalone,
+# а внутри повторяет дерево от outputFileTracingRoot — server.js оказывается
+# в apps/web/, node_modules и packages/ рядом на верхнем уровне.
+# Папки public у приложения нет: иконка отдаётся роутером (app/icon.svg).
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 USER nextjs
 
