@@ -22,6 +22,7 @@ import {
   type UtmKey,
 } from '@utmka/core'
 
+import { allow, readJson, tooMany } from '@/lib/rate-limit'
 import { askModel, dailyLimit, extractJson, llmConfigured } from '@/lib/routerai'
 import { currentUser } from '@/lib/session'
 import { storageConfigured, supabase } from '@/lib/supabase'
@@ -99,6 +100,9 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
+  // Поверх дневной квоты — потолок по IP, чтобы её не выжигали за минуту.
+  if (!(await allow('assistant', request))) return tooMany()
+
   const used = await usedToday(user.hash)
   const limit = dailyLimit()
   if (used >= limit) {
@@ -108,13 +112,11 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  let brief = ''
-  try {
-    const body = (await request.json()) as { brief?: unknown }
-    brief = text(body.brief).slice(0, MAX_BRIEF)
-  } catch {
+  const body = await readJson<{ brief?: unknown; baseUrl?: unknown }>(request, 8192)
+  if (!body) {
     return Response.json({ error: 'Не удалось прочитать запрос' }, { status: 400 })
   }
+  const brief = text(body.brief).slice(0, MAX_BRIEF)
 
   if (brief.length < 10) {
     return Response.json({ error: 'Опишите запуск парой фраз — куда ведём и где размещаемся' }, { status: 400 })
@@ -146,13 +148,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // Базовый адрес модель не выдумывает: он либо пришёл из формы, либо его нет.
-  let baseUrl = ''
-  try {
-    const body = (await request.clone().json()) as { baseUrl?: unknown }
-    baseUrl = text(body.baseUrl)
-  } catch {
-    /* адрес необязателен */
-  }
+  const baseUrl = text(body.baseUrl)
 
   const results = rawLinks.slice(0, MAX_LINKS).map((raw) => {
     const params: Partial<Record<UtmKey, string>> = {}

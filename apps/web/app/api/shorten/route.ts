@@ -12,16 +12,20 @@
 
 import { assertPublicUrl, normalizeBaseUrl } from '@utmka/core'
 
+import { allow, readJson, tooMany } from '@/lib/rate-limit'
+
 const TIMEOUT_MS = 5000
 
 export async function POST(request: Request): Promise<Response> {
-  let url: string
-  try {
-    const body: unknown = await request.json()
-    url = typeof body === 'object' && body !== null && 'url' in body ? String(body.url) : ''
-  } catch {
+  // Роут открыт без входа, а сервер по нему ходит наружу — значит через нас
+  // можно долбить clck.ru. Потолок по IP обязателен.
+  if (!(await allow('shorten', request))) return tooMany()
+
+  const body = await readJson<{ url?: unknown }>(request, 4096)
+  if (!body) {
     return Response.json({ error: 'Не удалось прочитать запрос' }, { status: 400 })
   }
+  const url = typeof body.url === 'string' ? body.url : ''
 
   const normalized = normalizeBaseUrl(url)
   if (!normalized) {

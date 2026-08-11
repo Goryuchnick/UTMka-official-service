@@ -1,5 +1,6 @@
 /** История собранных ссылок — только с сессией. Потолок держит `store.addHistory`. */
 
+import { readJson } from '@/lib/rate-limit'
 import { currentUser } from '@/lib/session'
 import { addHistory, clearHistory, listHistory, removeHistory } from '@/lib/store'
 import { storageConfigured } from '@/lib/supabase'
@@ -36,8 +37,10 @@ export async function POST(request: Request): Promise<Response> {
   const auth = await guard()
   if (auth instanceof Response) return auth
 
+  const body = await readJson<Omit<HistoryItem, 'id'>>(request)
+  if (!body) return Response.json({ error: 'Слишком большой или битый запрос' }, { status: 400 })
+
   try {
-    const body = (await request.json()) as Omit<HistoryItem, 'id'>
     if (!body?.url) return Response.json({ error: 'Пустая ссылка' }, { status: 400 })
     const origin = ORIGINS.has(body.origin) ? body.origin : 'single'
     return Response.json({ item: await addHistory(auth.hash, { ...body, origin }) })

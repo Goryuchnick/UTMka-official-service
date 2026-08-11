@@ -6,6 +6,7 @@
  * в отчёты площадки, и подмена задним числом соврала бы.
  */
 
+import { readJson } from '@/lib/rate-limit'
 import { currentUser } from '@/lib/session'
 import { listDictionary, mergeValue, removeValue } from '@/lib/store'
 import { storageConfigured } from '@/lib/supabase'
@@ -43,8 +44,10 @@ export async function POST(request: Request): Promise<Response> {
   const auth = await guard()
   if (auth instanceof Response) return auth
 
+  const body = await readJson<{ kind?: unknown; alias?: unknown; canonical?: unknown }>(request, 4096)
+  if (!body) return Response.json({ error: 'Слишком большой или битый запрос' }, { status: 400 })
+
   try {
-    const body = (await request.json()) as { kind?: unknown; alias?: unknown; canonical?: unknown }
     if (!isKind(body.kind) || typeof body.alias !== 'string' || typeof body.canonical !== 'string') {
       return Response.json({ error: 'Не хватает данных для сведения' }, { status: 400 })
     }

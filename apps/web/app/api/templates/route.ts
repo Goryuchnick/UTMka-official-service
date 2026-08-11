@@ -1,5 +1,6 @@
 /** Шаблоны — только с сессией. Чужой `user_hash` подставить нельзя: он берётся из куки. */
 
+import { readJson } from '@/lib/rate-limit'
 import { currentUser } from '@/lib/session'
 import { createTemplate, listTemplates, removeTemplate, updateTemplate } from '@/lib/store'
 import { storageConfigured } from '@/lib/supabase'
@@ -34,8 +35,10 @@ export async function POST(request: Request): Promise<Response> {
   const auth = await guard()
   if (auth instanceof Response) return auth
 
+  const body = await readJson<Omit<Template, 'id'>>(request)
+  if (!body) return Response.json({ error: 'Слишком большой или битый запрос' }, { status: 400 })
+
   try {
-    const body = (await request.json()) as Omit<Template, 'id'>
     if (!body?.name?.trim()) {
       return Response.json({ error: 'Без названия шаблон не найдётся' }, { status: 400 })
     }
@@ -49,8 +52,10 @@ export async function PATCH(request: Request): Promise<Response> {
   const auth = await guard()
   if (auth instanceof Response) return auth
 
+  const body = await readJson<{ id?: string } & Partial<Omit<Template, 'id'>>>(request)
+  if (!body) return Response.json({ error: 'Слишком большой или битый запрос' }, { status: 400 })
+
   try {
-    const body = (await request.json()) as { id?: string } & Partial<Omit<Template, 'id'>>
     if (!body?.id) return Response.json({ error: 'Не указан шаблон' }, { status: 400 })
     const { id, ...patch } = body
     return Response.json({ item: await updateTemplate(auth.hash, id, patch) })

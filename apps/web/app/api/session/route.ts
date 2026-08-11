@@ -15,6 +15,7 @@ import {
   hashPassphrase,
   isValidPassphraseShape,
 } from '@/lib/passphrase'
+import { allow, readJson, tooMany } from '@/lib/rate-limit'
 import { clearSession, currentUser, setSession, touchUser } from '@/lib/session'
 import { storageConfigured, supabase } from '@/lib/supabase'
 
@@ -28,7 +29,8 @@ interface Body {
 export async function GET(): Promise<Response> {
   if (!storageConfigured()) return Response.json({ user: null, storage: false })
   const user = await currentUser()
-  return Response.json({ user: user ? { hash: user.hash.slice(0, 8) } : null, storage: true })
+  // Ни куска хеша наружу: клиенту нужен только факт «вошёл или нет».
+  return Response.json({ user: user ? { in: true } : null, storage: true })
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -36,14 +38,16 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Хранилище не настроено' }, { status: 503 })
   }
 
-  let body: Body
-  try {
-    body = (await request.json()) as Body
-  } catch {
+  const body = await readJson<Body>(request, 4096)
+  if (!body) {
     return Response.json({ error: 'Не удалось прочитать запрос' }, { status: 400 })
   }
 
   const mode = body.mode === 'register' ? 'register' : 'login'
+
+  // Лимит по IP: без него в цикле создаются аккаунты, а каждый из них —
+  // ещё одна дневная квота платного помощника.
+  if (!(await allow(mode === 'register' ? 'register' : 'login', request))) return tooMany()
 
   if (mode === 'register') {
     // Коллизия фразы практически невозможна, но вставка всё равно может
