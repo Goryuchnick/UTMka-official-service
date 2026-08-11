@@ -224,7 +224,7 @@ function SimpleMode({
                 <span className={passed ? 'qchip qchip--done' : chipTone[current]}>
                   {passed ? <PixelIcon name="check" /> : current}
                 </span>
-                <span>{shortTitles[current]}</span>
+                <span className="step-name">{shortTitles[current]}</span>
                 {answers[current] ? <b>{answers[current]}</b> : null}
               </button>
             </div>
@@ -283,10 +283,8 @@ function SimpleMode({
                     bare
                   />
                   <IssueList issues={validateValue('campaign', draft.params.campaign ?? '')} onFix={onTidy} />
-                  <p className="hint">
-                    Латиницей, без пробелов. Кнопка календаря дописывает дату — она не заменяет
-                    название, а добавляется через подчёркивание.
-                  </p>
+                  {/* Про поведение даты рассказывает сам календарь — здесь не дублируем. */}
+                  <p className="hint">Латиницей, без пробелов.</p>
                   <div className="result-row">
                     <button type="button" className="btn btn--main" onClick={() => onStep(4)}>
                       Дальше

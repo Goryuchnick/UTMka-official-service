@@ -1,16 +1,12 @@
 @import "tailwindcss";
 
-/* Karmatic Arcade — пиксельный акцентный шрифт «ПРОНИН-ОС».
-   Файл тот же, что на сайте (public/fonts/ka1.ttf). Используется точечно:
-   заголовки экранов, кикеры, номера шагов — там, где нужен характер,
-   а не читаемость длинного текста. */
-@font-face {
-  font-family: 'Karmatic Arcade';
-  src: url('/fonts/ka1.ttf') format('truetype');
-  font-display: swap;
-  font-weight: 400;
-  font-style: normal;
-}
+/* Пиксельный акцентный шрифт — Press Start 2P, подключается через next/font
+   в app/layout.tsx (переменная --font-pixel), ровно как на сайте.
+
+   ⚠️ Karmatic Arcade (public/fonts/ka1.ttf) здесь НЕ годится: в его cmap
+   кириллица объявлена, но глифы пустые (нулевая длина в glyf), поэтому
+   браузер не уходит в фолбэк, а рисует пустоту. Проверено на ka1.ttf:
+   «А» → gid 458, длина контура 0. Не возвращать. */
 
 /* ═══════════════════════════════════════════════════════════════════
    UTMka 3.0 — визуальный слой «ПРОНИН-ОС».
@@ -51,7 +47,7 @@
 
   --hv2-mono: 'Cascadia Code', 'Cascadia Mono', Consolas, 'IBM Plex Mono', ui-monospace, monospace;
   --hv2-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --hv2-pixel: 'Karmatic Arcade', 'Press Start 2P', monospace;
+  --hv2-pixel: var(--font-pixel), 'Press Start 2P', monospace;
 
   /* Стекло и скругления. Заливка плотная: прозрачное стекло на мобилке,
      где backdrop-filter часто отключён экономией батареи, превращалось
@@ -686,6 +682,28 @@ html[data-theme='light'] .crt {
   height: 12px;
 }
 
+/* Название свёрнутого шага — тем же пиксельным, что и заголовок раскрытого:
+   иначе при сворачивании шрифт подменяется и плашка «выпадает» из ряда. */
+.step-name {
+  font-family: var(--hv2-pixel);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .step-name {
+    font-size: 9px;
+  }
+}
+
+.step[data-state='done'] .step-name {
+  color: var(--hv2-muted);
+}
+
 .step-done b {
   color: var(--hv2-fg);
   font-weight: 600;
@@ -742,7 +760,7 @@ html[data-theme='light'] .crt {
 }
 
 .input .scheme {
-  color: var(--hv2-subtle);
+  color: color-mix(in srgb, var(--hv2-subtle) 55%, transparent);
   flex: none;
 }
 
@@ -755,12 +773,17 @@ html[data-theme='light'] .crt {
   color: var(--hv2-fg);
   font-family: inherit;
   font-size: inherit;
+  font-weight: 400;
   height: 100%;
   padding: 0;
 }
 
+/* Подсказка внутри поля — самый тихий слой. Она подсказывает формат, а не
+   несёт смысл: главный здесь заголовок над полем, и он не должен проигрывать
+   по весу тексту внутри рамки. */
 .input input::placeholder {
-  color: var(--hv2-subtle);
+  color: color-mix(in srgb, var(--hv2-subtle) 48%, transparent);
+  font-size: 13px;
 }
 
 .input .ibtn {
@@ -783,20 +806,34 @@ html[data-theme='light'] .crt {
   color: var(--hv2-primary);
 }
 
+/* Пояснение под полем — служебный слой, ещё тише плейсхолдера. */
 .hint {
-  font-size: 13px;
-  color: var(--hv2-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--hv2-subtle) 72%, transparent);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 9px;
 }
 
+/* Заголовок поля — главный ориентир: это единственное, что пользователь
+   обязан прочитать. Отсюда пиксельный шрифт и полная яркость текста,
+   тогда как всё внутри и под полем приглушено. */
 .field-label {
-  font-size: 13px;
-  color: var(--hv2-muted);
+  font-family: var(--hv2-pixel);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--hv2-fg);
+}
+
+@media (max-width: 767px) {
+  .field-label {
+    font-size: 9px;
+  }
 }
 
 .grid2 {
@@ -905,14 +942,19 @@ html[data-theme='light'] .crt {
   height: 18px;
 }
 
+/* Название площадки — пиксельным, подпись под ним остаётся наборным:
+   пиксельный читается плохо на длинной строке, а тут строка короткая. */
 .tile-name {
-  font-size: 14px;
-  font-weight: 600;
+  font-family: var(--hv2-pixel);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
 }
 
 .tile-hint {
   font-size: 12px;
-  color: var(--hv2-subtle);
+  color: color-mix(in srgb, var(--hv2-subtle) 82%, transparent);
   line-height: 1.4;
 }
 
@@ -944,10 +986,12 @@ html[data-theme='light'] .crt {
   gap: 8px;
 }
 
+/* Переключатель режима — тоже пиксельным: это развилка, а не служебная метка. */
 .chip {
-  font-family: var(--hv2-mono);
-  font-size: 13px;
-  padding: 8px 14px;
+  font-family: var(--hv2-pixel);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  padding: 10px 15px;
   background: var(--g-fill-2);
   border: 1px solid var(--g-line);
   color: var(--hv2-muted);
@@ -1019,9 +1063,14 @@ html[data-theme='light'] .crt {
 
 /* ═══════════ КНОПКИ ═══════════ */
 
+/* Кнопки — пиксельным: это то, что нужно подсветить в первую очередь.
+   Кегль ниже обычного, шрифт широкий; насыщенность у него одна (400),
+   поэтому «жирность» набирается не весом, а цветом и подложкой. */
 .btn {
-  font-size: 15px;
-  font-weight: 600;
+  font-family: var(--hv2-pixel);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   height: 48px;
   padding: 0 24px;
   display: inline-flex;
@@ -1057,7 +1106,6 @@ html[data-theme='light'] .crt {
   background: linear-gradient(135deg, var(--hv2-primary), var(--hv2-primary-d));
   border-color: color-mix(in srgb, var(--hv2-primary) 70%, transparent);
   color: var(--hv2-onprimary);
-  font-weight: 700;
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--hv2-primary) 30%, transparent),
     0 8px 30px color-mix(in srgb, var(--hv2-primary) 30%, transparent);
@@ -1076,8 +1124,19 @@ html[data-theme='light'] .crt {
 
 .btn--sm {
   height: 40px;
-  font-size: 14px;
+  font-size: 9px;
   padding: 0 18px;
+}
+
+@media (max-width: 767px) {
+  .btn {
+    font-size: 10px;
+    padding: 0 18px;
+  }
+
+  .btn--sm {
+    font-size: 9px;
+  }
 }
 
 /* ═══════════ ПРИГЛАШЕНИЕ ЗАВЕСТИ ФРАЗУ ═══════════ */
@@ -1538,9 +1597,154 @@ html[data-theme='light'] .crt {
   min-width: 0;
 }
 
+/* ═══════════ КАЛЕНДАРЬ ПОЛЯ ═══════════
+
+   Панель якорится к кнопке: обёртка `position: relative`, панель прижата к
+   правому краю кнопки. Нативный `<input type="date">` убран — он открывал
+   окно там, где лежал скрытый инпут, то есть в случайной точке экрана. */
+
+.datepick {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.cal {
+  position: absolute;
+  z-index: 40;
+  /* --cal-shift — доводка от компонента, когда панель не влезает в экран. */
+  top: calc(100% + 10px + var(--cal-shift, 0px));
+  right: -12px;
+  width: 272px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 34%, var(--g-line));
+  /* Заливка непрозрачная: панель ложится поверх заголовков и полей формы,
+     и полупрозрачное стекло превращало их в кашу под цифрами. */
+  background: color-mix(in srgb, var(--hv2-primary) 6%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop), 0 0 32px color-mix(in srgb, var(--hv2-primary) 12%, transparent);
+}
+
+/* Снизу не помещается — откидываем вверх, `transform-origin` меняет компонент. */
+.cal--up {
+  top: auto;
+  bottom: calc(100% + 10px - var(--cal-shift, 0px));
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal-month {
+  flex: 1;
+  text-align: center;
+  font-family: var(--hv2-pixel);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  color: var(--hv2-primary);
+}
+
+.cal-nav {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  color: var(--hv2-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+
+.cal-nav:hover {
+  color: var(--hv2-primary);
+  border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+}
+
+.cal-week,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-week span {
+  text-align: center;
+  font-family: var(--hv2-mono);
+  font-size: 10px;
+  color: color-mix(in srgb, var(--hv2-subtle) 65%, transparent);
+}
+
+.cal-day {
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: none;
+  color: var(--hv2-fg);
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+
+.cal-day:hover {
+  background: color-mix(in srgb, var(--hv2-primary) 18%, transparent);
+  border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  color: var(--hv2-fg);
+}
+
+.cal-day[data-outside] {
+  color: color-mix(in srgb, var(--hv2-subtle) 45%, transparent);
+}
+
+.cal-day[data-today] {
+  color: var(--hv2-primary);
+  border-color: color-mix(in srgb, var(--hv2-primary) 50%, transparent);
+}
+
+.cal-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--g-line);
+}
+
+.cal-today {
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+  color: var(--hv2-fg);
+  font-family: var(--hv2-pixel);
+  font-size: 8px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.cal-note {
+  font-size: 11px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--hv2-subtle) 70%, transparent);
+}
+
 .hint--examples {
   font-family: var(--hv2-mono);
-  font-size: 12px;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--hv2-subtle) 58%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hint--error {

@@ -8,10 +8,10 @@
  * к значению через `_`, а не затирает его (`osenniy_nabor_2026-09-01`).
  */
 
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import { appendDate, placeholderFor, VALUE_HINTS, validateValue, type UtmKey } from '@utmka/core'
 
-import { PixelIcon } from '@/components/PixelIcon'
+import { DatePopover } from './DatePopover'
 
 const LABELS: Record<UtmKey, string> = {
   source: 'Источник — площадка',
@@ -33,7 +33,6 @@ interface ValueFieldProps {
 }
 
 export function ValueField({ field, value, onChange, bare }: ValueFieldProps) {
-  const dateRef = useRef<HTMLInputElement>(null)
   const listId = `hints-${field}`
 
   const issues = validateValue(field, value)
@@ -43,13 +42,12 @@ export function ValueField({ field, value, onChange, bare }: ValueFieldProps) {
       ? 'input--warn'
       : ''
 
-  const pickDate = useCallback(() => {
-    const input = dateRef.current
-    if (!input) return
-    // showPicker есть не везде — тогда просто фокусируем нативное поле
-    if (typeof input.showPicker === 'function') input.showPicker()
-    else input.focus()
-  }, [])
+  const pickDate = useCallback(
+    (iso: string) => {
+      onChange(appendDate(value, iso))
+    },
+    [onChange, value],
+  )
 
   return (
     <div className="field">
@@ -67,22 +65,7 @@ export function ValueField({ field, value, onChange, bare }: ValueFieldProps) {
           list={listId}
         />
 
-        {WITH_DATE.has(field) ? (
-          <>
-            <button type="button" className="ibtn" onClick={pickDate} title="Добавить дату" aria-label="Добавить дату">
-              <PixelIcon name="calendar" />
-            </button>
-            {/* нативный календарь: невидим, открывается кнопкой выше */}
-            <input
-              ref={dateRef}
-              type="date"
-              className="sr-only"
-              tabIndex={-1}
-              aria-hidden="true"
-              onChange={(event) => onChange(appendDate(value, event.target.value))}
-            />
-          </>
-        ) : null}
+        {WITH_DATE.has(field) ? <DatePopover onPick={pickDate} /> : null}
       </div>
 
       <datalist id={listId}>
@@ -92,12 +75,11 @@ export function ValueField({ field, value, onChange, bare }: ValueFieldProps) {
       </datalist>
 
       {bare ? null : (
-        <span className="hint hint--examples">
+        <span className="hint hint--examples" title="Полный список — в выпадающем списке поля">
           {VALUE_HINTS[field]
             .slice(0, 3)
             .map((hint) => hint.value)
             .join(' · ')}
-          {' — и другие в списке поля'}
         </span>
       )}
     </div>

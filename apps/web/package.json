@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@utmka/core": "*",
+    "motion": "^13.1.0",
     "next": "16.1.6",
     "qrcode.react": "^4.2.0",
     "react": "19.2.3",
