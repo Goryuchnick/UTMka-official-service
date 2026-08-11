@@ -1934,6 +1934,121 @@ html[data-theme='light'] .crt {
   box-shadow: 0 0 0 2px var(--hv2-bg2);
 }
 
+/* ═══════════ ПОМОЩНИК ═══════════
+
+   Кнопка живёт в правом нижнем углу экрана устройства, окно выезжает из неё.
+   На мобилке кнопка поднята над доком разделов, чтобы они не наезжали. */
+
+.ask-fab {
+  position: absolute;
+  right: 18px;
+  bottom: 56px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  padding: 0 17px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hv2-course) 50%, transparent);
+  background: color-mix(in srgb, var(--hv2-course) 18%, var(--hv2-card));
+  color: var(--hv2-fg);
+  font-family: var(--hv2-pixel);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 8px 26px color-mix(in srgb, var(--hv2-course) 24%, transparent);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.ask-fab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--hv2-course) 34%, transparent);
+}
+
+.ask-fab svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 767px) {
+  .ask-fab {
+    right: 10px;
+    bottom: 52px;
+    height: 38px;
+    padding: 0 13px;
+    font-size: 8px;
+  }
+}
+
+.ask {
+  position: absolute;
+  right: 18px;
+  bottom: 108px;
+  z-index: 31;
+  width: min(520px, calc(100% - 36px));
+  max-height: min(70%, 560px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-course) 34%, var(--g-line));
+  /* Непрозрачно: окно ложится поверх формы, стекло превращало текст в кашу. */
+  background: color-mix(in srgb, var(--hv2-course) 5%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop), 0 0 40px color-mix(in srgb, var(--hv2-course) 16%, transparent);
+  transform-origin: bottom right;
+}
+
+@media (max-width: 767px) {
+  .ask {
+    right: 10px;
+    left: 10px;
+    width: auto;
+    bottom: 98px;
+    max-height: 66%;
+  }
+}
+
+.ask-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ask-quota {
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  color: var(--hv2-subtle);
+}
+
+.ask-quota b {
+  color: var(--hv2-primary);
+}
+
+.ask-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ask-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+}
+
+.ask-card .hist-url {
+  white-space: normal;
+  word-break: break-all;
+}
+
 /* ═══════════ ПУСТОЕ СОСТОЯНИЕ ═══════════ */
 
 .empty {

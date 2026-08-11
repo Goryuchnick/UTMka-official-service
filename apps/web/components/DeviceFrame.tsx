@@ -15,6 +15,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, type ReactNode } from 'react'
 
+import { Assistant } from './Assistant'
 import { MascotBar } from './Mascot'
 import { PixelIcon, type IconName } from './PixelIcon'
 import { useAccount } from '@/lib/account'
@@ -95,6 +96,8 @@ export function DeviceFrame({ children }: DeviceFrameProps) {
         <MascotBar />
 
         {children}
+
+        <Assistant />
 
         <div className="statusbar">
           <Link href="/login" className="sb-item">
