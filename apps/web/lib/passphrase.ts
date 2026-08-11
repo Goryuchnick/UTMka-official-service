@@ -1,5 +1,7 @@
 import { createHmac, randomInt, timingSafeEqual } from 'crypto'
 
+import { normalizePassphrase } from './passphrase-shape'
+
 /**
  * Кодовая фраза — анонимный вход вместо почты и пароля.
  *
@@ -75,39 +77,6 @@ export function generatePassphrase(): string {
   return parts.join('-')
 }
 
-/**
- * Нормализация перед хешированием. Без неё один и тот же на вид текст даёт
- * разные hash: macOS отдаёт кириллицу в разложенной форме, «ё» пишут как
- * попало, разделителем бывает пробел.
- */
-export function normalizePassphrase(input: string): string {
-  return input
-    .normalize('NFC')
-    .toLowerCase()
-    .trim()
-    .replace(/ё/g, 'е')
-    .replace(/[\s_+]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
-/** Форма фразы: буквы одного из алфавитов, цифры, минимум три части. */
-export function isValidPassphraseShape(input: string): boolean {
-  const norm = normalizePassphrase(input)
-  if (!/^[a-zа-я0-9-]{8,128}$/.test(norm)) return false
-  return norm.split('-').filter(Boolean).length >= 3
-}
-
-/**
- * Смешанные алфавиты почти всегда означают неверную раскладку: человек думает,
- * что печатает кириллицей, а часть символов латинские. Молча хешировать такое
- * жестоко — вход просто не найдётся, и причину не объяснить.
- */
-export function hasMixedScripts(input: string): boolean {
-  const norm = normalizePassphrase(input)
-  return /[a-z]/.test(norm) && /[а-я]/.test(norm)
-}
-
 function secret(): string {
   const value = process.env.UTMKA_PASSPHRASE_HMAC_SECRET ?? ''
   if (value.length < 16) {
@@ -130,3 +99,7 @@ export function hashesEqual(a: string, b: string): boolean {
     return false
   }
 }
+
+/* Форма фразы нужна и серверу, и вводу в браузере — живёт в отдельном модуле
+   без `crypto`, здесь только реэкспорт, чтобы серверные импорты не менялись. */
+export { hasMixedScripts, isValidPassphraseShape, normalizePassphrase } from './passphrase-shape'

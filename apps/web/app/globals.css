@@ -1784,6 +1784,26 @@ html[data-theme='light'] .crt {
   }
 }
 
+/* Подтверждение «записал» — оно снимает блокировку с кнопки «Продолжить»,
+   поэтому строка кликабельна целиком, а не только сам квадратик. */
+.checkline {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--hv2-muted);
+  user-select: none;
+}
+
+.checkline input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--hv2-primary);
+  cursor: pointer;
+  margin: 0;
+}
+
 /* ═══════════ БИБЛИОТЕКА: СПИСКИ, ТАБЛИЦА, СПРАВОЧНИК ═══════════ */
 
 .hist-main {

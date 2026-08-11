@@ -27,6 +27,8 @@ export type IconName =
   | 'moon'
   | 'sun'
   | 'close'
+  | 'share'
+  | 'mail'
 
 const GLYPHS: Record<IconName, ReactElement> = {
   link: (
@@ -136,6 +138,20 @@ const GLYPHS: Record<IconName, ReactElement> = {
   close: (
     <g stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
       <path d="M4 4l8 8M12 4l-8 8" />
+    </g>
+  ),
+  share: (
+    <g stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round">
+      <circle cx="12" cy="3.5" r="2" />
+      <circle cx="4" cy="8" r="2" />
+      <circle cx="12" cy="12.5" r="2" />
+      <path d="M10.2 4.5L5.8 6.9M5.8 9.1l4.4 2.4" />
+    </g>
+  ),
+  mail: (
+    <g stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinejoin="round">
+      <rect x="1.5" y="3.5" width="13" height="9" />
+      <path d="M1.5 4.5L8 9l6.5-4.5" />
     </g>
   ),
 }
