@@ -83,6 +83,46 @@ export interface ChatMessage {
   content: string
 }
 
+/**
+ * Пинг модели, чтобы шлюз не выгружал её из памяти.
+ *
+ * Замер на Гермесе (тот же routerai, 2026-08-06): первый запрос после простоя —
+ * 31–52 с, следующий подряд — 4–5 с. Разовый прогрев на старте не спасает,
+ * модель успевает остыть до прихода человека. Отсюда пинг по таймеру
+ * (`instrumentation.ts`), а не «разогреем при первом заходе».
+ *
+ * Запрос нарочно куцый: пара токенов на выходе и без `json_object` — нам нужен
+ * факт обращения, а не ответ. По ценам routerai это единицы рублей в год.
+ */
+export async function pingModel(): Promise<boolean> {
+  if (!API_KEY) return false
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 30_000)
+
+  try {
+    const response = await fetch(`${BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: 'user', content: 'ок' }],
+        max_tokens: 5,
+      }),
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+    return response.ok
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 /** Один запрос к модели. Возвращает сырой текст ответа или null при любой беде. */
 export async function askModel(messages: ChatMessage[]): Promise<string | null> {
   if (!API_KEY) return null
