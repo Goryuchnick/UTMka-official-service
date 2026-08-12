@@ -1963,6 +1963,155 @@ html[data-theme='light'] .crt {
   box-shadow: 0 0 0 2px var(--hv2-bg2);
 }
 
+/* ═══════════ ОБУЧЕНИЕ ═══════════
+
+   Пять шагов при первом визите. Оверлей поверх всей рамки устройства: тур
+   рассказывает про инструмент целиком, а не про текущий экран. */
+
+.onb {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--hv2-bg) 78%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.onb-card {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-teal) 30%, var(--g-line));
+  /* Непрозрачно: под карточкой лежит рабочий экран, стекло дало бы кашу. */
+  background: color-mix(in srgb, var(--hv2-teal) 4%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop);
+}
+
+@media (max-width: 767px) {
+  .onb-card {
+    padding: 17px;
+    gap: 12px;
+  }
+}
+
+.onb-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--hv2-fg);
+  margin: 0;
+}
+
+.onb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.onb-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--hv2-subtle);
+}
+
+.onb-list svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--hv2-success);
+}
+
+.onb-foot {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.onb-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.onb-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--g-line);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.onb-dots i.on {
+  background: var(--hv2-teal);
+  transform: scale(1.25);
+}
+
+/* ═══════════ ПОМОЩЬ: ДВЕ КОЛОНКИ ═══════════
+
+   На широких экранах объяснения и действия расходятся: читать длинный текст
+   в одну колонку во всю ширину неудобно, а кнопки должны быть под рукой. */
+
+.help-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .help-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.help-main,
+.help-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+@media (min-width: 1101px) {
+  .help-side {
+    position: sticky;
+    top: 0;
+  }
+}
+
+/* Колонка узкая, а пиксельный шрифт широкий — сбавляем кегль, иначе каждый
+   заголовок ломается на две строки. */
+.help-side .qtitle {
+  font-size: 12px;
+}
+
+.help-links {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: stretch;
+}
+
+.help-links .btn {
+  justify-content: flex-start;
+}
+
+.help-ver {
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  opacity: 0.7;
+}
+
 /* ═══════════ ПОМОЩНИК ═══════════
 
    Кнопка живёт в правом нижнем углу экрана устройства, окно выезжает из неё.

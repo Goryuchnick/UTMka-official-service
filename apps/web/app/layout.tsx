@@ -16,10 +16,40 @@ const pixelFont = Press_Start_2P({
   display: 'swap',
 })
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://utmka.alex-pronin.ru'
+
+const DESCRIPTION =
+  'Собирает корректные UTM-ссылки и объясняет, что сломается в отчёте: регистр, пробелы, кириллица, подмена типа трафика. Пакетный режим, разбор чужой ссылки, QR и справочник значений. Бесплатно, без регистрации.'
+
 export const metadata: Metadata = {
-  title: 'UTMka — конструктор UTM-меток',
-  description:
-    'Собирает корректные UTM-ссылки и объясняет, что сломается в отчёте: регистр, пробелы, кириллица, подмена типа трафика. Бесплатно, без регистрации.',
+  metadataBase: new URL(SITE),
+  title: {
+    default: 'UTMka — конструктор UTM-меток',
+    template: '%s · UTMka',
+  },
+  description: DESCRIPTION,
+  applicationName: 'UTMka',
+  keywords: [
+    'utm конструктор',
+    'генератор utm меток',
+    'utm builder',
+    'utm для яндекс директ',
+    'utm для вконтакте',
+    'проверка utm меток',
+    'utmka',
+  ],
+  authors: [{ name: 'Александр Пронин', url: 'https://alex-pronin.ru' }],
+  creator: 'Александр Пронин',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: 'UTMka',
+    locale: 'ru_RU',
+    url: SITE,
+    title: 'UTMka — конструктор UTM-меток',
+    description: DESCRIPTION,
+  },
+  twitter: { card: 'summary_large_image' },
   robots: { index: true, follow: true },
 }
 
@@ -29,12 +59,31 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+/** Разметка приложения: поисковикам это инструмент, а не статья. */
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'UTMka',
+  alternateName: 'Конструктор UTM-меток',
+  url: SITE,
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web, Windows, macOS',
+  inLanguage: 'ru-RU',
+  description: DESCRIPTION,
+  offers: { '@type': 'Offer', price: 0, priceCurrency: 'RUB' },
+  author: { '@type': 'Person', name: 'Александр Пронин', url: 'https://alex-pronin.ru' },
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={pixelFont.variable}>
       <head>
         {/* Тема ставится до первой отрисовки — иначе светлая мигает тёмной. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
       </head>
       <body>
         <DeviceFrame>{children}</DeviceFrame>

@@ -29,6 +29,9 @@ export type IconName =
   | 'close'
   | 'share'
   | 'mail'
+  | 'heart'
+  | 'code'
+  | 'send'
 
 const GLYPHS: Record<IconName, ReactElement> = {
   link: (
@@ -154,6 +157,22 @@ const GLYPHS: Record<IconName, ReactElement> = {
       <path d="M1.5 4.5L8 9l6.5-4.5" />
     </g>
   ),
+  heart: (
+    <path
+      d="M8 13.5S2 10 2 6.2A3.2 3.2 0 018 4.4a3.2 3.2 0 016 1.8C14 10 8 13.5 8 13.5z"
+      fill="currentColor"
+    />
+  ),
+  code: (
+    <g stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5" />
+    </g>
+  ),
+  send: (
+    <g stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinejoin="round">
+      <path d="M14 2L1.8 7.2l4.7 1.6L14 2zM6.5 8.8L8.4 14 14 2" />
+    </g>
+  ),
 }
 
 interface PixelIconProps {
@@ -162,7 +181,12 @@ interface PixelIconProps {
   className?: string
 }
 
-export function PixelIcon({ name, size, className }: PixelIconProps) {
+/**
+ * Размер по умолчанию обязателен: `<svg>` без width/height растягивается по
+ * флекс-контейнеру, и одна забытая иконка занимает весь экран. CSS-правила
+ * (`.btn svg`, `.qchip svg`) атрибуты перебивают, так что дефолт им не мешает.
+ */
+export function PixelIcon({ name, size = 16, className }: PixelIconProps) {
   return (
     <svg
       viewBox="0 0 16 16"
