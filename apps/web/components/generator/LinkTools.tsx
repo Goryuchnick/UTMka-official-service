@@ -9,7 +9,7 @@
  */
 
 import { useCallback, useRef, useState } from 'react'
-import { QRCodeCanvas } from 'qrcode.react'
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react'
 
 import { PixelIcon } from '@/components/PixelIcon'
 
@@ -69,6 +69,24 @@ export function LinkTools({ url }: LinkToolsProps) {
     link.click()
   }, [])
 
+  /* SVG — паритет с 2.2: типографии просят вектор, растр на баннере рассыпается.
+     Рядом с canvas держим скрытую векторную копию и сериализуем её. */
+  const downloadSvg = useCallback(() => {
+    const svg = boxRef.current?.querySelector('svg')
+    if (!svg) return
+    const markup = new XMLSerializer().serializeToString(svg)
+    const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>
+${markup}`], {
+      type: 'image/svg+xml;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'utmka-qr.svg'
+    link.click()
+    URL.revokeObjectURL(url)
+  }, [])
+
   return (
     <div className="linktools">
       <div className="result-row">
@@ -85,15 +103,25 @@ export function LinkTools({ url }: LinkToolsProps) {
       {qrOpen ? (
         <div className="qrbox" ref={boxRef}>
           <QRCodeCanvas value={url} size={168} level="M" marginSize={2} />
+          {/* Векторная копия того же кода — не показывается, нужна для выгрузки. */}
+          <span className="sr-only" aria-hidden="true">
+            <QRCodeSVG value={url} size={168} level="M" marginSize={2} />
+          </span>
           <div className="qrbox-side">
             <p className="hint">
               Для листовок, витрин и упаковки. Метки внутри кода те же — переход из офлайна
               попадёт в отчёт.
             </p>
-            <button type="button" className="btn btn--sm" onClick={downloadPng}>
-              <PixelIcon name="save" />
-              Скачать PNG
-            </button>
+            <div className="result-row">
+              <button type="button" className="btn btn--sm" onClick={downloadPng}>
+                <PixelIcon name="save" />
+                PNG
+              </button>
+              <button type="button" className="btn btn--sm" onClick={downloadSvg}>
+                <PixelIcon name="save" />
+                SVG
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

@@ -7,7 +7,7 @@
  * над записью. Потолок 500 держит сервер, здесь его только объясняем.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { HistoryItem } from '@utmka/core'
 
@@ -17,7 +17,7 @@ import { VaultGate } from '@/components/VaultGate'
 import { useAccount } from '@/lib/account'
 import { useSetMascotLine } from '@/lib/mascot'
 import { useViewMode } from '@/lib/view'
-import { exportJson, exportCsv, historyToCsv, historyToJson } from '@/lib/exchange'
+import { exportJson, exportCsv, historyToCsv, historyToJson, parseHistory } from '@/lib/exchange'
 
 const ORIGIN_LABEL: Record<HistoryItem['origin'], string> = {
   single: 'Генератор',
@@ -66,6 +66,9 @@ export function HistoryScreen() {
   const [items, setItems] = useState<HistoryItem[] | null>(null)
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+  /** Счётчик перечитываний: растёт после импорта, эффект на него подписан. */
+  const [reload, setReload] = useState(0)
 
   const busy = state === 'unknown' || (state === 'member' && items === null)
 
@@ -88,7 +91,7 @@ export function HistoryScreen() {
     return () => {
       alive = false
     }
-  }, [state])
+  }, [state, reload])
 
   const list = useMemo(() => items ?? [], [items])
 
@@ -112,6 +115,27 @@ export function HistoryScreen() {
   const wipe = useCallback(async () => {
     setItems([])
     await fetch('/api/history', { method: 'DELETE' })
+  }, [])
+
+  /** Импорт истории — паритет с 2.2: перенос между устройствами файлом. */
+  const importFile = useCallback(async (file: File) => {
+    const parsed = parseHistory(await file.text(), file.name.toLowerCase().endsWith('.csv'))
+    if (parsed.length === 0) {
+      setError('В файле не нашлось ни одной ссылки')
+      return
+    }
+
+    let added = 0
+    for (const row of parsed) {
+      const response = await fetch('/api/history', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(row),
+      })
+      if (response.ok) added += 1
+    }
+    setError(added === parsed.length ? '' : `Загружено ${added} из ${parsed.length}`)
+    setReload((value) => value + 1)
   }, [])
 
   const reuse = useCallback(
@@ -168,6 +192,21 @@ export function HistoryScreen() {
         </div>
 
         <div className="result-row">
+          <button type="button" className="btn btn--sm" onClick={() => fileRef.current?.click()}>
+            <PixelIcon name="save" />
+            Загрузить файл
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".json,.csv"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (file) void importFile(file)
+              event.target.value = ''
+            }}
+          />
           <button
             type="button"
             className="btn btn--sm"

@@ -90,6 +90,49 @@ export function templatesToCsv(items: Template[]): string[][] {
   return [head, ...rows]
 }
 
+/** CSV → массив словарей по заголовку. Разделитель определяем по первой строке. */
+function parseCsvRows(text: string): Record<string, string>[] {
+  const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter((line) => line.trim())
+  if (lines.length < 2) return []
+
+  const delimiter = (lines[0].match(/;/g)?.length ?? 0) >= (lines[0].match(/,/g)?.length ?? 0) ? ';' : ','
+
+  const split = (line: string): string[] => {
+    const cells: string[] = []
+    let cell = ''
+    let quoted = false
+    for (let i = 0; i < line.length; i += 1) {
+      const char = line[i]
+      if (quoted) {
+        if (char === '"' && line[i + 1] === '"') {
+          cell += '"'
+          i += 1
+        } else if (char === '"') quoted = false
+        else cell += char
+      } else if (char === '"') quoted = true
+      else if (char === delimiter) {
+        cells.push(cell)
+        cell = ''
+      } else cell += char
+    }
+    cells.push(cell)
+    return cells.map((value) => value.trim())
+  }
+
+  const head = split(lines[0]).map((cell) => cell.toLowerCase())
+  return lines.slice(1).map((line) => {
+    const cells = split(line)
+    const row: Record<string, string> = {}
+    head.forEach((name, index) => {
+      if (cells[index]) row[name] = cells[index]
+    })
+    // Синонимы, чтобы вызывающему не разбирать заголовки заново.
+    if (!row.baseurl && row.base_url) row.baseUrl = row.base_url
+    if (row.base_url) row.baseUrl = row.base_url
+    return row
+  })
+}
+
 /** Что удалось вычитать из файла. Кривые строки пропускаем, а не роняем импорт. */
 export interface ImportedTemplate {
   name: string
@@ -196,5 +239,68 @@ export function parseTemplatesCsv(text: string): ImportedTemplate[] {
       tagName: at(row, 'tag', 'тег') || undefined,
     })
   }
+  return result
+}
+
+/** Запись истории из файла. Формат тот же, что у выгрузки выше. */
+export interface ImportedLink {
+  url: string
+  baseUrl: string
+  params: Record<string, string>
+  origin: 'single' | 'batch' | 'brief' | 'parse'
+}
+
+/**
+ * Разбор истории. Через шаблонный разбор идти нельзя: тот требует имя, а у
+ * записи истории его нет и не должно быть — она опознаётся по адресу.
+ */
+export function parseHistory(text: string, csv: boolean): ImportedLink[] {
+  const result: ImportedLink[] = []
+
+  const take = (row: Record<string, unknown>, source: Record<string, unknown>): void => {
+    const url = String(row.url ?? row.baseUrl ?? row.base_url ?? '').trim()
+    if (!url) return
+
+    const params: Record<string, string> = {}
+    for (const key of UTM_KEYS) {
+      const value = source[key] ?? source[`utm_${key}`]
+      if (typeof value === 'string' && value.trim()) params[key] = value.trim()
+    }
+
+    result.push({
+      url,
+      baseUrl: String(row.baseUrl ?? row.base_url ?? url).trim(),
+      params,
+      // Откуда ссылка взялась в прошлой жизни, файл знать не обязан.
+      origin: 'single',
+    })
+  }
+
+  if (csv) {
+    const rows = parseCsvRows(text)
+    for (const row of rows) take(row, row)
+    return result
+  }
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    return []
+  }
+
+  const list = Array.isArray(parsed)
+    ? parsed
+    : typeof parsed === 'object' && parsed !== null && Array.isArray((parsed as { items?: unknown }).items)
+      ? (parsed as { items: unknown[] }).items
+      : []
+
+  for (const raw of list) {
+    if (typeof raw !== 'object' || raw === null) continue
+    const row = raw as Record<string, unknown>
+    const source = (row.params ?? row) as Record<string, unknown>
+    take(row, source)
+  }
+
   return result
 }
