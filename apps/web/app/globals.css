@@ -2016,20 +2016,42 @@ html[data-theme='light'] .crt {
   position: fixed;
   inset: 0;
   z-index: 60;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: color-mix(in srgb, var(--hv2-bg) 78%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Затемнение с вырезом вокруг цели. Клик по нему закрывает тур — так же,
+   как клик мимо модалки в 2.2. */
+.onb-mask {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--hv2-bg) 76%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Рамка подсветки. Пульсирует, иначе на тёмном фоне её не замечают. */
+.onb-ring {
+  position: absolute;
+  border-radius: var(--r-md);
+  border: 2px solid var(--hv2-teal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hv2-teal) 22%, transparent),
+    0 0 26px color-mix(in srgb, var(--hv2-teal) 40%, transparent);
+  pointer-events: none;
+  animation: onb-pulse 1.8s ease-in-out infinite;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+@keyframes onb-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 .onb-card {
-  width: min(560px, 100%);
+  position: absolute;
+  width: min(440px, calc(100vw - 32px));
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 22px;
+  gap: 13px;
+  padding: 18px;
   border-radius: var(--r-lg);
   border: 1px solid color-mix(in srgb, var(--hv2-teal) 30%, var(--g-line));
   /* Непрозрачно: под карточкой лежит рабочий экран, стекло дало бы кашу. */
@@ -2039,8 +2061,11 @@ html[data-theme='light'] .crt {
 
 @media (max-width: 767px) {
   .onb-card {
-    padding: 17px;
-    gap: 12px;
+    left: 12px !important;
+    right: 12px;
+    width: auto;
+    padding: 15px;
+    gap: 11px;
   }
 }
 

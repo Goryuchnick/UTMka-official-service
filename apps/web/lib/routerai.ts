@@ -23,10 +23,17 @@ export function llmConfigured(): boolean {
   return Boolean(API_KEY)
 }
 
-/** Дневной лимит на одну кодовую фразу. Видимый — показываем остаток. */
+/**
+ * Дневной лимит на одну кодовую фразу. Видимый — показываем остаток.
+ *
+ * 50, а не 20: замер 2026-08-12 по ценам routerai (5,16 ₽/млн входа,
+ * 20,67 ₽/млн выхода) даёт 1,2 коп. за самый тяжёлый запрос — то есть
+ * 18 ₽/мес на человека, который выжигает квоту каждый день. Жать сильнее
+ * смысла нет: экономия копеечная, а отказ помощника пользователь запомнит.
+ */
 export function dailyLimit(): number {
   const parsed = Number.parseInt(process.env.UTMKA_LLM_DAILY_LIMIT ?? '', 10)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 20
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50
 }
 
 /** Снимает markdown-фенсы и вырезает первый сбалансированный объект. */

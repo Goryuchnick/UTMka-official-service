@@ -9,7 +9,7 @@
  * прятать остальные девятнадцать.
  */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   batchFromCsv,
   batchTemplateCsv,
@@ -21,6 +21,7 @@ import {
 
 import { PixelIcon } from '@/components/PixelIcon'
 import { useSetMascotLine } from '@/lib/mascot'
+import { clearBatchHandOff, rowsToCsv, useBatchHandOff } from '@/lib/assistant-bridge'
 
 const SAMPLE = `Метка,Источник,Канал,Кампания
 ВК пост,vk,social,osenniy_nabor
@@ -32,25 +33,47 @@ export function BatchScreen() {
   const [campaign, setCampaign] = useState('')
   const [table, setTable] = useState('')
   const [copied, setCopied] = useState(false)
+  /* Пакет, собранный помощником из брифа. Значение производим из стора, а не
+     копируем в состояние: так не нужен ни setState в эффекте, ни ref в рендере.
+     Своё введённое всегда перебивает подставленное. */
+  const handOff = useBatchHandOff()
+  const shared = handOff?.[0]?.campaign
+  const fromBrief = handOff !== null
 
-  const rows: BatchRow[] = useMemo(() => (table.trim() ? batchFromCsv(table) : []), [table])
+  const shownTable = table || (handOff ? rowsToCsv(handOff) : '')
+  const shownCampaign =
+    campaign ||
+    // Кампания у запуска одна — выносим её в общее поле, чтобы правилась
+    // в одном месте, а не в каждой строке таблицы.
+    (shared && handOff?.every((row) => row.campaign === shared) ? shared : '')
+
+  // Мост одноразовый: уходим с экрана — забываем, иначе таблица подставится
+  // и в следующий заход, а человек не поймёт, откуда она взялась.
+  useEffect(() => clearBatchHandOff, [])
+
+  const rows: BatchRow[] = useMemo(
+    () => (shownTable.trim() ? batchFromCsv(shownTable) : []),
+    [shownTable],
+  )
 
   const results = useMemo(
     () =>
       rows.length > 0 && baseUrl.trim()
         ? buildBatch(rows, {
             baseUrl,
-            params: campaign.trim() ? { campaign: campaign.trim() } : {},
+            params: shownCampaign.trim() ? { campaign: shownCampaign.trim() } : {},
           })
         : [],
-    [rows, baseUrl, campaign],
+    [rows, baseUrl, shownCampaign],
   )
 
   const summary = useMemo(() => summarizeBatch(results), [results])
 
   const line =
-    results.length === 0
-      ? 'Вставьте таблицу площадок — соберу ссылки пачкой.'
+    fromBrief && results.length === 0
+      ? 'Перенёс разбор брифа в таблицу. Осталось указать адрес страницы.'
+      : results.length === 0
+      ? 'Вставьте таблицу площадок — соберу ссылки пачкой. Или опишите запуск помощнику — он заполнит её сам.'
       : summary.withErrors > 0
         ? `Собрал ${summary.total}, но в ${summary.withErrors} есть ошибки — они помечены.`
         : `Готово: ${summary.total} ссылок, замечаний нет.`
@@ -112,7 +135,7 @@ export function BatchScreen() {
               <input
                 type="text"
                 className="ym-disable-keys ym-hide-content"
-                value={campaign}
+                value={shownCampaign}
                 onChange={(event) => setCampaign(event.target.value)}
                 placeholder="osenniy_nabor"
                 aria-label="Общая кампания"
@@ -130,7 +153,7 @@ export function BatchScreen() {
           </span>
           <textarea
             className="area ym-disable-keys ym-hide-content"
-            value={table}
+            value={shownTable}
             onChange={(event) => setTable(event.target.value)}
             placeholder={SAMPLE}
             rows={7}

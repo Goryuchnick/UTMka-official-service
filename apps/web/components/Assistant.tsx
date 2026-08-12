@@ -14,11 +14,13 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react'
 import type { Issue, UtmParams } from '@utmka/core'
 
 import { PixelIcon } from '@/components/PixelIcon'
 import { useAccount } from '@/lib/account'
+import { handOffToBatch } from '@/lib/assistant-bridge'
 import { useSetMascotLine } from '@/lib/mascot'
 
 interface BriefLink {
@@ -58,6 +60,7 @@ const CARD: Variants = {
 }
 
 export function Assistant() {
+  const router = useRouter()
   const { state } = useAccount()
   const reduced = useReducedMotion()
 
@@ -241,10 +244,35 @@ export function Assistant() {
                     {busy ? 'Думаю…' : 'Собрать пакет'}
                   </button>
                   {links.length > 0 ? (
-                    <button type="button" className="btn btn--sm" onClick={copyAll}>
-                      <PixelIcon name={copied === 'all' ? 'check' : 'copy'} />
-                      {copied === 'all' ? 'Скопировано' : 'Скопировать все'}
-                    </button>
+                    <>
+                      <button type="button" className="btn btn--sm" onClick={copyAll}>
+                        <PixelIcon name={copied === 'all' ? 'check' : 'copy'} />
+                        {copied === 'all' ? 'Скопировано' : 'Скопировать все'}
+                      </button>
+                      {/* Пакет — естественное продолжение брифа: там строки
+                          можно править и выгружать в CSV, а не только копировать. */}
+                      <button
+                        type="button"
+                        className="btn btn--sm"
+                        onClick={() => {
+                          handOffToBatch(
+                            links.map((link) => ({
+                              platform: link.platform,
+                              source: link.params.source,
+                              medium: link.params.medium,
+                              campaign: link.params.campaign,
+                              content: link.params.content,
+                              term: link.params.term,
+                            })),
+                          )
+                          setOpen(false)
+                          router.push('/batch')
+                        }}
+                      >
+                        <PixelIcon name="grid" />
+                        Открыть в пакете
+                      </button>
+                    </>
                   ) : null}
                 </div>
 
