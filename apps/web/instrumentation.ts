@@ -31,9 +31,22 @@ export async function register(): Promise<void> {
   if (!llmConfigured()) return
 
   /* `register` обязан завершиться до того, как сервер начнёт принимать
-     запросы, поэтому первый пинг не ждём — уходим в таймер сразу. */
+     запросы, поэтому первый пинг не ждём — уходим в таймер сразу.
+
+     Логируем скупо: первый успех и каждую неудачу. Молчаливый прогрев нечем
+     проверить — а проверять придётся: если помощник снова начнёт «думать»
+     полминуты, первый вопрос будет именно «жив ли keep-alive». */
+  let announced = false
   const tick = () => {
-    void pingModel()
+    void pingModel().then((ok) => {
+      if (ok && !announced) {
+        announced = true
+        console.log('keep-alive: модель прогревается раз в 3 минуты')
+      } else if (!ok) {
+        announced = false
+        console.warn('keep-alive: пинг модели не прошёл (не критично)')
+      }
+    })
   }
 
   tick()
