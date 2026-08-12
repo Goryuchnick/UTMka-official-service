@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Press_Start_2P } from 'next/font/google'
 
 import { DeviceFrame } from '@/components/DeviceFrame'
+import { DRAFT_BOOTSTRAP } from '@/lib/draft-bootstrap'
 import { THEME_BOOTSTRAP } from '@/lib/theme'
 
 import './globals.css'
@@ -86,6 +87,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Тема ставится до первой отрисовки — иначе светлая мигает тёмной. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+        {/* Заготовка снимается с адресной строки ДО счётчика: в ней реальный
+            адрес кампании пользователя, а Метрика шлёт location.href сама. */}
+        <script dangerouslySetInnerHTML={{ __html: DRAFT_BOOTSTRAP }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}

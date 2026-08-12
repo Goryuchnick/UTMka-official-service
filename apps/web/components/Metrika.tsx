@@ -18,8 +18,27 @@
 import Script from 'next/script'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
+import { UTM_KEYS } from '@utmka/core'
 
 const COUNTER = process.env.NEXT_PUBLIC_YM_ID
+
+/**
+ * Параметры заготовки генератора (`/?url=…&source=…`). В них лежит РЕАЛЬНЫЙ
+ * адрес кампании пользователя — так работают кнопки «в генератор» из истории
+ * и шаблонов. В Метрику они уходить не должны: это ровно те данные, ради
+ * которых мы отключили вебвизор.
+ *
+ * Собственные `utm_*` (реклама самой UTMka) называются иначе и остаются —
+ * иначе счётчик потеряет источники нашего же трафика.
+ */
+const PRIVATE_PARAMS = new Set<string>(['url', ...UTM_KEYS])
+
+/** Адрес страницы без пользовательских данных — то, что можно отдать счётчику. */
+function safeHref(): string {
+  const url = new URL(window.location.href)
+  for (const key of PRIVATE_PARAMS) url.searchParams.delete(key)
+  return url.toString()
+}
 
 declare global {
   interface Window {
@@ -30,10 +49,11 @@ declare global {
 export function Metrika() {
   const pathname = usePathname()
 
-  /* Переходы между экранами — фронт-роутинг, сама Метрика их не видит. */
+  /* Переходы между экранами — фронт-роутинг, сама Метрика их не видит.
+     Отдаём адрес БЕЗ параметров заготовки: в них адрес чужой кампании. */
   useEffect(() => {
     if (!COUNTER || typeof window === 'undefined') return
-    window.ym?.(Number(COUNTER), 'hit', window.location.href)
+    window.ym?.(Number(COUNTER), 'hit', safeHref())
   }, [pathname])
 
   if (!COUNTER) return null

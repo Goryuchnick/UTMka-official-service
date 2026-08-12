@@ -71,9 +71,32 @@ async function usedToday(hash: string): Promise<number> {
   return (data as { used: number } | null)?.used ?? 0
 }
 
-async function spend(hash: string, was: number): Promise<void> {
+/**
+ * Занять единицу квоты ДО обращения к модели. Возвращает новое значение
+ * счётчика или -1, если квота уже выбрана.
+ *
+ * ⚠️ Резерв именно заранее и одним запросом (`utmka.spend_llm_quota`,
+ * миграция 0002). Раньше остаток читался в начале обработчика, а списание
+ * шло после ответа модели — между этим лежали секунды, за которые пачка
+ * параллельных запросов успевала прочитать один и тот же остаток и сходить
+ * в платную модель десять раз при счётчике «плюс один». Не возвращать
+ * списание обратно после вызова.
+ */
+async function reserve(hash: string, limit: number): Promise<number> {
   const day = new Date().toISOString().slice(0, 10)
-  await supabase().from('llm_usage').upsert({ user_hash: hash, day, used: was + 1 })
+  const { data, error } = await supabase().rpc('spend_llm_quota', {
+    p_hash: hash,
+    p_day: day,
+    p_limit: limit,
+  })
+  if (error) return -1
+  return typeof data === 'number' ? data : -1
+}
+
+/** Вернуть резерв: модель не ответила — платить не за что. */
+async function refund(hash: string): Promise<void> {
+  const day = new Date().toISOString().slice(0, 10)
+  await supabase().rpc('refund_llm_quota', { p_hash: hash, p_day: day })
 }
 
 export async function GET(): Promise<Response> {
@@ -103,14 +126,7 @@ export async function POST(request: Request): Promise<Response> {
   // Поверх дневной квоты — потолок по IP, чтобы её не выжигали за минуту.
   if (!(await allow('assistant', request))) return tooMany()
 
-  const used = await usedToday(user.hash)
   const limit = dailyLimit()
-  if (used >= limit) {
-    return Response.json(
-      { error: `На сегодня лимит выбран (${limit}). Инструмент работает дальше — просто без подсказок.`, left: 0 },
-      { status: 429 },
-    )
-  }
 
   const body = await readJson<{ brief?: unknown; baseUrl?: unknown }>(request, 8192)
   if (!body) {
@@ -122,6 +138,17 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Опишите запуск парой фраз — куда ведём и где размещаемся' }, { status: 400 })
   }
 
+  /* Квоту занимаем здесь — после проверки запроса, но ДО похода в модель.
+     Разбор входа ничего не стоит, а вот вызов модели стоит денег, и именно
+     он должен быть за счётчиком. */
+  const used = await reserve(user.hash, limit)
+  if (used < 0) {
+    return Response.json(
+      { error: `На сегодня лимит выбран (${limit}). Инструмент работает дальше — просто без подсказок.`, left: 0 },
+      { status: 429 },
+    )
+  }
+
   const known = PRESETS.map((preset) => `${preset.title}: source=${preset.params.source}, medium=${preset.params.medium}`)
   const answer = await askModel([
     { role: 'system', content: `${SYSTEM}\n\nИзвестные пресеты площадок:\n${known.join('\n')}` },
@@ -129,20 +156,28 @@ export async function POST(request: Request): Promise<Response> {
   ])
 
   if (!answer) {
+    await refund(user.hash)
     return Response.json({ error: 'Модель не ответила. Соберите вручную — это те же поля.' }, { status: 502 })
   }
 
-  await spend(user.hash, used)
-
   const parsed = extractJson(answer)
-  const rawLinks =
+  /* Каждый элемент проверяем на объектность: модель присылает и `[null]`,
+     и массив строк. Без фильтра `raw[key]` уронил бы обработчик уже ПОСЛЕ
+     списания квоты — человек терял бы её и получал голый 500 вместо
+     понятного отказа. */
+  const rawLinks: ModelLink[] =
     typeof parsed === 'object' && parsed !== null && Array.isArray((parsed as { links?: unknown }).links)
-      ? ((parsed as { links: unknown[] }).links as ModelLink[])
+      ? ((parsed as { links: unknown[] }).links.filter(
+          (item): item is ModelLink => typeof item === 'object' && item !== null,
+        ) as ModelLink[])
       : []
 
   if (rawLinks.length === 0) {
+    // Модель отработала (и стоила денег), но ответ негодный — квоту возвращаем:
+    // человек не виноват, что она ответила не по форме.
+    await refund(user.hash)
     return Response.json(
-      { error: 'Модель ответила не по форме. Попробуйте описать запуск конкретнее.', left: limit - used - 1 },
+      { error: 'Модель ответила не по форме. Попробуйте описать запуск конкретнее.', left: Math.max(0, limit - used + 1) },
       { status: 422 },
     )
   }
@@ -177,7 +212,7 @@ export async function POST(request: Request): Promise<Response> {
   return Response.json({
     links: results.filter((item) => !item.dropped),
     dropped: results.filter((item) => item.dropped),
-    left: Math.max(0, limit - used - 1),
+    left: Math.max(0, limit - used),
     limit,
   })
 }

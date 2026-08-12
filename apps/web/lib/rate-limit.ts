@@ -65,36 +65,28 @@ function keyFor(scope: string, ip: string): string {
 /**
  * Возвращает `true`, если запрос разрешён. При недоступной базе пропускает:
  * инструмент важнее лимита, а без базы всё равно нечего защищать.
+ *
+ * ⚠️ Счёт идёт одним запросом — функцией `utmka.bump_rate_limit` (миграция
+ * 0002). Прежняя схема «SELECT, потом UPDATE» обходилась пачкой параллельных
+ * запросов: все успевали прочитать один и тот же счётчик до первой записи,
+ * и потолок в 5 регистраций в час превращался в сотни. Здесь блокировку
+ * строки берёт сам Postgres, поэтому одновременные вызовы считают честно.
+ * Не разбирать это обратно на select+update.
  */
 export async function allow(scope: keyof typeof LIMITS, request: Request): Promise<boolean> {
   if (!storageConfigured()) return true
 
   const limit: Limit = LIMITS[scope]
   const key = keyFor(scope, clientIp(request))
-  const now = new Date()
 
-  const { data, error } = await supabase()
-    .from('rate_limits')
-    .select('count, window_started_at')
-    .eq('key', key)
-    .maybeSingle()
+  const { data, error } = await supabase().rpc('bump_rate_limit', {
+    p_key: key,
+    p_window_ms: limit.windowMs,
+    p_max: limit.max,
+  })
 
   if (error) return true
-
-  const row = data as { count: number; window_started_at: string } | null
-  const fresh = row && now.getTime() - new Date(row.window_started_at).getTime() < limit.windowMs
-
-  if (!fresh) {
-    await supabase()
-      .from('rate_limits')
-      .upsert({ key, count: 1, window_started_at: now.toISOString() })
-    return true
-  }
-
-  if (row.count >= limit.max) return false
-
-  await supabase().from('rate_limits').update({ count: row.count + 1 }).eq('key', key)
-  return true
+  return data !== false
 }
 
 /** Ответ на превышение — одинаковый во всех роутах. */

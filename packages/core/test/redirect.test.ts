@@ -78,6 +78,14 @@ describe('assertPublicUrl — предохранители SSRF', () => {
     }
   })
 
+  it('блокирует всенулевые адреса обеих версий', () => {
+    expect(assertPublicUrl('http://[::]/')).toEqual({ ok: false, reason: 'blocked-private-host' })
+    expect(assertPublicUrl('http://0.0.0.0/')).toEqual({
+      ok: false,
+      reason: 'blocked-private-host',
+    })
+  })
+
   it('блокирует IPv4-mapped IPv6', () => {
     expect(assertPublicUrl('http://[::ffff:127.0.0.1]/')).toEqual({
       ok: false,

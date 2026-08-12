@@ -11,7 +11,7 @@
  * Экран только отображает; правила здесь не дублируются.
  */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation'
 import {
   applyPreset,
@@ -28,6 +28,7 @@ import {
 } from '@utmka/core'
 
 import { PixelIcon } from '@/components/PixelIcon'
+import { readBootstrapDraft } from '@/lib/draft-bootstrap'
 import { useSetMascotLine, type MascotTone } from '@/lib/mascot'
 import { useGeneratorMode } from '@/lib/mode'
 import { IssueList } from './IssueList'
@@ -55,6 +56,25 @@ function draftFromSearch(search: ReadonlyURLSearchParams): LinkDraft | null {
   return { baseUrl, params }
 }
 
+/**
+ * Заготовка, снятая с адресной строки бутстрапом (`lib/draft-bootstrap.ts`).
+ * Основной путь: к моменту гидрации адрес уже вычищен, и `useSearchParams`
+ * наших ключей не увидит — значения ждут в `window.__utmkaDraft`.
+ */
+function draftFromBootstrap(): LinkDraft | null {
+  const raw = readBootstrapDraft()
+  if (!raw) return null
+
+  const params: LinkDraft['params'] = {}
+  for (const key of UTM_KEYS) {
+    const value = raw[key]
+    if (value) params[key] = value
+  }
+  const baseUrl = raw.url ?? ''
+  if (!baseUrl && Object.keys(params).length === 0) return null
+  return { baseUrl, params }
+}
+
 /** Реплики помощника. Свои, не копия сайта и не копия курса. */
 const LINES = {
   start: 'Соберём ссылку. Начнём с адреса — куда ведём людей.',
@@ -73,8 +93,33 @@ export function GeneratorScreen() {
 
   // Заготовку берём один раз при монтировании: дальше это обычная форма,
   // и перезатирать введённое при смене адреса было бы враньём.
-  const [draft, setDraft] = useState<LinkDraft>(() => draftFromSearch(search) ?? EMPTY)
-  const [step, setStep] = useState<Step>(() => (draftFromSearch(search) ? 4 : 1))
+  const [draft, setDraft] = useState<LinkDraft>(
+    () => draftFromBootstrap() ?? draftFromSearch(search) ?? EMPTY,
+  )
+  const [step, setStep] = useState<Step>(() =>
+    draftFromBootstrap() ?? draftFromSearch(search) ? 4 : 1,
+  )
+
+  /* Страховка на случай, если бутстрап в `<head>` не отработал (заблокирован
+     расширением, старый браузер): чистим адрес хотя бы здесь. В норме к этому
+     моменту чистить уже нечего — см. `lib/draft-bootstrap.ts`, там же
+     объяснение, почему основную работу делает синхронный скрипт, а не эффект.
+
+     `history.replaceState`, а не `router.replace`: адрес меняется, состояние
+     React и скролл не трогаются. */
+  useEffect(() => {
+    const current = new URL(window.location.href)
+    let cleaned = false
+    for (const key of ['url', ...UTM_KEYS]) {
+      if (current.searchParams.has(key)) {
+        current.searchParams.delete(key)
+        cleaned = true
+      }
+    }
+    if (cleaned) {
+      window.history.replaceState(null, '', `${current.pathname}${current.search}${current.hash}`)
+    }
+  }, [])
 
   // `?mode=` перебивает сохранённый выбор — чтобы можно было прислать ссылку
   // «открой сразу в простом» (ARCHITECTURE §4.2).

@@ -102,6 +102,9 @@ function isPrivateHostname(hostname: string): boolean {
 
   if (host === 'localhost' || host.endsWith('.localhost')) return true
   if (host === '::1' || host === '0:0:0:0:0:0:0:1') return true
+  // Всенулевой IPv6 — брат 0.0.0.0 (тот ловится ниже как a === 0). Подключение
+  // на него обычно падает с ENETUNREACH, но полагаться на это незачем.
+  if (host === '::' || host === '0:0:0:0:0:0:0:0') return true
   // IPv6 unique-local (fc00::/7) и link-local (fe80::/10)
   if (/^f[cd][0-9a-f]{2}:/.test(host)) return true
   if (/^fe[89ab][0-9a-f]:/.test(host)) return true
