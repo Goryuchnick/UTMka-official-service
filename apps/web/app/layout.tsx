@@ -51,6 +51,12 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image' },
   robots: { index: true, follow: true },
+  // Токены поддомена совпадают с апексом alex-pronin.ru — обе панели выдали те
+  // же значения, что у сайта и курса (проверено запросом, а не скопировано).
+  verification: {
+    google: 'ctMT8aZ1ijkY5uacCWQL1Sf8fuiQseAjkZ-C5u_2WTA',
+    yandex: '7169c240f5affe51',
+  },
 }
 
 export const viewport: Viewport = {
