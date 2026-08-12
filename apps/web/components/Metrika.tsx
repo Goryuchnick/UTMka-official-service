@@ -40,7 +40,10 @@ export function Metrika() {
 
   return (
     <>
-      <Script id="ym" strategy="afterInteractive">
+      {/* ⚠️ id НЕ "ym": элемент с таким id браузер кладёт в window.ym (named access),
+          и сниппет Метрики видит там DOM-узел вместо функции — счётчик молча
+          не инициализируется, а в консоли «ym is not a function». */}
+      <Script id="ym-counter" strategy="afterInteractive">
         {`(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
         m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
         k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
