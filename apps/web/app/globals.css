@@ -490,12 +490,21 @@ html[data-theme='light'] .crt {
   }
 }
 
+/* Окно спрайта: ровно один кадр ленты, поэтому overflow скрыт, а масштаб
+   задаётся высотой — лента внутри едет transform'ом (см. MascotSprite). */
 .mascot {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   flex: none;
+  overflow: hidden;
   image-rendering: pixelated;
-  border-radius: var(--r-md);
+}
+
+@media (max-width: 767px) {
+  .mascot {
+    width: 42px;
+    height: 42px;
+  }
 }
 
 @media (max-width: 767px) {

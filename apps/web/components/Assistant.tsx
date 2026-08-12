@@ -19,6 +19,7 @@ import type { Issue, UtmParams } from '@utmka/core'
 
 import { PixelIcon } from '@/components/PixelIcon'
 import { useAccount } from '@/lib/account'
+import { useSetMascotLine } from '@/lib/mascot'
 
 interface BriefLink {
   platform: string
@@ -68,6 +69,19 @@ export function Assistant() {
   const [dropped, setDropped] = useState<BriefDropped[]>([])
   const [quota, setQuota] = useState<Quota | null>(null)
   const [copied, setCopied] = useState('')
+
+  // Планка с маскотом — то же лицо, что и у окна: пока модель считает, он
+  // думает, а на ответ рассказывает, что из предложенного пережило правила.
+  useSetMascotLine(
+    busy
+      ? 'Думаю над брифом. Что предложит модель — всё равно прогоню через правила.'
+      : dropped.length > 0
+        ? `Выбросил ${dropped.length}: правила важнее модели.`
+        : links.length > 0
+          ? `Готово: ${links.length} ссылок. Скобки площадок оставил как есть.`
+          : '',
+    busy ? 'think' : dropped.length > 0 ? 'alert' : links.length > 0 ? 'done' : 'neutral',
+  )
 
   // Остаток лимита спрашиваем при открытии: показывать его в баре постоянно
   // означало бы дёргать сервер на каждой странице ради числа.

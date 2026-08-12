@@ -44,9 +44,10 @@ RUN addgroup --system --gid 1001 nodejs \
 # Раскладка standalone в монорепо: Next кладёт его в apps/web/.next/standalone,
 # а внутри повторяет дерево от outputFileTracingRoot — server.js оказывается
 # в apps/web/, node_modules и packages/ рядом на верхнем уровне.
-# Папки public у приложения нет: иконка отдаётся роутером (app/icon.svg).
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+# Спрайты маскота — единственное, что лежит в public (иконка отдаётся роутером).
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 USER nextjs
 

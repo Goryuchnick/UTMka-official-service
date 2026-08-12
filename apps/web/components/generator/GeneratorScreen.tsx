@@ -28,7 +28,7 @@ import {
 } from '@utmka/core'
 
 import { PixelIcon } from '@/components/PixelIcon'
-import { useSetMascotLine } from '@/lib/mascot'
+import { useSetMascotLine, type MascotTone } from '@/lib/mascot'
 import { useGeneratorMode } from '@/lib/mode'
 import { IssueList } from './IssueList'
 import { ValueField } from './ValueField'
@@ -116,7 +116,11 @@ export function GeneratorScreen() {
     return blocking.length > 0 ? LINES.broken : LINES.done
   })()
 
-  useSetMascotLine(line)
+  // Настроение: поломанное — удивление, готовая ссылка — кивок.
+  const tone: MascotTone =
+    blocking.length > 0 ? 'alert' : mode === 'simple' && step === 4 && url ? 'done' : 'neutral'
+
+  useSetMascotLine(line, tone)
 
   return (
     <div className="screen-scroll">

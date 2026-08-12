@@ -14,9 +14,14 @@ import type { NextConfig } from 'next'
  * рендера всех страниц) он не проходит. Для инструмента без пользовательского
  * контента риск невелик — XSS-инъекции неоткуда взяться.
  */
+/* В разработке React пользуется `eval` для отладочных функций (восстановление
+   стека, HMR) — без послабления консоль ругается, а гидратация ломается.
+   В прод-сборке eval не используется, поэтому там директива строгая. */
+const DEV_EVAL = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"
+
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${DEV_EVAL}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
