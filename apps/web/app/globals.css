@@ -2007,6 +2007,48 @@ html[data-theme='light'] .crt {
   box-shadow: 0 0 0 2px var(--hv2-bg2);
 }
 
+/* ═══════════ МОДАЛКА ДЕТАЛЕЙ ═══════════ */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.modal-back {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--hv2-bg) 74%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-card {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: min(86vh, 760px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 20px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--g-line);
+  /* Непрозрачно: под окном рабочий список, стекло дало бы кашу. */
+  background: var(--hv2-card);
+  box-shadow: var(--g-inner), var(--g-drop);
+}
+
+@media (max-width: 767px) {
+  .modal-card {
+    padding: 15px;
+    max-height: 90vh;
+  }
+}
+
 /* ═══════════ ОБУЧЕНИЕ ═══════════
 
    Пять шагов при первом визите. Оверлей поверх всей рамки устройства: тур

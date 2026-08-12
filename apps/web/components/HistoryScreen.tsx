@@ -14,6 +14,7 @@ import type { HistoryItem } from '@utmka/core'
 import { PixelIcon } from '@/components/PixelIcon'
 import { EmptyNote, ViewSwitch } from '@/components/ViewSwitch'
 import { VaultGate } from '@/components/VaultGate'
+import { LinkDetails } from '@/components/LinkDetails'
 import { useAccount } from '@/lib/account'
 import { useSetMascotLine } from '@/lib/mascot'
 import { useViewMode } from '@/lib/view'
@@ -69,6 +70,8 @@ export function HistoryScreen() {
   const [from, setFrom] = useState('')
   const [till, setTill] = useState('')
   const [error, setError] = useState('')
+  /** Открытая карточка ссылки. null — модалка закрыта. */
+  const [details, setDetails] = useState<HistoryItem | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   /** Счётчик перечитываний: растёт после импорта, эффект на него подписан. */
   const [reload, setReload] = useState(0)
@@ -175,6 +178,8 @@ export function HistoryScreen() {
 
   return (
     <div className="screen-scroll">
+      <LinkDetails item={details} onClose={() => setDetails(null)} onDelete={drop} />
+
       <div className="glass">
         <div className="qhead">
           <span className="qchip">
@@ -310,6 +315,9 @@ export function HistoryScreen() {
                   {item.shortUrl ?? item.url}
                 </span>
                 <span role="cell" className="htable-acts">
+                  <button type="button" className="ibtn" title="Подробнее" onClick={() => setDetails(item)}>
+                    <PixelIcon name="search" />
+                  </button>
                   <button type="button" className="ibtn" title="В генератор" onClick={() => reuse(item)}>
                     <PixelIcon name="wand" />
                   </button>
@@ -341,6 +349,9 @@ export function HistoryScreen() {
                   onClick={() => void navigator.clipboard.writeText(item.shortUrl ?? item.url)}
                 >
                   <PixelIcon name="copy" />
+                </button>
+                <button type="button" className="ibtn" title="Подробнее" onClick={() => setDetails(item)}>
+                  <PixelIcon name="search" />
                 </button>
                 <button type="button" className="ibtn" title="В генератор" onClick={() => reuse(item)}>
                   <PixelIcon name="wand" />
