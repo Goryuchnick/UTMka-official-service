@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assertPublicUrl, explainFailure, followRedirects } from '../src/redirect'
+import { assertPublicUrl, explainFailure, followRedirects, isPublicHost } from '../src/redirect'
 import type { HopResponse } from '../src/redirect'
 
 /** Фейковая сеть: карта «адрес → ответ». Ядро не знает про fetch. */
@@ -63,6 +63,69 @@ describe('assertPublicUrl — предохранители SSRF', () => {
 
   it('битый адрес не пропускает', () => {
     expect(assertPublicUrl('не ссылка')).toEqual({ ok: false, reason: 'invalid-url' })
+    // Числовая метка больше 255 — для URL-парсера это вообще не адрес.
+    expect(assertPublicUrl('http://999.1.1.1/')).toEqual({ ok: false, reason: 'invalid-url' })
+  })
+
+  /* Классические обходы наивного фильтра «четыре числа через точку».
+     Все записи ниже — тот же 127.0.0.1, и `fetch` их понимает. */
+  it('блокирует числовые записи петлевого адреса', () => {
+    for (const host of ['2130706433', '0177.0.0.1', '0x7f.0.0.1', '127.1', '0']) {
+      expect(assertPublicUrl(`http://${host}/`), host).toEqual({
+        ok: false,
+        reason: 'blocked-private-host',
+      })
+    }
+  })
+
+  it('блокирует IPv4-mapped IPv6', () => {
+    expect(assertPublicUrl('http://[::ffff:127.0.0.1]/')).toEqual({
+      ok: false,
+      reason: 'blocked-private-host',
+    })
+    expect(assertPublicUrl('http://[::ffff:7f00:1]/')).toEqual({
+      ok: false,
+      reason: 'blocked-private-host',
+    })
+  })
+
+  it('числовые формы публичных адресов не ломает', () => {
+    expect(assertPublicUrl('http://134744072/')).toEqual({ ok: true }) // 8.8.8.8
+    expect(assertPublicUrl('http://8.8.8.8/')).toEqual({ ok: true })
+  })
+})
+
+describe('isPublicHost — проверка адреса после резолва', () => {
+  it('пропускает публичные адреса', () => {
+    expect(isPublicHost('8.8.8.8')).toBe(true)
+    expect(isPublicHost('5.129.197.27')).toBe(true)
+    expect(isPublicHost('2a00:1450:4010:c07::8b')).toBe(true)
+  })
+
+  it('заворачивает адреса, в которые может указывать чужой домен', () => {
+    for (const address of ['127.0.0.1', '10.0.0.5', '192.168.1.1', '169.254.169.254', '::1']) {
+      expect(isPublicHost(address), address).toBe(false)
+    }
+  })
+
+  /* Сюда приходит строка от вызывающего, а не результат URL-парсера, который
+     числовые формы нормализует сам. Проверяем, что фильтр справляется без него. */
+  it('разбирает числовые записи петлевого адреса', () => {
+    for (const address of ['2130706433', '0177.0.0.1', '0x7f.0.0.1', '127.1', '0']) {
+      expect(isPublicHost(address), address).toBe(false)
+    }
+  })
+
+  it('разворачивает IPv4-mapped IPv6', () => {
+    expect(isPublicHost('::ffff:127.0.0.1')).toBe(false)
+    expect(isPublicHost('::ffff:7f00:1')).toBe(false)
+    expect(isPublicHost('::ffff:8.8.8.8')).toBe(true)
+  })
+
+  it('битую числовую запись считает опасной, домен — нет', () => {
+    expect(isPublicHost('999.1.1.1')).toBe(false)
+    expect(isPublicHost('example.com')).toBe(true)
+    expect(isPublicHost('a1.example.com')).toBe(true)
   })
 })
 

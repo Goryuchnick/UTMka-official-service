@@ -2338,6 +2338,90 @@ html[data-theme='light'] .crt {
   word-break: break-all;
 }
 
+/* ═══════════ ПРОВЕРКА ПЕРЕАДРЕСАЦИЙ ═══════════ */
+
+.hops {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: hop;
+}
+
+.hop {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--hv2-bg2) 45%, transparent);
+}
+
+.hop:nth-child(odd) {
+  background: transparent;
+}
+
+.hop-status {
+  flex: none;
+  width: 44px;
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hop-status--ok {
+  color: var(--hv2-teal);
+}
+
+.hop-status--redirect {
+  color: var(--hv2-primary);
+}
+
+.hop-status--bad {
+  color: var(--hv2-destructive);
+}
+
+.hop-url {
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  color: var(--hv2-muted);
+  word-break: break-all;
+  min-width: 0;
+}
+
+.verdict {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+}
+
+.verdict--ok {
+  border-color: color-mix(in srgb, var(--hv2-teal) 34%, transparent);
+  background: color-mix(in srgb, var(--hv2-teal) 8%, transparent);
+}
+
+.verdict--bad {
+  border-color: color-mix(in srgb, var(--hv2-destructive) 34%, transparent);
+  background: color-mix(in srgb, var(--hv2-destructive) 8%, transparent);
+}
+
+.verdict-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hv2-fg);
+}
+
+.verdict-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--hv2-muted);
+}
+
 /* ═══════════ ПУСТОЕ СОСТОЯНИЕ ═══════════ */
 
 .empty {

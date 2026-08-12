@@ -52,12 +52,53 @@ export interface RedirectReport {
 const DEFAULT_MAX_HOPS = 10
 
 /**
+ * Приводит любую запись IPv4 к точечной. Браузер и `fetch` понимают формы,
+ * которых не ждёт наивный фильтр: `http://2130706433/`, `http://0177.0.0.1/`
+ * и `http://0x7f.1/` — это всё 127.0.0.1. Проверка «четыре числа через точку»
+ * их не ловит и пропускает запрос внутрь сети.
+ *
+ * Правила те же, что у `inet_aton`: ведущий `0x` — шестнадцатеричное,
+ * ведущий `0` — восьмеричное, последняя часть добирает оставшиеся байты.
+ * Возвращает `null`, если это не запись адреса вовсе (обычный домен).
+ */
+function toDottedIpv4(host: string): string | null {
+  const parts = host.split('.')
+  if (parts.length > 4) return null
+
+  const numbers: number[] = []
+  for (const part of parts) {
+    if (!part) return null
+
+    let value: number
+    if (/^0[xX][0-9a-fA-F]+$/.test(part)) value = Number.parseInt(part.slice(2), 16)
+    else if (/^0[0-7]+$/.test(part)) value = Number.parseInt(part.slice(1), 8)
+    else if (/^\d+$/.test(part)) value = Number.parseInt(part, 10)
+    else return null
+
+    if (!Number.isFinite(value) || value < 0) return null
+    numbers.push(value)
+  }
+
+  // Последняя часть занимает все оставшиеся байты: у `127.1` это `0.0.1`.
+  const last = numbers[numbers.length - 1] ?? 0
+  const head = numbers.slice(0, -1)
+  if (head.some((n) => n > 255)) return null
+  if (last >= 2 ** (8 * (4 - head.length))) return null
+
+  const bytes = [...head]
+  for (let i = 4 - head.length - 1; i >= 0; i -= 1) {
+    bytes.push((last >>> (8 * i)) & 0xff)
+  }
+  return bytes.join('.')
+}
+
+/**
  * Приватные и служебные диапазоны. Проверяем строковые литералы: DNS-резолв
- * ядру недоступен, его обязан делать вызывающий (и лучше — резолвить заранее,
- * иначе остаётся окно DNS rebinding).
+ * ядру недоступен, его обязан делать вызывающий (`isPublicHost` для каждого
+ * полученного адреса), иначе домен, указывающий на 127.0.0.1, пройдёт фильтр.
  */
 function isPrivateHostname(hostname: string): boolean {
-  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '')
+  let host = hostname.toLowerCase().replace(/^\[|\]$/g, '')
 
   if (host === 'localhost' || host.endsWith('.localhost')) return true
   if (host === '::1' || host === '0:0:0:0:0:0:0:1') return true
@@ -67,12 +108,25 @@ function isPrivateHostname(hostname: string): boolean {
   // внутренние зоны
   if (/\.(local|internal|lan|home|corp)$/.test(host)) return true
 
-  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
-  if (!ipv4) return false
+  /* IPv4-mapped IPv6 (`::ffff:127.0.0.1`) — тот же адрес другими словами.
+     Разворачиваем и проверяем как обычный IPv4. */
+  const mapped = host.match(/^::ffff:(.+)$/)
+  if (mapped?.[1]) {
+    const inner = mapped[1]
+    // Может быть и в hex-виде (`::ffff:7f00:1`) — такие не пускаем вовсе.
+    if (!inner.includes('.')) return true
+    host = inner
+  }
 
-  const octets = ipv4.slice(1).map(Number)
+  const dotted = toDottedIpv4(host)
+  if (!dotted) {
+    /* Числовая запись, которую не удалось разобрать (`999.1.1.1`), — это битый
+       адрес, а не домен: числовым TLD не бывает. Такое не пускаем. */
+    return /^(0[xX][0-9a-fA-F]+|\d+)(\.(0[xX][0-9a-fA-F]+|\d+))*$/.test(host)
+  }
+
+  const octets = dotted.split('.').map(Number)
   const [a = 0, b = 0] = octets
-  if (octets.some((n) => n > 255)) return true // битый адрес — не пускаем
 
   if (a === 0 || a === 10 || a === 127) return true
   if (a === 169 && b === 254) return true // link-local, оттуда же метаданные облака
@@ -82,6 +136,18 @@ function isPrivateHostname(hostname: string): boolean {
   if (a >= 224) return true // multicast и зарезервированное
 
   return false
+}
+
+/**
+ * Публичный ли адрес, полученный резолвом имени.
+ *
+ * Отдельная точка входа для сетевого слоя: `assertPublicUrl` видит только имя
+ * домена, а `evil.example.com` спокойно указывает на `127.0.0.1`. Вызывающий
+ * обязан резолвить хост и прогнать **каждый** полученный адрес через эту
+ * проверку перед запросом — на каждом хопе, а не только на первом.
+ */
+export function isPublicHost(hostname: string): boolean {
+  return !isPrivateHostname(hostname)
 }
 
 /** Можно ли выпускать сервер по этому адресу. */

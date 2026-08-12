@@ -21,6 +21,7 @@ import {
 import { IssueList } from '@/components/generator/IssueList'
 import { ResultCard } from '@/components/generator/ResultCard'
 import { PixelIcon } from '@/components/PixelIcon'
+import { RedirectCheck } from '@/components/RedirectCheck'
 import { useSetMascotLine } from '@/lib/mascot'
 
 const FIELD_LABELS: Record<UtmKey, string> = {
@@ -162,6 +163,16 @@ export function ParseScreen() {
               <p className="empty">Регистр, разделители и тип трафика на месте.</p>
             )}
           </div>
+
+          {/* Проверка живой цепочки — единственное, что нельзя посчитать
+              на месте: за ответом ходит сервер. Поэтому она отдельным блоком
+              и запускается кнопкой, а не на каждый ввод.
+
+              `key` по адресу сбрасывает отчёт, как только ссылку поменяли:
+              иначе на экране остался бы результат проверки прошлой ссылки —
+              то есть прямое враньё. Сброс состояния ключом, а не эффектом
+              с setState, — линтер `react-hooks` второе запрещает. */}
+          <RedirectCheck key={raw.trim()} url={raw.trim()} />
 
           {fixed ? (
             <div className="glass">
