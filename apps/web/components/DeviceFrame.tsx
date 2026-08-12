@@ -18,6 +18,7 @@ import { useState, type ReactNode } from 'react'
 import { Assistant } from './Assistant'
 import { OnboardingGate } from './OnboardingGate'
 import { MascotBar } from './Mascot'
+import { Metrika } from './Metrika'
 import { PixelIcon, type IconName } from './PixelIcon'
 import { useAccount } from '@/lib/account'
 import { useTheme } from '@/lib/theme'
@@ -75,6 +76,16 @@ export function DeviceFrame({ children }: DeviceFrameProps) {
 
           <span className="spacer" />
 
+          <a
+            href="https://alex-pronin.ru/donate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="iconbtn iconbtn--heart"
+            title="Поблагодарить автора"
+            aria-label="Поблагодарить автора"
+          >
+            <PixelIcon name="heart" />
+          </a>
           <Link href="/help" className="iconbtn" title="Помощь" aria-label="Помощь">
             <PixelIcon name="help" />
           </Link>
@@ -100,6 +111,7 @@ export function DeviceFrame({ children }: DeviceFrameProps) {
 
         <Assistant />
         <OnboardingGate />
+        <Metrika />
 
         <div className="statusbar">
           <Link href="/login" className="sb-item">
@@ -110,6 +122,14 @@ export function DeviceFrame({ children }: DeviceFrameProps) {
             Сохранение: <b>{signedIn ? 'включено' : 'нужна фраза'}</b>
           </span>
           <span className="spacer" />
+          <a
+            className="sb-item"
+            href="https://alex-pronin.ru/donate"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Поблагодарить
+          </a>
           <span className="sb-item">UTMKA 3.0</span>
         </div>
       </div>

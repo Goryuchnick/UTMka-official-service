@@ -35,6 +35,7 @@ import { ValueField } from './ValueField'
 import { PresetTiles } from './PresetTiles'
 import { ResultCard } from './ResultCard'
 import { SaveBar } from './SaveBar'
+import { QuickStart } from './QuickStart'
 
 const EMPTY: LinkDraft = { baseUrl: '', params: {} }
 
@@ -156,6 +157,13 @@ export function GeneratorScreen() {
         </span>
       </div>
 
+      <QuickStart
+        onPick={(next) => {
+          setDraft(next)
+          setStep(4)
+        }}
+      />
+
       {mode === 'simple' ? (
         <SimpleMode
           draft={draft}
@@ -276,6 +284,7 @@ function SimpleMode({
                     <span className="scheme">https://</span>
                     <input
                       type="text"
+                      className="ym-disable-keys ym-hide-content"
                       value={draft.baseUrl.replace(/^https?:\/\//, '')}
                       onChange={(event) => onBaseUrl(event.target.value)}
                       placeholder="studiowelcome.ru/rostov"
@@ -371,6 +380,7 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
             <span className="scheme">https://</span>
             <input
               type="text"
+              className="ym-disable-keys ym-hide-content"
               value={draft.baseUrl.replace(/^https?:\/\//, '')}
               onChange={(event) => onBaseUrl(event.target.value)}
               placeholder="studiowelcome.ru/rostov"

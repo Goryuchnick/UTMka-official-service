@@ -65,6 +65,9 @@ export function HistoryScreen() {
   // требовал бы setState прямо в эффекте, а это лишний каскад рендеров.
   const [items, setItems] = useState<HistoryItem[] | null>(null)
   const [query, setQuery] = useState('')
+  /** Диапазон дат — паритет с 2.2 (`historyDateRange`). Пусто = без границы. */
+  const [from, setFrom] = useState('')
+  const [till, setTill] = useState('')
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   /** Счётчик перечитываний: растёт после импорта, эффект на него подписан. */
@@ -97,12 +100,22 @@ export function HistoryScreen() {
 
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    if (!needle) return list
+    // Границы включительные: «с 1 по 3» должно включать и первое, и третье.
+    const after = from ? new Date(`${from}T00:00:00`).getTime() : null
+    const before = till ? new Date(`${till}T23:59:59`).getTime() : null
+
     return list.filter((item) => {
+      if (after !== null || before !== null) {
+        const at = item.createdAt ? new Date(item.createdAt).getTime() : null
+        if (at === null) return false
+        if (after !== null && at < after) return false
+        if (before !== null && at > before) return false
+      }
+      if (!needle) return true
       const haystack = [item.url, ...Object.values(item.params ?? {})].join(' ').toLowerCase()
       return haystack.includes(needle)
     })
-  }, [list, query])
+  }, [list, query, from, till])
 
   const drop = useCallback(
     async (id: string) => {
@@ -175,6 +188,7 @@ export function HistoryScreen() {
             <PixelIcon name="search" />
             <input
               type="text"
+              className="ym-disable-keys ym-hide-content"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Поиск по ссылке и меткам"
@@ -182,6 +196,39 @@ export function HistoryScreen() {
               autoComplete="off"
             />
           </div>
+        </div>
+
+        <div className="result-row dates">
+          <span className="field-label">Период</span>
+          <input
+            type="date"
+            className="datefield"
+            value={from}
+            max={till || undefined}
+            onChange={(event) => setFrom(event.target.value)}
+            aria-label="Начало периода"
+          />
+          <span className="hint">—</span>
+          <input
+            type="date"
+            className="datefield"
+            value={till}
+            min={from || undefined}
+            onChange={(event) => setTill(event.target.value)}
+            aria-label="Конец периода"
+          />
+          {from || till ? (
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => {
+                setFrom('')
+                setTill('')
+              }}
+            >
+              Сбросить
+            </button>
+          ) : null}
         </div>
 
         <div className="result-row">
@@ -241,7 +288,7 @@ export function HistoryScreen() {
           text={
             list.length === 0
               ? 'Пока пусто. Соберите ссылку — она сохранится сюда сама.'
-              : 'По этому запросу ничего нет.'
+              : 'По этому запросу и периоду ничего нет.'
           }
         />
       ) : view === 'table' ? (

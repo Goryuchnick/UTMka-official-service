@@ -259,6 +259,7 @@ export function TemplatesScreen() {
                 <PixelIcon name="search" />
                 <input
                   type="text"
+                  className="ym-disable-keys ym-hide-content"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Поиск по названию, тегу и меткам"

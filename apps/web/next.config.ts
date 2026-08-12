@@ -19,13 +19,18 @@ import type { NextConfig } from 'next'
    В прод-сборке eval не используется, поэтому там директива строгая. */
 const DEV_EVAL = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"
 
+/* Метрика — единственный внешний хост, которому мы что-то разрешаем:
+   скрипт счётчика, пиксель и отправка хитов. Вебвизор выключен, поэтому
+   ни содержимое полей, ни запись сессии наружу не уходят. */
+const YM = 'https://mc.yandex.ru https://mc.yandex.com'
+
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${DEV_EVAL}`,
+  `script-src 'self' 'unsafe-inline'${DEV_EVAL} ${YM}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob: ${YM}`,
   "font-src 'self'",
-  "connect-src 'self'",
+  `connect-src 'self' ${YM}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

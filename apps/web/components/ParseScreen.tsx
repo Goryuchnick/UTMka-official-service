@@ -66,6 +66,7 @@ export function ParseScreen() {
         <div className="input">
           <input
             type="text"
+            className="ym-disable-keys ym-hide-content"
             value={raw}
             onChange={(event) => {
               setRaw(event.target.value)

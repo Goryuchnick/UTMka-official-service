@@ -338,6 +338,13 @@ html[data-theme='light'] .crt {
   box-shadow: 0 0 20px color-mix(in srgb, var(--hv2-primary) 20%, transparent);
 }
 
+/* Сердце — единственная розовая кнопка в шапке: благодарность не должна
+   выглядеть как ещё один инструмент. */
+.iconbtn--heart:hover {
+  color: var(--hv2-course);
+  border-color: color-mix(in srgb, var(--hv2-course) 45%, transparent);
+}
+
 .iconbtn--teal {
   color: var(--hv2-teal);
   border-color: color-mix(in srgb, var(--hv2-teal) 34%, transparent);
@@ -1811,6 +1818,43 @@ html[data-theme='light'] .crt {
   accent-color: var(--hv2-primary);
   cursor: pointer;
   margin: 0;
+}
+
+/* Быстрый старт — недавние шаблоны над формой генератора. */
+.quick {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.quick .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+}
+
+/* Период в истории. Нативное поле даты здесь уместно: это фильтр, а не
+   значение метки — привязка к кнопке и своя раскладка тут не нужны. */
+.dates {
+  align-items: center;
+  gap: 8px;
+}
+
+.datefield {
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: color-mix(in srgb, var(--hv2-bg2) 62%, transparent);
+  color: var(--hv2-fg);
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+}
+
+.datefield::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(1) saturate(4) hue-rotate(3deg);
+  cursor: pointer;
 }
 
 /* ═══════════ БИБЛИОТЕКА: СПИСКИ, ТАБЛИЦА, СПРАВОЧНИК ═══════════ */

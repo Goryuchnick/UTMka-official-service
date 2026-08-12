@@ -92,6 +92,7 @@ export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
           <div className="input">
             <input
               type="text"
+              className="ym-disable-keys ym-hide-content"
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Осенний набор — Директ"
@@ -106,6 +107,7 @@ export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
           <div className="input">
             <input
               type="text"
+              className="ym-disable-keys ym-hide-content"
               value={tag}
               onChange={(event) => setTag(event.target.value)}
               placeholder="Необязательно: клиент, сезон, проект"

@@ -96,6 +96,7 @@ export function BatchScreen() {
               <span className="scheme">https://</span>
               <input
                 type="text"
+                className="ym-disable-keys ym-hide-content"
                 value={baseUrl.replace(/^https?:\/\//, '')}
                 onChange={(event) => setBaseUrl(event.target.value)}
                 placeholder="studiowelcome.ru/rostov"
@@ -110,6 +111,7 @@ export function BatchScreen() {
             <div className="input">
               <input
                 type="text"
+                className="ym-disable-keys ym-hide-content"
                 value={campaign}
                 onChange={(event) => setCampaign(event.target.value)}
                 placeholder="osenniy_nabor"
@@ -127,7 +129,7 @@ export function BatchScreen() {
             и utm_source.
           </span>
           <textarea
-            className="area"
+            className="area ym-disable-keys ym-hide-content"
             value={table}
             onChange={(event) => setTable(event.target.value)}
             placeholder={SAMPLE}

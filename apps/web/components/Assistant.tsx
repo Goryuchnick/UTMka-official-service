@@ -223,7 +223,7 @@ export function Assistant() {
             ) : (
               <>
                 <textarea
-                  className="area"
+                  className="area ym-disable-keys ym-hide-content"
                   value={brief}
                   onChange={(event) => setBrief(event.target.value)}
                   placeholder="Запускаем осенний набор на Директ, ВК и рассылку по базе. Ведём на страницу с расписанием."

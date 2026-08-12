@@ -56,6 +56,7 @@ export function ValueField({ field, value, onChange, bare }: ValueFieldProps) {
       <div className={`input ${state}`.trim()}>
         <input
           type="text"
+          className="ym-disable-keys ym-hide-content"
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholderFor(field)}

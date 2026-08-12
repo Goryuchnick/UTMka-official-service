@@ -307,6 +307,7 @@ export function LoginScreen() {
           <div className={`input ${error ? 'input--err' : mixed ? 'input--warn' : ''}`.trim()}>
             <input
               type="text"
+              className="ym-disable-keys ym-hide-content"
               value={phrase}
               onChange={(event) => {
                 setPhrase(event.target.value)
