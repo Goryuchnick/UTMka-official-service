@@ -154,6 +154,91 @@ button {
   }
 }
 
+/* ═══════════ СТРОКА ЗАГОЛОВКА (только десктоп) ═══════════
+
+   Окно объявлено без системных декораций: чужая рамка ОС спорила с корпусом
+   устройства. Взамен — своя строка, которая ведёт себя как системная:
+   тянется мышью (`data-tauri-drag-region`), разворачивается двойным щелчком,
+   держит три кнопки справа. В вебе этого блока нет вовсе — слот пустой. */
+
+.dev--framed {
+  padding-top: 0;
+}
+
+.titlebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 38px;
+  padding: 0 0 0 12px;
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-muted);
+  /* Текст в перетаскиваемой полосе выделять некуда и незачем. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar__mark {
+  display: inline-flex;
+  color: var(--hv2-primary);
+}
+
+.titlebar__name {
+  font-family: var(--hv2-pixel);
+  font-size: 11px;
+  color: var(--hv2-fg);
+  letter-spacing: 0.02em;
+}
+
+.titlebar__hint {
+  color: var(--hv2-subtle);
+}
+
+@media (max-width: 620px) {
+  .titlebar__hint {
+    display: none;
+  }
+}
+
+.titlebar__acts {
+  display: flex;
+  align-self: stretch;
+}
+
+/* Размеры и поведение — как у системных кнопок Windows: широкая зона нажатия
+   во всю высоту полосы и красная подсветка только у закрытия. */
+.wbtn {
+  width: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--hv2-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.wbtn svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+
+.wbtn:hover {
+  background: color-mix(in srgb, var(--hv2-fg) 10%, transparent);
+  color: var(--hv2-fg);
+}
+
+.wbtn--close:hover {
+  background: var(--hv2-destructive);
+  color: #fff;
+}
+
 /* ═══════════ ЭКРАН ═══════════ */
 
 .screen {
@@ -466,6 +551,25 @@ html[data-theme='light'] .crt {
 
 .sb-item:hover {
   color: var(--hv2-fg);
+}
+
+/* Надпись, а не кнопка: состояние хранилища и версия никуда не ведут.
+   Подсветка при наведении обещала нажатие, которого не происходило. */
+.sb-item--flat {
+  cursor: default;
+}
+
+.sb-item--flat:hover {
+  color: inherit;
+}
+
+/* Единственная ссылка в строке состояния — пусть будет видно, что она живая. */
+.sb-item--heart {
+  color: var(--hv2-muted);
+}
+
+.sb-item--heart:hover {
+  color: var(--hv2-course);
 }
 
 .sb-dot {
@@ -1652,6 +1756,78 @@ html[data-theme='light'] .crt {
   flex: none;
 }
 
+/* ═══════════ ТИПОВЫЕ ЗНАЧЕНИЯ ПОЛЯ ═══════════
+
+   Своя панель вместо `<datalist>`: нативный список рисует браузер, он не
+   оформляется, не показывает пояснение «когда брать» и не закрывается при
+   прокрутке. Оформление и поведение — как у календаря рядом. */
+
+.vhints {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.vhints-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: -12px;
+  width: 288px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 34%, var(--g-line));
+  /* Заливка непрозрачная: панель ложится поверх полей формы. */
+  background: color-mix(in srgb, var(--hv2-primary) 6%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop), 0 0 32px color-mix(in srgb, var(--hv2-primary) 12%, transparent);
+}
+
+.vhints-panel--up {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+.vhints-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 9px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--hv2-fg);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.vhints-row b {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.vhints-row i {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--hv2-subtle);
+}
+
+.vhints-row:hover,
+.vhints-row:focus-visible {
+  background: color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+}
+
+.vhints-row[aria-selected='true'] b {
+  color: var(--hv2-primary);
+}
+
 .cal {
   position: absolute;
   z-index: 40;
@@ -1934,6 +2110,14 @@ html[data-theme='light'] .crt {
   border-bottom: 1px solid var(--g-line);
 }
 
+/* У шаблонов колонок шесть, и они другие: не «когда/ссылка», а метки,
+   которые как раз и сравнивают между собой глазами. */
+.htable--templates .htable-head,
+.htable--templates .htable-row {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) 74px;
+  min-width: 640px;
+}
+
 .htable-row + .htable-row {
   border-top: 1px solid color-mix(in srgb, var(--g-line) 55%, transparent);
 }
@@ -2191,11 +2375,20 @@ html[data-theme='light'] .crt {
    На широких экранах объяснения и действия расходятся: читать длинный текст
    в одну колонку во всю ширину неудобно, а кнопки должны быть под рукой. */
 
+/* Колонки растут вместе с экраном, а не держат боковую на фиксированных
+   320px: на широком мониторе левая часть раздувалась, а правая оставалась
+   узкой полосой, где каждый заголовок ломался на две строки. */
 .help-cols {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
+  gap: 16px;
   align-items: start;
+}
+
+@media (min-width: 1500px) {
+  .help-cols {
+    grid-template-columns: minmax(0, 1.35fr) minmax(420px, 1fr);
+  }
 }
 
 @media (max-width: 1100px) {

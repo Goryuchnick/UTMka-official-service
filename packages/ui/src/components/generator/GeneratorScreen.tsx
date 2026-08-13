@@ -37,6 +37,7 @@ import { PresetTiles } from './PresetTiles'
 import { ResultCard } from './ResultCard'
 import { SaveBar } from './SaveBar'
 import { QuickStart } from './QuickStart'
+import { sayAbout } from '../../lib/mascot-lines'
 
 const EMPTY: LinkDraft = { baseUrl: '', params: {} }
 
@@ -147,6 +148,7 @@ export function GeneratorScreen() {
 
   const tidy = useCallback(() => {
     setDraft((prev) => normalizeDraft(prev).draft)
+    sayAbout('fixed')
   }, [])
 
   const reset = useCallback(() => {
@@ -204,8 +206,19 @@ export function GeneratorScreen() {
 
       <QuickStart
         onPick={(next) => {
-          setDraft(next)
-          setStep(4)
+          /* Шаблон — это набор МЕТОК, адрес в нём может отсутствовать: в 2.2
+             базового адреса у шаблона не было вовсе, да и в 3.0 его сохраняют
+             не всегда. Поэтому пустой адрес шаблона не затирает введённый —
+             иначе нажатие на «недавний шаблон» стирало набранную ссылку и
+             экран говорил «не указан адрес» на только что заполненном поле. */
+          setDraft((prev) => ({
+            baseUrl: next.baseUrl.trim() || prev.baseUrl,
+            params: hasAnyParam(next.params) ? next.params : prev.params,
+          }))
+          /* На итог переводим, только если ссылке есть из чего собраться;
+             иначе возвращаем к первому вопросу — там, где адрес и вводят. */
+          setStep(next.baseUrl.trim() || draft.baseUrl.trim() ? 4 : 1)
+          sayAbout('applyTemplate')
         }}
       />
 

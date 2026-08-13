@@ -14,6 +14,7 @@ import { backendMessage } from '@utmka/core'
 
 import { PixelIcon } from '../PixelIcon'
 import { backend, saveFile } from '../../shell'
+import { sayAbout } from '../../lib/mascot-lines'
 
 interface LinkToolsProps {
   url: string
@@ -32,6 +33,7 @@ export function LinkTools({ url }: LinkToolsProps) {
     setShortError(null)
     try {
       setShort(await backend.net.shorten(url))
+      sayAbout('shorten')
     } catch (error) {
       setShortError(backendMessage(error))
     } finally {
@@ -58,6 +60,7 @@ export function LinkTools({ url }: LinkToolsProps) {
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
     if (!blob) return
     await saveFile('utmka-qr.png', 'image/png', new Uint8Array(await blob.arrayBuffer()))
+    sayAbout('qr')
   }, [])
 
   /* SVG — паритет с 2.2: типографии просят вектор, растр на баннере рассыпается.

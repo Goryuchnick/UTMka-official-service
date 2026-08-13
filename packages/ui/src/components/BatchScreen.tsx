@@ -23,6 +23,7 @@ import { PixelIcon } from './PixelIcon'
 import { useSetMascotLine } from '../lib/mascot'
 import { clearBatchHandOff, rowsToCsv, useBatchHandOff } from '../lib/assistant-bridge'
 import { saveFile } from '../shell'
+import { sayAbout } from '../lib/mascot-lines'
 
 const SAMPLE = `Метка,Источник,Канал,Кампания
 ВК пост,vk,social,osenniy_nabor
@@ -84,6 +85,7 @@ export function BatchScreen() {
   const copyAll = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(results.map((result) => result.url).join('\n'))
+      sayAbout('copy')
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {

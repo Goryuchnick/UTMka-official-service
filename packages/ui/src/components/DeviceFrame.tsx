@@ -40,13 +40,19 @@ interface DeviceFrameProps {
   children: ReactNode
   /**
    * Что хост доносит поверх рамки: в вебе сюда приезжает счётчик Метрики,
-   * в десктопе — ничего. Флагом `__TAURI__` внутри разметки это же различие
-   * было бы невидимо в дереве файлов.
+   * в десктопе — предложение обновиться. Флагом `__TAURI__` внутри разметки
+   * это же различие было бы невидимо в дереве файлов.
    */
   extras?: ReactNode
+  /**
+   * Строка заголовка окна. Есть только у десктопа: там окно объявлено без
+   * системных декораций, и заголовок с кнопками — часть интерфейса. В вебе
+   * заголовок рисует браузер, и слот остаётся пустым.
+   */
+  titleBar?: ReactNode
 }
 
-export function DeviceFrame({ children, extras }: DeviceFrameProps) {
+export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
   const { path: pathname } = useNav()
   const { theme, toggle } = useTheme()
   const { state: account } = useAccount()
@@ -62,7 +68,8 @@ export function DeviceFrame({ children, extras }: DeviceFrameProps) {
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
   return (
-    <div className={`dev${menuOpen ? '' : ' dev--menuclosed'}`}>
+    <div className={`dev${menuOpen ? '' : ' dev--menuclosed'}${titleBar ? ' dev--framed' : ''}`}>
+      {titleBar}
       <div className="screen">
         <div className="crt" aria-hidden="true" />
 
@@ -123,6 +130,11 @@ export function DeviceFrame({ children, extras }: DeviceFrameProps) {
         <OnboardingGate />
         {extras}
 
+        {/* Строка состояния: слева — что с хранилищем, справа — постоянное.
+            ⚠️ Кликается здесь только то, что действительно куда-то ведёт.
+            Раньше подсвечивались при наведении все пункты подряд, включая
+            «Локальный режим» и «Сохранение», — человек нажимал и не получал
+            ничего. Класс `sb-item--flat` снимает вид кнопки с надписей. */}
         <div className="statusbar">
           {withAuth ? (
             <NavLink to="/login" className="sb-item">
@@ -130,24 +142,26 @@ export function DeviceFrame({ children, extras }: DeviceFrameProps) {
               {signedIn ? 'Фраза при вас' : 'Гость'}
             </NavLink>
           ) : (
-            <span className="sb-item">
+            <span className="sb-item sb-item--flat" title="Данные лежат на этом компьютере">
               <span className="sb-dot" aria-hidden="true" />
               Локальный режим
             </span>
           )}
-          <span className="sb-item sb-quota">
+          <span className="sb-item sb-item--flat sb-quota">
             Сохранение: <b>{withAuth && !signedIn ? 'нужна фраза' : 'включено'}</b>
           </span>
           <span className="spacer" />
           <a
-            className="sb-item"
+            className="sb-item sb-item--heart"
             href="https://alex-pronin.ru/donate"
             target="_blank"
             rel="noopener noreferrer"
+            title="Поддержать автора рублём"
           >
+            <PixelIcon name="heart" size={12} />
             Поблагодарить
           </a>
-          <span className="sb-item">UTMKA 3.0</span>
+          <span className="sb-item sb-item--flat">UTMKA 3.0</span>
         </div>
       </div>
 

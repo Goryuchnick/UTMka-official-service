@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { PixelIcon } from '../PixelIcon'
 import { LinkTools } from './LinkTools'
 import { UrlPreview } from './UrlPreview'
+import { sayAbout } from '../../lib/mascot-lines'
 
 interface ResultCardProps {
   url: string
@@ -31,6 +32,7 @@ export function ResultCard({ url, tools = true }: ResultCardProps) {
   const copy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(url)
+      sayAbout('copy')
       setCopied(true)
     } catch {
       // буфер недоступен (нет разрешения или http) — ссылку можно выделить руками

@@ -12,6 +12,7 @@ import { useCallback } from 'react'
 import { appendDate, placeholderFor, VALUE_HINTS, validateValue, type UtmKey } from '@utmka/core'
 
 import { DatePopover } from './DatePopover'
+import { ValueHints } from './ValueHints'
 
 const LABELS: Record<UtmKey, string> = {
   source: 'Источник — площадка',
@@ -33,8 +34,6 @@ interface ValueFieldProps {
 }
 
 export function ValueField({ field, value, onChange, bare }: ValueFieldProps) {
-  const listId = `hints-${field}`
-
   const issues = validateValue(field, value)
   const state = issues.some((issue) => issue.level === 'error')
     ? 'input--err'
@@ -63,17 +62,11 @@ export function ValueField({ field, value, onChange, bare }: ValueFieldProps) {
           aria-label={LABELS[field]}
           autoComplete="off"
           spellCheck={false}
-          list={listId}
         />
 
+        <ValueHints field={field} value={value} onPick={onChange} />
         {WITH_DATE.has(field) ? <DatePopover onPick={pickDate} /> : null}
       </div>
-
-      <datalist id={listId}>
-        {VALUE_HINTS[field].map((hint) => (
-          <option key={hint.value} value={hint.value} label={hint.when} />
-        ))}
-      </datalist>
 
       {bare ? null : (
         <span className="hint hint--examples" title="Полный список — в выпадающем списке поля">

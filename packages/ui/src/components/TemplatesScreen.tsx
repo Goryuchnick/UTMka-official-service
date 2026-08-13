@@ -33,6 +33,7 @@ import { backend, useNav } from '../shell'
 import { useSetMascotLine } from '../lib/mascot'
 import { useViewMode } from '../lib/view'
 import { exportCsv, exportJson } from '../lib/exchange'
+import { sayAbout } from '../lib/mascot-lines'
 
 /** Палитра тегов — восемь цветов, как в 2.2. Значения из токенов «ПРОНИН-ОС». */
 export const TAG_COLORS: readonly string[] = [
@@ -142,6 +143,7 @@ export function TemplatesScreen() {
   const drop = useCallback(async (id: string) => {
     setItems((prev) => (prev ?? []).filter((item) => item.id !== id))
     await backend.templates.remove(id)
+    sayAbout('removed')
   }, [])
 
   const apply = useCallback(
@@ -163,6 +165,7 @@ export function TemplatesScreen() {
         ),
       )
       await backend.dictionary.merge(kind, alias, canonical)
+      sayAbout('merged')
     },
     [],
   )
@@ -192,6 +195,7 @@ export function TemplatesScreen() {
         setReport(backendMessage(error))
       }
       setReload((value) => value + 1)
+      sayAbout('imported')
     },
     [],
   )
@@ -269,7 +273,10 @@ export function TemplatesScreen() {
                 type="button"
                 className="btn btn--sm"
                 disabled={list.length === 0}
-                onClick={() => void exportJson('utmka-templates', templatesToJson(list))}
+                onClick={() => {
+                  void exportJson('utmka-templates', templatesToJson(list))
+                  sayAbout('exported')
+                }}
               >
                 <PixelIcon name="save" />
                 Выгрузить JSON
@@ -278,7 +285,10 @@ export function TemplatesScreen() {
                 type="button"
                 className="btn btn--sm"
                 disabled={list.length === 0}
-                onClick={() => void exportCsv('utmka-templates', templatesToCsv(list))}
+                onClick={() => {
+                  void exportCsv('utmka-templates', templatesToCsv(list))
+                  sayAbout('exported')
+                }}
               >
                 <PixelIcon name="save" />
                 Выгрузить CSV
@@ -319,6 +329,64 @@ export function TemplatesScreen() {
               : 'По этому запросу ничего нет.'
           }
         />
+      ) : view === 'table' ? (
+        /* Таблица — третий вид из 2.2. Здесь она нужнее, чем в истории:
+           шаблоны сравнивают между собой по меткам, а в списке значения
+           слиты в одну строку через точку. */
+        <div className="glass">
+          <div className="htable htable--templates" role="table">
+            <div className="htable-head" role="row">
+              <span role="columnheader">Название</span>
+              <span role="columnheader">Источник</span>
+              <span role="columnheader">Канал</span>
+              <span role="columnheader">Кампания</span>
+              <span role="columnheader">Тег</span>
+              <span role="columnheader" />
+            </div>
+            {shown.map((template) => (
+              <div className="htable-row" role="row" key={template.id}>
+                <span role="cell">{template.name}</span>
+                <span role="cell">{template.params?.source ?? '—'}</span>
+                <span role="cell">{template.params?.medium ?? '—'}</span>
+                <span role="cell">{template.params?.campaign ?? '—'}</span>
+                <span role="cell">
+                  {template.tagName ? (
+                    <>
+                      {template.tagColor ? (
+                        <span
+                          className="tag-dot"
+                          style={{ background: template.tagColor }}
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      {template.tagName}
+                    </>
+                  ) : (
+                    '—'
+                  )}
+                </span>
+                <span role="cell" className="htable-acts">
+                  <button
+                    type="button"
+                    className="ibtn"
+                    title="В генератор"
+                    onClick={() => apply(template)}
+                  >
+                    <PixelIcon name="wand" />
+                  </button>
+                  <button
+                    type="button"
+                    className="ibtn"
+                    title="Удалить"
+                    onClick={() => drop(template.id)}
+                  >
+                    <PixelIcon name="trash" />
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         <div className={view === 'grid' ? 'cards' : 'hist'}>
           {shown.map((template) => (

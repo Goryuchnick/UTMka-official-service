@@ -189,11 +189,20 @@ export function DatePopover({ onPick, label = 'Добавить дату' }: Dat
       buttonRef.current?.focus()
     }
 
+    /* Панель привязана к кнопке: уехала кнопка — панель обязана исчезнуть,
+       иначе календарь висит посреди экрана над чужим содержимым. Слушаем на
+       фазе перехвата: прокручивается внутренний контейнер, а не окно. */
+    const onScroll = () => setOpen(false)
+
     document.addEventListener('pointerdown', onDown)
     document.addEventListener('keydown', onKey)
+    document.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onScroll)
     return () => {
       document.removeEventListener('pointerdown', onDown)
       document.removeEventListener('keydown', onKey)
+      document.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', onScroll)
     }
   }, [open])
 

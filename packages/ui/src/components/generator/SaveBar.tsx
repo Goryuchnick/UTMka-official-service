@@ -15,6 +15,7 @@ import { PixelIcon } from '../PixelIcon'
 import { TAG_COLORS } from '../TemplatesScreen'
 import { useAccount } from '../../lib/account'
 import { backend, NavLink } from '../../shell'
+import { sayAbout } from '../../lib/mascot-lines'
 
 type Saved = 'no' | 'history' | 'template'
 
@@ -39,6 +40,7 @@ export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
     try {
       await backend.history.add({ url, baseUrl: draft.baseUrl, params: draft.params, origin })
       setSaved('history')
+      sayAbout('saveHistory')
     } catch (error) {
       setError(backendMessage(error))
     }
@@ -55,6 +57,7 @@ export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
         tagColor: tag.trim() ? color : undefined,
       })
       setSaved('template')
+      sayAbout('saveTemplate')
       setNaming(false)
       setName('')
       setTag('')

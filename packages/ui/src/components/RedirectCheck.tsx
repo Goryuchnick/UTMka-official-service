@@ -17,6 +17,7 @@ import { backendMessage, explainFailure, UTM_PARAM_NAMES, type RedirectReport } 
 
 import { PixelIcon } from './PixelIcon'
 import { backend } from '../shell'
+import { sayAbout } from '../lib/mascot-lines'
 
 interface RedirectCheckProps {
   /** Адрес, который разбирает экран. Проверяем ровно его. */
@@ -34,7 +35,9 @@ export function RedirectCheck({ url }: RedirectCheckProps) {
     setReport(null)
 
     try {
-      setReport(await backend.net.checkRedirects(url))
+      const next = await backend.net.checkRedirects(url)
+      setReport(next)
+      sayAbout(next.lost.length > 0 || next.failure ? 'redirectLost' : 'redirectOk')
     } catch (error) {
       setError(backendMessage(error))
     } finally {

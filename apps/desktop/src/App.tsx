@@ -10,6 +10,7 @@ import {
 } from '@utmka/ui'
 
 import { ImportGate } from './components/ImportGate'
+import { TitleBar } from './components/TitleBar'
 import { UpdateGate } from './components/UpdateGate'
 
 /**
@@ -27,7 +28,7 @@ import { UpdateGate } from './components/UpdateGate'
 export function App() {
   return (
     <HashRouter>
-      <DeviceFrame extras={<UpdateGate />}>
+      <DeviceFrame titleBar={<TitleBar />} extras={<UpdateGate />}>
         <Routes>
           <Route path="/" element={<GeneratorScreen />} />
           <Route path="/batch" element={<BatchScreen />} />

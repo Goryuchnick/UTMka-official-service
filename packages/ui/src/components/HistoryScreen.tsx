@@ -26,6 +26,7 @@ import { backend, useNav } from '../shell'
 import { useSetMascotLine } from '../lib/mascot'
 import { useViewMode } from '../lib/view'
 import { exportCsv, exportJson } from '../lib/exchange'
+import { sayAbout } from '../lib/mascot-lines'
 
 const ORIGIN_LABEL: Record<HistoryItem['origin'], string> = {
   single: 'Генератор',
@@ -129,6 +130,7 @@ export function HistoryScreen() {
     async (id: string) => {
       setItems((prev) => (prev ?? []).filter((item) => item.id !== id))
       await backend.history.remove(id)
+      sayAbout('removed')
     },
     [],
   )
@@ -136,6 +138,7 @@ export function HistoryScreen() {
   const wipe = useCallback(async () => {
     setItems([])
     await backend.history.clear()
+    sayAbout('cleared')
   }, [])
 
   /** Импорт истории — паритет с 2.2: перенос между устройствами файлом. */
@@ -159,6 +162,7 @@ export function HistoryScreen() {
       setReport(backendMessage(error))
     }
     setReload((value) => value + 1)
+    sayAbout('imported')
   }, [])
 
   const reuse = useCallback(
@@ -270,7 +274,10 @@ export function HistoryScreen() {
             type="button"
             className="btn btn--sm"
             disabled={list.length === 0}
-            onClick={() => void exportJson('utmka-history', historyToJson(list))}
+            onClick={() => {
+              void exportJson('utmka-history', historyToJson(list))
+              sayAbout('exported')
+            }}
           >
             <PixelIcon name="save" />
             Выгрузить JSON
@@ -279,7 +286,10 @@ export function HistoryScreen() {
             type="button"
             className="btn btn--sm"
             disabled={list.length === 0}
-            onClick={() => void exportCsv('utmka-history', historyToCsv(list))}
+            onClick={() => {
+              void exportCsv('utmka-history', historyToCsv(list))
+              sayAbout('exported')
+            }}
           >
             <PixelIcon name="save" />
             Выгрузить CSV
