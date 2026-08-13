@@ -27,6 +27,17 @@ import { useSetMascotLine } from '../lib/mascot'
 import { useViewMode } from '../lib/view'
 import { exportCsv, exportJson } from '../lib/exchange'
 import { sayAbout } from '../lib/mascot-lines'
+import { useSort, type SortColumn } from '../lib/sorting'
+import { SortHead } from './SortHead'
+
+/** По чему упорядочиваем историю — те же колонки, что были в 2.2. */
+const SORT_COLUMNS: readonly SortColumn<HistoryItem>[] = [
+  { key: 'createdAt', label: 'Когда', value: (item) => item.createdAt, numeric: true },
+  { key: 'source', label: 'Источник', value: (item) => item.params?.source },
+  { key: 'medium', label: 'Канал', value: (item) => item.params?.medium },
+  { key: 'campaign', label: 'Кампания', value: (item) => item.params?.campaign },
+  { key: 'url', label: 'Ссылка', value: (item) => item.shortUrl ?? item.url },
+]
 
 const ORIGIN_LABEL: Record<HistoryItem['origin'], string> = {
   single: 'Генератор',
@@ -82,6 +93,8 @@ export function HistoryScreen() {
   /** Счётчик перечитываний: растёт после импорта, эффект на него подписан. */
   const [reload, setReload] = useState(0)
 
+  const sorting = useSort(SORT_COLUMNS)
+
   const busy = state === 'unknown' || (state === 'member' && items === null)
 
   useSetMascotLine(
@@ -113,7 +126,7 @@ export function HistoryScreen() {
     const after = from ? new Date(`${from}T00:00:00`).getTime() : null
     const before = till ? new Date(`${till}T23:59:59`).getTime() : null
 
-    return list.filter((item) => {
+    const found = list.filter((item) => {
       if (after !== null || before !== null) {
         const at = item.createdAt ? new Date(item.createdAt).getTime() : null
         if (at === null) return false
@@ -124,7 +137,10 @@ export function HistoryScreen() {
       const haystack = [item.url, ...Object.values(item.params ?? {})].join(' ').toLowerCase()
       return haystack.includes(needle)
     })
-  }, [list, query, from, till])
+    // Порядок задаётся данными, а не таблицей: список, плитки и таблица
+    // показывают одно и то же, переключение вида не тасует записи.
+    return sorting.sort(found)
+  }, [list, query, from, till, sorting])
 
   const drop = useCallback(
     async (id: string) => {
@@ -318,10 +334,19 @@ export function HistoryScreen() {
         <div className="glass">
           <div className="htable" role="table">
             <div className="htable-head" role="row">
-              <span role="columnheader">Когда</span>
-              <span role="columnheader">Источник</span>
-              <span role="columnheader">Кампания</span>
-              <span role="columnheader">Ссылка</span>
+              {(['createdAt', 'source', 'campaign', 'url'] as const).map((key) => {
+                const meta = SORT_COLUMNS.find((column) => column.key === key)
+                return (
+                  <span role="columnheader" key={key}>
+                    <SortHead
+                      column={key}
+                      label={meta?.label ?? key}
+                      state={sorting.state}
+                      onToggle={sorting.toggle}
+                    />
+                  </span>
+                )
+              })}
               <span role="columnheader" />
             </div>
             {shown.map((item) => (
@@ -333,11 +358,11 @@ export function HistoryScreen() {
                   {item.shortUrl ?? item.url}
                 </span>
                 <span role="cell" className="htable-acts">
-                  <button type="button" className="ibtn" title="Подробнее" onClick={() => setDetails(item)}>
-                    <PixelIcon name="search" />
+                  <button type="button" className="ibtn" title="Посмотреть запись" onClick={() => setDetails(item)}>
+                    <PixelIcon name="eye" />
                   </button>
-                  <button type="button" className="ibtn" title="В генератор" onClick={() => reuse(item)}>
-                    <PixelIcon name="wand" />
+                  <button type="button" className="ibtn" title="Подставить в генератор" onClick={() => reuse(item)}>
+                    <PixelIcon name="use" />
                   </button>
                   <button type="button" className="ibtn" title="Удалить" onClick={() => drop(item.id)}>
                     <PixelIcon name="trash" />
@@ -368,11 +393,11 @@ export function HistoryScreen() {
                 >
                   <PixelIcon name="copy" />
                 </button>
-                <button type="button" className="ibtn" title="Подробнее" onClick={() => setDetails(item)}>
+                <button type="button" className="ibtn" title="Посмотреть запись" onClick={() => setDetails(item)}>
                   <PixelIcon name="search" />
                 </button>
-                <button type="button" className="ibtn" title="В генератор" onClick={() => reuse(item)}>
-                  <PixelIcon name="wand" />
+                <button type="button" className="ibtn" title="Подставить в генератор" onClick={() => reuse(item)}>
+                  <PixelIcon name="use" />
                 </button>
                 <button type="button" className="ibtn" title="Удалить" onClick={() => drop(item.id)}>
                   <PixelIcon name="trash" />

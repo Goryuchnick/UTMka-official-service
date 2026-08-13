@@ -1772,6 +1772,9 @@ html[data-theme='light'] .crt {
   position: relative;
   display: inline-flex;
   flex: none;
+  /* Та же причина, что у списка значений: поля ниже по дереву перекрывали бы
+     раскрытый календарь. */
+  z-index: 5;
 }
 
 /* ═══════════ ТИПОВЫЕ ЗНАЧЕНИЯ ПОЛЯ ═══════════
@@ -1784,6 +1787,11 @@ html[data-theme='light'] .crt {
   position: relative;
   display: inline-flex;
   flex: none;
+  /* ⚠️ Поднимаем сам якорь, а не только панель: соседние поля идут ниже по
+     дереву и без этого рисуются поверх выпавшего списка — «Кампания», «Термин»
+     и «Содержание» перекрывали подсказки предыдущего поля. z-index панели
+     здесь не помогает: она в том же контексте наложения, что и поля. */
+  z-index: 5;
 }
 
 .vhints-panel {
@@ -2146,6 +2154,38 @@ html[data-theme='light'] .crt {
   border-bottom: 1px solid var(--g-line);
 }
 
+/* Заголовок-кнопка: по нему упорядочивают список, как в 2.2. Стрелка стоит
+   всегда — иначе неочевидно, что шапка вообще нажимается. */
+.sorthead {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sorthead__mark {
+  opacity: 0.45;
+  font-size: 9px;
+}
+
+.sorthead:hover {
+  color: var(--hv2-fg);
+}
+
+.sorthead--on {
+  color: var(--hv2-primary);
+}
+
+.sorthead--on .sorthead__mark {
+  opacity: 1;
+}
+
 /* У шаблонов колонок шесть, и они другие: не «когда/ссылка», а метки,
    которые как раз и сравнивают между собой глазами. */
 .htable--templates .htable-head,
@@ -2257,6 +2297,22 @@ html[data-theme='light'] .crt {
 .lib-add {
   width: 100%;
   justify-content: center;
+}
+
+/* Боковая колонка следует за прокруткой: список длинный, а форма нужна
+   в любой момент. */
+@media (min-width: 1180px) {
+  .lib-side {
+    position: sticky;
+    top: 0;
+  }
+}
+
+/* Пара «поле — значение» в карточке шаблона: слева подпись, справа значение
+   во всю оставшуюся ширину. */
+.htable-row--pair {
+  grid-template-columns: 132px minmax(0, 1fr);
+  min-width: 0;
 }
 
 /* Палитра тегов — восемь образцов, паритет с 2.2. */

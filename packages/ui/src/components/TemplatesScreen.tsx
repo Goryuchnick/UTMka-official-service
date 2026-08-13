@@ -27,6 +27,7 @@ import {
 
 import { PixelIcon } from './PixelIcon'
 import { DictionaryForm } from './DictionaryForm'
+import { TemplateDetails } from './TemplateDetails'
 import { TemplateForm } from './TemplateForm'
 import { EmptyNote, ViewSwitch } from './ViewSwitch'
 import { VaultGate } from './VaultGate'
@@ -36,6 +37,8 @@ import { useSetMascotLine } from '../lib/mascot'
 import { useViewMode } from '../lib/view'
 import { exportCsv, exportJson } from '../lib/exchange'
 import { sayAbout } from '../lib/mascot-lines'
+import { useSort, type SortColumn } from '../lib/sorting'
+import { SortHead } from './SortHead'
 
 /** Палитра тегов — восемь цветов, как в 2.2. Значения из токенов «ПРОНИН-ОС». */
 export const TAG_COLORS: readonly string[] = [
@@ -47,6 +50,16 @@ export const TAG_COLORS: readonly string[] = [
   'var(--hv2-destructive)',
   'var(--hv2-muted)',
   'var(--hv2-subtle)',
+]
+
+/** По чему упорядочиваем шаблоны — как в 2.2, плюс имя и дата правки. */
+const SORT_COLUMNS: readonly SortColumn<Template>[] = [
+  { key: 'name', label: 'Название', value: (item) => item.name },
+  { key: 'source', label: 'Источник', value: (item) => item.params?.source },
+  { key: 'medium', label: 'Канал', value: (item) => item.params?.medium },
+  { key: 'campaign', label: 'Кампания', value: (item) => item.params?.campaign },
+  { key: 'tagName', label: 'Тег', value: (item) => item.tagName },
+  { key: 'updatedAt', label: 'Изменён', value: (item) => item.updatedAt, numeric: true },
 ]
 
 const KIND_LABEL: Record<UtmKey, string> = {
@@ -103,6 +116,11 @@ export function TemplatesScreen() {
   /** Счётчик перечитываний: растёт после импорта, эффект на него подписан. */
   const [reload, setReload] = useState(0)
 
+  /** Открытая карточка шаблона. null — модалка закрыта. */
+  const [details, setDetails] = useState<Template | null>(null)
+
+  const sorting = useSort(SORT_COLUMNS)
+
   const busy = state === 'unknown' || (state === 'member' && items === null)
   const list = useMemo(() => items ?? [], [items])
 
@@ -130,14 +148,17 @@ export function TemplatesScreen() {
 
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    if (!needle) return list
-    return list.filter((item) =>
-      [item.name, item.tagName ?? '', ...Object.values(item.params ?? {})]
-        .join(' ')
-        .toLowerCase()
-        .includes(needle),
-    )
-  }, [list, query])
+    const found = needle
+      ? list.filter((item) =>
+          [item.name, item.tagName ?? '', ...Object.values(item.params ?? {})]
+            .join(' ')
+            .toLowerCase()
+            .includes(needle),
+        )
+      : list
+    // Порядок общий для всех видов — см. `HistoryScreen`.
+    return sorting.sort(found)
+  }, [list, query, sorting])
 
   /** Расщепления — то, ради чего справочник и нужен. Логика в ядре. */
   const splits = useMemo(() => detectSplits(dict), [dict])
@@ -215,6 +236,18 @@ export function TemplatesScreen() {
 
   return (
     <div className="screen-scroll">
+      <TemplateDetails
+        template={details}
+        onClose={() => setDetails(null)}
+        onApply={apply}
+        onDelete={drop}
+      />
+
+      {/* Колонки начинаются от самого верха: форма создания выравнивается по
+          блоку с поиском, а не уезжает под него. Раньше она стояла под
+          фильтрами и на широком экране висела в пустоте. */}
+      <div className="lib-cols">
+        <div className="lib-main">
       <div className="glass">
         <div className="qhead">
           <span className="qchip">
@@ -319,10 +352,6 @@ export function TemplatesScreen() {
         {report ? <p className="hint">{report}</p> : null}
       </div>
 
-      {/* Форма создания — рядом со списком, а не вместо него: на широком
-          экране она уходит в боковую колонку, на узком встаёт сверху. */}
-      <div className="lib-cols">
-        <div className="lib-main">
           {busy ? (
             <p className="empty">Читаю библиотеку…</p>
           ) : tab === 'dictionary' ? (
@@ -342,11 +371,19 @@ export function TemplatesScreen() {
         <div className="glass">
           <div className="htable htable--templates" role="table">
             <div className="htable-head" role="row">
-              <span role="columnheader">Название</span>
-              <span role="columnheader">Источник</span>
-              <span role="columnheader">Канал</span>
-              <span role="columnheader">Кампания</span>
-              <span role="columnheader">Тег</span>
+              {(['name', 'source', 'medium', 'campaign', 'tagName'] as const).map((key) => {
+                const meta = SORT_COLUMNS.find((column) => column.key === key)
+                return (
+                  <span role="columnheader" key={key}>
+                    <SortHead
+                      column={key}
+                      label={meta?.label ?? key}
+                      state={sorting.state}
+                      onToggle={sorting.toggle}
+                    />
+                  </span>
+                )
+              })}
               <span role="columnheader" />
             </div>
             {shown.map((template) => (
@@ -375,10 +412,18 @@ export function TemplatesScreen() {
                   <button
                     type="button"
                     className="ibtn"
-                    title="В генератор"
+                    title="Посмотреть шаблон"
+                    onClick={() => setDetails(template)}
+                  >
+                    <PixelIcon name="eye" />
+                  </button>
+                  <button
+                    type="button"
+                    className="ibtn"
+                    title="Подставить в генератор"
                     onClick={() => apply(template)}
                   >
-                    <PixelIcon name="wand" />
+                    <PixelIcon name="use" />
                   </button>
                   <button
                     type="button"
@@ -412,8 +457,16 @@ export function TemplatesScreen() {
                 </div>
               </div>
               <span className="htable-acts">
-                <button type="button" className="ibtn" title="В генератор" onClick={() => apply(template)}>
-                  <PixelIcon name="wand" />
+                <button
+                  type="button"
+                  className="ibtn"
+                  title="Посмотреть шаблон"
+                  onClick={() => setDetails(template)}
+                >
+                  <PixelIcon name="eye" />
+                </button>
+                <button type="button" className="ibtn" title="Подставить в генератор" onClick={() => apply(template)}>
+                  <PixelIcon name="use" />
                 </button>
                 <button type="button" className="ibtn" title="Удалить" onClick={() => drop(template.id)}>
                   <PixelIcon name="trash" />

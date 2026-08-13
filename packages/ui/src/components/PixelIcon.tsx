@@ -31,6 +31,8 @@ export type IconName =
   | 'mail'
   | 'heart'
   | 'donut'
+  | 'use'
+  | 'eye'
   | 'code'
   | 'send'
 
@@ -118,6 +120,22 @@ const GLYPHS: Record<IconName, ReactElement> = {
       <path d="M2 6.5h12M5.5 2v2.5M10.5 2v2.5" strokeLinecap="round" />
     </g>
   ),
+  /* «Подставить в генератор»: стрелка входит в поле. Волшебная палочка на
+     её месте не читалась — по значку было не понять, что произойдёт. */
+  use: (
+    <g stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round">
+      <path d="M2 8h7" />
+      <path d="M6.5 5L9.5 8l-3 3" strokeLinejoin="round" />
+      <path d="M11 3.5h3v9h-3" strokeLinejoin="round" />
+    </g>
+  ),
+  /* «Посмотреть»: карточка записи целиком. */
+  eye: (
+    <g stroke="currentColor" strokeWidth="1.4" fill="none">
+      <path d="M1.5 8S4 3.8 8 3.8 14.5 8 14.5 8 12 12.2 8 12.2 1.5 8 1.5 8z" strokeLinejoin="round" />
+      <circle cx="8" cy="8" r="2.1" />
+    </g>
+  ),
   wand: (
     <g stroke="currentColor" strokeWidth="1.4" fill="none">
       <path d="M3 13L11 5" strokeLinecap="round" />
@@ -127,7 +145,11 @@ const GLYPHS: Record<IconName, ReactElement> = {
   ),
   trash: (
     <g stroke="currentColor" strokeWidth="1.4" fill="none">
-      <path d="M3 4h10M6.5 4V2.5h3V4M4.5 4l.7 9.5h5.6L11.5 4" strokeLinejoin="round" />
+      <path d="M2.5 4h11" strokeLinecap="round" />
+      <path d="M6 4V2.6h4V4" strokeLinejoin="round" />
+      <path d="M4.2 4.8l.7 8.7h6.2l.7-8.7" strokeLinejoin="round" />
+      {/* Рёбра внутри: без них силуэт читается как «пакет», а не корзина. */}
+      <path d="M6.6 6.8v4.6M9.4 6.8v4.6" strokeWidth="1.2" strokeLinecap="round" />
     </g>
   ),
   moon: (
