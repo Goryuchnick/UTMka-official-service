@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 
-import { GeneratorScreen } from '@/components/generator/GeneratorScreen'
+import { GeneratorScreen } from '@utmka/ui'
 
 /**
  * Генератор читает заготовку из адресной строки (`?url=…&source=…`), поэтому

@@ -1,6 +1,6 @@
 import { createHmac, randomInt, timingSafeEqual } from 'crypto'
 
-import { normalizePassphrase } from './passphrase-shape'
+import { normalizePassphrase } from '@utmka/core'
 
 /**
  * Кодовая фраза — анонимный вход вместо почты и пароля.
@@ -102,4 +102,4 @@ export function hashesEqual(a: string, b: string): boolean {
 
 /* Форма фразы нужна и серверу, и вводу в браузере — живёт в отдельном модуле
    без `crypto`, здесь только реэкспорт, чтобы серверные импорты не менялись. */
-export { hasMixedScripts, isValidPassphraseShape, normalizePassphrase } from './passphrase-shape'
+export { hasMixedScripts, isValidPassphraseShape, normalizePassphrase } from '@utmka/core'

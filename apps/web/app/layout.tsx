@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import { Press_Start_2P } from 'next/font/google'
 
-import { DeviceFrame } from '@/components/DeviceFrame'
-import { DRAFT_BOOTSTRAP } from '@/lib/draft-bootstrap'
-import { THEME_BOOTSTRAP } from '@/lib/theme'
+import { DeviceFrame, DRAFT_BOOTSTRAP, THEME_BOOTSTRAP } from '@utmka/ui'
 
-import './globals.css'
+import { Metrika } from '@/components/Metrika'
+
+import '@utmka/ui/styles.css'
 
 /* Пиксельный акцентный шрифт — тот же, что на сайте (`--font-pixel` в
    pronin-alex). Кириллица обязательна: интерфейс русский, а Karmatic Arcade
@@ -96,7 +96,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <DeviceFrame>{children}</DeviceFrame>
+        {/* Счётчик доносит хост: в десктопе аналитики нет как понятия, и
+            рамка устройства о ней ничего не знает. */}
+        <DeviceFrame extras={<Metrika />}>{children}</DeviceFrame>
       </body>
     </html>
   )

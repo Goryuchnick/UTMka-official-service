@@ -8,95 +8,10 @@
  */
 
 import { buildUrl } from './build'
+import { COLUMN_ALIASES, parseCsv, pickColumn, toCsv } from './csv'
 import { validateDraft } from './validate'
-import type { BatchResult, BatchRow, Issue, LinkDraft, UtmKey, UtmParams } from './types'
+import type { BatchResult, BatchRow, Issue, LinkDraft, UtmParams } from './types'
 import { UTM_KEYS, UTM_PARAM_NAMES } from './types'
-
-/** Заголовки, которые принимаем на импорте. Ключ — поле, значения — синонимы. */
-const COLUMN_ALIASES: Record<UtmKey | 'label' | 'baseUrl', readonly string[]> = {
-  label: ['label', 'метка', 'название', 'площадка', 'name'],
-  baseUrl: ['url', 'ссылка', 'адрес', 'base_url', 'baseurl', 'страница'],
-  source: ['utm_source', 'source', 'источник'],
-  medium: ['utm_medium', 'medium', 'канал', 'тип трафика'],
-  campaign: ['utm_campaign', 'campaign', 'кампания'],
-  content: ['utm_content', 'content', 'содержание', 'объявление'],
-  term: ['utm_term', 'term', 'ключевое слово', 'ключ', 'фраза'],
-}
-
-/** Экранирование значения CSV. Паритет с `escapeCSVValue` из 2.2. */
-export function escapeCsvValue(value: unknown): string {
-  if (value === null || value === undefined) return ''
-  const text = String(value)
-  if (text.includes(',') || text.includes('\n') || text.includes('"')) {
-    return `"${text.replace(/"/g, '""')}"`
-  }
-  return text
-}
-
-/** Разбор одной строки CSV с учётом кавычек. Паритет с `parseCSVLine` из 2.2. */
-function parseCsvLine(line: string): string[] {
-  const result: string[] = []
-  let current = ''
-  let inQuotes = false
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"'
-        i++
-      } else {
-        inQuotes = !inQuotes
-      }
-    } else if (char === ',' && !inQuotes) {
-      result.push(current)
-      current = ''
-    } else {
-      current += char ?? ''
-    }
-  }
-
-  result.push(current)
-  return result
-}
-
-/** CSV → массив объектов по заголовкам первой строки. */
-export function parseCsv(text: string): Array<Record<string, string>> {
-  const lines = text.split(/\r?\n/).filter((line) => line.trim())
-  if (lines.length < 2) return []
-
-  const headers = parseCsvLine(lines[0] ?? '').map((h) => h.trim())
-  const rows: Array<Record<string, string>> = []
-
-  for (const line of lines.slice(1)) {
-    const values = parseCsvLine(line)
-    const row: Record<string, string> = {}
-    headers.forEach((header, index) => {
-      row[header] = (values[index] ?? '').trim()
-    })
-    rows.push(row)
-  }
-
-  return rows
-}
-
-/** Массив объектов → CSV. Колонки берутся из первой строки. */
-export function toCsv(rows: ReadonlyArray<Record<string, unknown>>): string {
-  if (rows.length === 0) return ''
-  const headers = Object.keys(rows[0] ?? {})
-  const head = headers.map(escapeCsvValue).join(',')
-  const body = rows.map((row) => headers.map((h) => escapeCsvValue(row[h] ?? '')).join(','))
-  return [head, ...body].join('\n')
-}
-
-/** Найти колонку по списку синонимов (регистр и пробелы не важны). */
-function pickColumn(row: Record<string, string>, aliases: readonly string[]): string {
-  for (const [key, value] of Object.entries(row)) {
-    const normalized = key.trim().toLowerCase()
-    if (aliases.includes(normalized)) return value
-  }
-  return ''
-}
 
 /** CSV или вставленная таблица → строки пакета. */
 export function batchFromCsv(text: string): BatchRow[] {
@@ -106,7 +21,10 @@ export function batchFromCsv(text: string): BatchRow[] {
       const value = pickColumn(row, COLUMN_ALIASES[key])
       if (value) params[key] = value
     }
-    const label = pickColumn(row, COLUMN_ALIASES.label)
+    /* Метку ищем и по синонимам названия: в таблицах из Excel колонка «Название»
+       означает подпись строки, а не имя шаблона — своего имени у строки пакета
+       нет и не должно быть. */
+    const label = pickColumn(row, COLUMN_ALIASES.label) || pickColumn(row, COLUMN_ALIASES.name)
     const baseUrl = pickColumn(row, COLUMN_ALIASES.baseUrl)
     const batchRow: BatchRow = { params }
     if (label) batchRow.label = label

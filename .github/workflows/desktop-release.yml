@@ -1,0 +1,116 @@
+# Сборка и публикация десктопа UTMka 3.0.
+#
+# Тег `app-v3.0.0` из ветки `v3.0` — в `main` пока лежит выпущенная 2.2.1.
+# Экшен сам создаёт релиз по версии приложения и собирает `latest.json`,
+# по которому обновляется установленное приложение.
+#
+# ⚠️ Кросс-компиляция под macOS с Windows невозможна в принципе: нужны Apple SDK,
+# `codesign` и `notarytool`, а они только на macOS. Поэтому матрица, а не флаги.
+#
+# ⚠️ Приложение НЕ подписывается: платного Apple Developer Program нет и не было
+# — mac-сборка 2.2.1 раздавалась так же и открывалась через «правой кнопкой →
+# Открыть». Значит это не регрессия, а тот же порядок, что был (решение
+# владельца, ARCHITECTURE §11 от 2026-08-13). На Windows по той же причине нет
+# Authenticode — живём с предупреждением SmartScreen, как 2.2.1.
+
+name: Десктоп — релиз
+
+on:
+  push:
+    tags:
+      - 'app-v*'
+  # Ручной запуск: собрать артефакты, не публикуя релиз.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Apple Silicon и Intel — два разных бинарника: Rosetta здесь не
+          # выручает, у Tauri для каждой архитектуры своя сборка.
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            label: macOS (Apple Silicon)
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+            label: macOS (Intel)
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            label: Windows
+
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Тулчейн Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Кэш cargo
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+          key: ${{ matrix.target }}
+
+      # Зависимости ставим по локу целиком: воркспейсы связаны через него,
+      # и частичная установка ломает сборку на рассинхроне.
+      - name: Зависимости
+        run: npm ci
+
+      - name: Правила ядра
+        run: npm test --workspace @utmka/core
+
+      - name: Проверка типов
+        run: npm run type-check
+
+      - name: Тесты оболочки (Rust)
+        working-directory: apps/desktop/src-tauri
+        run: cargo test --target ${{ matrix.target }}
+
+      # Версия закреплена точно: в мажоре action-v1 выпилена поддержка Tauri v1
+      # и убраны `includeRelease`/`includeDebug` — плавающий тег однажды сломает
+      # сборку молча.
+      - uses: tauri-apps/tauri-action@action-v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Подпись апдейтера обязательна и отключить её нельзя. Ключ живёт
+          # только здесь; файлы .env экшеном не читаются.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          args: --target ${{ matrix.target }}
+          tagName: app-v__VERSION__
+          releaseName: UTMka __VERSION__
+          releaseDraft: true
+          prerelease: false
+          releaseBody: |
+            Конструктор UTM-меток. Работает локально: данные лежат на вашем
+            компьютере, интернет нужен только сокращателю ссылок и проверке
+            переадресаций — по вашему нажатию.
+
+            **Windows** — `UTMka_*_x64-setup.exe`. Ставится без прав
+            администратора. При первом запуске SmartScreen предупредит о
+            неизвестном издателе: «Подробнее» → «Выполнить в любом случае».
+
+            **macOS** — берите файл под свой процессор:
+            `aarch64` для Apple Silicon (M1–M4), `x64` для Intel.
+            Приложение не подписано, поэтому первый запуск — **правой кнопкой
+            по значку → «Открыть» → «Открыть»**. Двойной клик в первый раз даст
+            отказ Gatekeeper; дальше открывается как обычно.
+
+            Данные версии 2.2 приложение предложит перенести при первом запуске
+            и читает её файл только на чтение — 2.2 продолжит работать.

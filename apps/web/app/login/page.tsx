@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { LoginScreen } from '@/components/LoginScreen'
+import { LoginScreen } from '@utmka/ui'
 
 export const metadata: Metadata = {
   title: 'Кодовая фраза',

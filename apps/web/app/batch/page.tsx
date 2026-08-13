@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { BatchScreen } from '@/components/BatchScreen'
+import { BatchScreen } from '@utmka/ui'
 
 export const metadata: Metadata = {
   title: 'Пакетный режим',

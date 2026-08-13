@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import type { NextConfig } from 'next'
 
 /**
@@ -40,9 +42,23 @@ const CSP = [
 const nextConfig: NextConfig = {
   // Обязательно для деплоя в контейнер (правило воркспейса).
   output: 'standalone',
-  // Ядро лежит в соседнем пакете монорепо и поставляется исходниками —
-  // Next должен его транспилировать сам.
-  transpilePackages: ['@utmka/core'],
+  // Ядро и экраны лежат в соседних пакетах монорепо и поставляются
+  // исходниками — Next должен транспилировать их сам.
+  transpilePackages: ['@utmka/core', '@utmka/ui'],
+
+  /* Алиас `#shell` — то место, где общие экраны получают эту оболочку.
+     Пакет `@utmka/ui` импортирует `#shell`, а каждое приложение направляет
+     алиас в свою реализацию: веб сюда, десктоп — в свой файл поверх `invoke`.
+     Ключ `turbopack.resolveAlias` сверен с `node_modules/next/dist/docs`
+     (в 13.0–15.2 он назывался `experimental.turbo` и в 16 удалён). */
+  turbopack: {
+    /* Путь только в POSIX-форме: на абсолютный путь Windows Turbopack отвечает
+       «windows imports are not implemented yet» — и падает не на алиасе, а на
+       файле, который его импортирует. */
+    resolveAlias: {
+      '#shell': './lib/shell.tsx',
+    },
+  },
   // Иначе standalone-сборка ищет node_modules только внутри apps/web.
   outputFileTracingRoot: `${__dirname}/../..`,
   // Версия сервера в заголовке помогает только тому, кто подбирает эксплойт.

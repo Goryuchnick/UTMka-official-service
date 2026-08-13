@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { TemplatesScreen } from '@/components/TemplatesScreen'
+import { TemplatesScreen } from '@utmka/ui'
 
 export const metadata: Metadata = {
   title: 'Шаблоны и справочник',

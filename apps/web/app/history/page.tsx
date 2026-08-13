@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { HistoryScreen } from '@/components/HistoryScreen'
+import { HistoryScreen } from '@utmka/ui'
 
 export const metadata: Metadata = {
   title: 'История ссылок',

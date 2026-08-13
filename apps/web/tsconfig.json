@@ -26,8 +26,17 @@
       "@/*": [
         "./*"
       ],
+      "#shell": [
+        "./lib/shell.tsx"
+      ],
       "@utmka/core": [
         "../../packages/core/src/index.ts"
+      ],
+      "@utmka/ui": [
+        "../../packages/ui/src/index.ts"
+      ],
+      "@utmka/ui/*": [
+        "../../packages/ui/src/*"
       ]
     }
   },

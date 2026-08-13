@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-  batchFromCsv,
-  batchToCsv,
-  buildBatch,
-  escapeCsvValue,
-  parseCsv,
-  summarizeBatch,
-  toCsv,
-} from '../src/batch'
+import { batchFromCsv, batchToCsv, buildBatch, summarizeBatch } from '../src/batch'
+import { escapeCsvValue, parseCsv, toCsv } from '../src/csv'
 
 describe('CSV — паритет с utils.js из 2.2', () => {
   it('экранирует запятые, кавычки и переводы строк', () => {

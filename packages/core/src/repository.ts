@@ -60,11 +60,33 @@ export interface HistoryPort {
 
 export interface DictionaryPort {
   list(): Promise<DictEntry[]>
-  /** Учесть использование значений собранной ссылки. */
+  /**
+   * Учесть использование значений собранной ссылки.
+   *
+   * ⚠️ Вызывается **внутри** `HistoryPort.add`, отдельной ручки в интерфейсе
+   * нет. Реализация `add`, которая просто пишет строку и не трогает справочник,
+   * ничего не сломает и ничего не сообщит — просто справочник останется пустым,
+   * а вместе с ним и детектор расщеплений, ради которого делалась 3.0.
+   */
   track(params: UtmParams): Promise<void>
   merge(kind: DictKind, alias: string, canonical: string): Promise<void>
+  /** Убрать значение из справочника. Историю не трогает: там оно уже уехало в отчёты. */
+  remove(kind: DictKind, value: string): Promise<void>
 }
 
+/**
+ * Настройки интерфейса.
+ *
+ * ⚠️ **В вебе намеренно не реализован**, и в первой версии десктопа тоже: обе
+ * оболочки держат настройки в `localStorage` пятью ключами (`utmka.theme`,
+ * `utmka.mode`, `utmka.view.history`, `utmka.view.templates`,
+ * `utmka.onboarding.v2`), каждый своим хуком на `useSyncExternalStore` с
+ * синхронным чтением — этого требует бутстрап темы в `<head>`.
+ *
+ * Порт оставлен не как мёртвая абстракция, а как заявка: таблица `settings`
+ * заведена в схеме SQLite с самого начала, чтобы вторым заходом включить
+ * реализацию без миграции (ARCHITECTURE §11, 2026-08-13).
+ */
 export interface SettingsPort {
   read(): Promise<Settings>
   write(patch: Partial<Settings>): Promise<Settings>

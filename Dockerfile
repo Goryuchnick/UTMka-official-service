@@ -11,10 +11,17 @@ FROM base AS deps
 RUN sed -i 's#dl-cdn.alpinelinux.org/alpine#mirror.yandex.ru/mirrors/alpine#g' /etc/apk/repositories \
   && apk add --no-cache libc6-compat
 WORKDIR /app
-# Манифесты всех воркспейсов — иначе npm ci не увидит связку core ↔ web.
+# Манифесты ВСЕХ воркспейсов — иначе npm ci не увидит связку core ↔ web.
+#
+# ⚠️ Список обязан совпадать с `workspaces` в корневом package.json целиком, а
+# не только с тем, что нужно вебу: `npm ci` работает по общему локу, и пропуск
+# любого манифеста роняет сборку на рассинхроне. Десктоп в образ не едет —
+# но его package.json обязан быть виден, иначе лок не сойдётся.
 COPY package.json package-lock.json ./
 COPY packages/core/package.json ./packages/core/
+COPY packages/ui/package.json ./packages/ui/
 COPY apps/web/package.json ./apps/web/
+COPY apps/desktop/package.json ./apps/desktop/
 RUN npm ci
 
 FROM base AS builder

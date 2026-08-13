@@ -2,6 +2,7 @@ import 'server-only'
 
 import {
   HISTORY_LIMIT,
+  STORAGE_MESSAGES,
   TEMPLATES_LIMIT,
   UTM_KEYS,
   type DictEntry,
@@ -71,7 +72,7 @@ export async function createTemplate(
     .eq('user_hash', userHash)
 
   if ((count ?? 0) >= TEMPLATES_LIMIT) {
-    throw new Error(`Больше ${TEMPLATES_LIMIT} шаблонов не храним — удалите ненужные`)
+    throw new Error(STORAGE_MESSAGES.templatesFull)
   }
 
   const { data, error } = await supabase()
@@ -90,7 +91,7 @@ export async function createTemplate(
 
   // 23505 — уникальный индекс по (user_hash, lower(name)).
   if (error) {
-    throw new Error(error.code === '23505' ? 'Шаблон с таким названием уже есть' : error.message)
+    throw new Error(error.code === '23505' ? STORAGE_MESSAGES.nameTaken : error.message)
   }
   return toTemplate(data as TemplateRow)
 }
@@ -117,7 +118,7 @@ export async function updateTemplate(
     .single()
 
   if (error) {
-    throw new Error(error.code === '23505' ? 'Шаблон с таким названием уже есть' : error.message)
+    throw new Error(error.code === '23505' ? STORAGE_MESSAGES.nameTaken : error.message)
   }
   return toTemplate(data as TemplateRow)
 }

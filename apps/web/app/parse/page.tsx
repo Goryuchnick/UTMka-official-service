@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { ParseScreen } from '@/components/ParseScreen'
+import { ParseScreen } from '@utmka/ui'
 
 export const metadata: Metadata = {
   title: 'Разбор чужой ссылки',

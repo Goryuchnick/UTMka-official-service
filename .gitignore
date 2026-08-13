@@ -152,3 +152,9 @@ node_modules/
 .next/
 next-env.d.ts
 *.tsbuildinfo
+
+# Tauri: артефакты сборки. `target/` в debug разрастается до десятков гигабайт,
+# `gen/` пересоздаётся из конфига при каждой сборке.
+**/target/
+apps/desktop/dist/
+apps/desktop/src-tauri/gen/

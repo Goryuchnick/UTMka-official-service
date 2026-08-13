@@ -1,0 +1,29 @@
+{
+  "name": "@utmka/ui",
+  "version": "3.0.0-dev",
+  "private": true,
+  "description": "@utmka/ui — экраны UTMka: один набор компонентов на веб и десктоп",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles/globals.css",
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@utmka/core": "*",
+    "motion": "^13.1.0",
+    "qrcode.react": "^4.2.0",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}
