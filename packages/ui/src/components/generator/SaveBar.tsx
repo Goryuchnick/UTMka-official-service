@@ -12,6 +12,7 @@ import { useCallback, useState } from 'react'
 import { backendMessage, type LinkDraft } from '@utmka/core'
 
 import { PixelIcon } from '../PixelIcon'
+import { TagHints } from '../TagHints'
 import { TAG_COLORS } from '../TemplatesScreen'
 import { useAccount } from '../../lib/account'
 import { backend, NavLink } from '../../shell'
@@ -126,6 +127,12 @@ export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
               />
             ))}
           </div>
+          <TagHints
+            onPick={(picked, pickedColor) => {
+              setTag(picked)
+              if (pickedColor) setColor(pickedColor)
+            }}
+          />
         </div>
 
         {error ? <p className="hint hint--error">{error}</p> : null}

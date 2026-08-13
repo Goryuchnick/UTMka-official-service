@@ -19,6 +19,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react'
 
 import { PixelIcon } from '../PixelIcon'
+import { place, scrollBox } from '../../lib/popover'
 
 const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'] as const
 
@@ -51,20 +52,12 @@ function gridStart(month: Date): Date {
   return new Date(first.getFullYear(), first.getMonth(), 1 - shift)
 }
 
-/** Высота панели с запасом — по ней решается, откидывать её вверх или вниз. */
+/** Размеры панели с запасом — по ним решается, куда её откидывать. */
 const PANEL_HEIGHT = 366
+const PANEL_WIDTH = 272
 
 /** Зазор между кнопкой и панелью — дублирует `top/bottom` в `.cal`. */
 const GAP = 10
-
-/** Ближайший предок, который прокручивается: экран инструмента, а не окно. */
-function scrollBox(from: HTMLElement | null): HTMLElement | null {
-  for (let node = from?.parentElement ?? null; node; node = node.parentElement) {
-    const overflow = getComputedStyle(node).overflowY
-    if (overflow === 'auto' || overflow === 'scroll') return node
-  }
-  return null
-}
 
 const PANEL: Variants = {
   hidden: { opacity: 0, scale: 0.9, y: -8 },
@@ -88,18 +81,30 @@ interface DatePopoverProps {
   onPick: (iso: string) => void
   /** Подпись кнопки и панели: у разных полей дата значит разное. */
   label?: string
+  /**
+   * Уже выбранная дата (ISO).
+   *
+   * Есть не у всех: в полях UTM дата **дописывается** к значению и «текущего
+   * выбора» там не существует. А у фильтра периода он есть — и без него
+   * календарь каждый раз открывался на сегодняшнем месяце, даже когда фильтр
+   * стоял на прошлом марте.
+   */
+  value?: string
 }
 
-export function DatePopover({ onPick, label = 'Добавить дату' }: DatePopoverProps) {
+export function DatePopover({ onPick, label = 'Добавить дату', value }: DatePopoverProps) {
   const [open, setOpen] = useState(false)
   const [month, setMonth] = useState(() => {
-    const now = new Date()
-    return new Date(now.getFullYear(), now.getMonth(), 1)
+    const start = value ? new Date(`${value}T00:00:00`) : new Date()
+    const safe = Number.isNaN(start.getTime()) ? new Date() : start
+    return new Date(safe.getFullYear(), safe.getMonth(), 1)
   })
   /** Панель откидывается вверх, если снизу не помещается. */
   const [up, setUp] = useState(false)
   /** Доводка по вертикали, когда не помещается ни вниз, ни вверх. */
   const [shift, setShift] = useState(0)
+  /** Сдвиг вправо, когда панель шире поля и уходит за левую кромку экрана. */
+  const [shiftX, setShiftX] = useState(0)
 
   const wrapRef = useRef<HTMLSpanElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -120,22 +125,30 @@ export function DatePopover({ onPick, label = 'Добавить дату' }: Dat
   const toggle = useCallback(() => {
     setOpen((was) => {
       if (was) return false
-      const rect = buttonRef.current?.getBoundingClientRect()
-      if (rect) {
+      // Открываем на месяце выбранной даты, а не на сегодняшнем.
+      if (value) {
+        const picked = new Date(`${value}T00:00:00`)
+        if (!Number.isNaN(picked.getTime())) {
+          setMonth(new Date(picked.getFullYear(), picked.getMonth(), 1))
+        }
+      }
+      const anchor = buttonRef.current
+      if (anchor) {
         // Считаем место не до края окна, а до края прокручиваемой области:
         // экран инструмента скроллится внутри рамки устройства, и панель,
         // «поместившаяся» по окну, всё равно уезжала бы за нижнюю кромку.
-        const edge = scrollBox(buttonRef.current)?.getBoundingClientRect()
-        const below = (edge ? edge.bottom : window.innerHeight) - rect.bottom
-        const above = rect.top - (edge ? edge.top : 0)
         // Не помещается ни вниз, ни вверх — идём туда, где места больше,
         // остаток добирает доводка в эффекте ниже.
-        setUp(below < PANEL_HEIGHT && above > below)
+        const spot = place(anchor, PANEL_WIDTH, PANEL_HEIGHT, GAP)
+        setUp(spot.up)
         setShift(0)
+        // Календарь шире поля: в правой колонке сетки он уезжал левым краем
+        // за кромку экрана и обрезался вместе с первыми днями недели.
+        setShiftX(spot.shiftX)
       }
       return true
     })
-  }, [])
+  }, [value])
 
   const pick = useCallback(
     (iso: string) => {
@@ -242,6 +255,7 @@ export function DatePopover({ onPick, label = 'Добавить дату' }: Dat
               {
                 transformOrigin: up ? 'bottom right' : 'top right',
                 '--cal-shift': `${shift}px`,
+                '--cal-shift-x': `${shiftX}px`,
               } as React.CSSProperties
             }
           >
@@ -272,6 +286,8 @@ export function DatePopover({ onPick, label = 'Добавить дату' }: Dat
                   className="cal-day"
                   data-outside={cell.outside ? '' : undefined}
                   data-today={cell.iso === today ? '' : undefined}
+                  data-picked={cell.iso === value ? '' : undefined}
+                  aria-pressed={value ? cell.iso === value : undefined}
                   onClick={() => pick(cell.iso)}
                 >
                   {cell.day}
@@ -283,7 +299,10 @@ export function DatePopover({ onPick, label = 'Добавить дату' }: Dat
               <button type="button" className="cal-today" onClick={() => pick(today)}>
                 Сегодня
               </button>
-              <span className="cal-note">Допишется через «_»</span>
+              {/* Подпись — только там, где дата дописывается к значению поля.
+                  В фильтре периода (у него есть `value`) дописывать нечего, и
+                  объяснение про «_» там сбивало бы с толку. */}
+              {value === undefined ? <span className="cal-note">Допишется через «_»</span> : null}
             </div>
           </motion.div>
         ) : null}

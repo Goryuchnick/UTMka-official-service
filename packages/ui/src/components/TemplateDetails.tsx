@@ -29,9 +29,17 @@ interface TemplateDetailsProps {
   onClose: () => void
   onApply: (template: Template) => void
   onDelete: (id: string) => void
+  /** Открыть шаблон в форме правки. Без обработчика кнопка не показывается. */
+  onEdit?: (template: Template) => void
 }
 
-export function TemplateDetails({ template, onClose, onApply, onDelete }: TemplateDetailsProps) {
+export function TemplateDetails({
+  template,
+  onClose,
+  onApply,
+  onDelete,
+  onEdit,
+}: TemplateDetailsProps) {
   const reduced = useReducedMotion()
 
   /* Ссылка-пример: показываем, что получится, если взять шаблон как есть.
@@ -138,6 +146,12 @@ export function TemplateDetails({ template, onClose, onApply, onDelete }: Templa
                 <PixelIcon name="use" />
                 Подставить в генератор
               </button>
+              {onEdit ? (
+                <button type="button" className="btn btn--sm" onClick={() => onEdit(template)}>
+                  <PixelIcon name="wand" />
+                  Изменить
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="btn btn--sm"

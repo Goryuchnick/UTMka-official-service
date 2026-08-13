@@ -204,3 +204,54 @@ export function parseHistory(text: string, csv: boolean): ImportedLink[] {
   }
   return result
 }
+
+/* ─────────────────────────── образец файла ─────────────────────────── */
+
+/**
+ * Пара строк-примеров для импорта — паритет с 2.2 («Скачать пример JSON / CSV»).
+ *
+ * Импорт принимает и свой формат, и плоский из 2.2, но узнать об этом можно
+ * было только из исходников: человек с чужой таблицей на сотню строк должен
+ * видеть, какие колонки нужны, до того как импорт скажет «в файле не нашлось
+ * ни одного шаблона».
+ *
+ * Образец намеренно осмысленный, а не `foo`/`bar`: его чаще всего открывают в
+ * Excel, стирают строки и вписывают свои — значит он заодно показывает,
+ * как выглядят правильные значения меток.
+ */
+export const TEMPLATE_SAMPLE: readonly Template[] = [
+  {
+    id: 'sample-1',
+    name: 'Осенний набор — Директ',
+    baseUrl: 'https://test.ru/autumn',
+    params: {
+      source: 'yandex',
+      medium: 'cpc',
+      campaign: 'osenniy_nabor',
+      content: 'banner_1',
+      term: '{keyword}',
+    },
+    tagName: 'Осень',
+  },
+  {
+    id: 'sample-2',
+    name: 'Рассылка по базе',
+    baseUrl: 'https://test.ru/autumn',
+    params: {
+      source: 'email',
+      medium: 'email',
+      campaign: 'osenniy_nabor',
+      content: 'letter_1',
+    },
+    tagName: 'Осень',
+  },
+]
+
+/** Образец в том же виде, в каком выгружается библиотека. */
+export function templatesSampleJson(): unknown {
+  return templatesToJson(TEMPLATE_SAMPLE)
+}
+
+export function templatesSampleCsv(): string[][] {
+  return templatesToCsv(TEMPLATE_SAMPLE)
+}

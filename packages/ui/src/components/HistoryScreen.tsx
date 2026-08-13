@@ -18,6 +18,7 @@ import {
 } from '@utmka/core'
 
 import { PixelIcon } from './PixelIcon'
+import { DatePopover } from './generator/DatePopover'
 import { EmptyNote, ViewSwitch } from './ViewSwitch'
 import { VaultGate } from './VaultGate'
 import { LinkDetails } from './LinkDetails'
@@ -58,6 +59,33 @@ async function fetchHistory(): Promise<{ items: HistoryItem[]; error: string }> 
     // «Фразы нет» — не ошибка чтения: об этом говорит отдельный экран.
     return { items: [], error: isAuthError(error) ? '' : backendMessage(error) }
   }
+}
+
+/**
+ * Граница периода — свой календарь вместо `<input type="date">`.
+ *
+ * Нативное поле открывает окно операционной системы: в вебвью оно чужое по
+ * виду, а на некоторых сборках якорится мимо поля. Тот же довод, по которому
+ * из полей UTM в 3.0 убрали нативный `showPicker()` (ARCHITECTURE §11,
+ * 2026-08-11) — здесь он просто задержался.
+ */
+function DateBound({
+  value,
+  label,
+  onPick,
+}: {
+  value: string
+  label: string
+  onPick: (iso: string) => void
+}) {
+  return (
+    <span className="datebound">
+      <span className={`datebound-value${value ? '' : ' datebound-value--empty'}`}>
+        {value ? new Date(`${value}T00:00:00`).toLocaleDateString('ru-RU') : 'любая'}
+      </span>
+      <DatePopover value={value} label={label} onPick={onPick} />
+    </span>
+  )
 }
 
 function when(iso: string | undefined): string {
@@ -232,23 +260,9 @@ export function HistoryScreen() {
 
         <div className="result-row dates">
           <span className="field-label">Период</span>
-          <input
-            type="date"
-            className="datefield"
-            value={from}
-            max={till || undefined}
-            onChange={(event) => setFrom(event.target.value)}
-            aria-label="Начало периода"
-          />
+          <DateBound value={from} label="Начало периода" onPick={setFrom} />
           <span className="hint">—</span>
-          <input
-            type="date"
-            className="datefield"
-            value={till}
-            min={from || undefined}
-            onChange={(event) => setTill(event.target.value)}
-            aria-label="Конец периода"
-          />
+          <DateBound value={till} label="Конец периода" onPick={setTill} />
           {from || till ? (
             <button
               type="button"

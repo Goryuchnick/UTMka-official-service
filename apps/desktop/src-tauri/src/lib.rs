@@ -23,6 +23,34 @@ mod store;
 
 use tauri::Manager;
 
+/// Скрипт, который кладёт сохранённые настройки обратно в `localStorage`.
+///
+/// Пишем только то, чего в хранилище ещё нет: профиль вебвью — источник
+/// правды, пока он жив, а база — запасная копия на случай переустановки.
+/// Тему ставим тут же атрибутом: бутстрап в `<head>` выполнится следом и
+/// увидит уже заполненное хранилище.
+fn restore_script(saved: &[(String, String)]) -> String {
+    let pairs = saved
+        .iter()
+        .map(|(key, value)| {
+            format!(
+                "[{},{}]",
+                serde_json::to_string(key).unwrap_or_else(|_| "\"\"".into()),
+                serde_json::to_string(value).unwrap_or_else(|_| "\"\"".into()),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+
+    format!(
+        "(function(){{try{{var s=[{pairs}];for(var i=0;i<s.length;i++){{\
+         if(localStorage.getItem(s[i][0])===null)localStorage.setItem(s[i][0],s[i][1]);}}\
+         var t=localStorage.getItem('utmka.theme');\
+         if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;\
+         }}catch(e){{}}}})()"
+    )
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -61,41 +89,42 @@ pub fn run() {
                 std::io::Error::other(error.message)
             })?;
 
-            /* Настройки возвращаем в `localStorage` ДО первой отрисовки.
+            /* Настройки возвращаем в `localStorage` ДО первого скрипта страницы.
                Фронт читает тему синхронно (иначе она мигает тёмной на светлой),
                а профиль вебвью не вечен: переустановка или чистка кэша сбрасывали
-               и тему, и режим генератора. Копия в базе это переживает. */
-            if let Ok(conn) = pool.get() {
-                if let Ok(saved) = store::settings_all(&conn) {
-                    if !saved.is_empty() {
-                        let pairs = saved
-                            .iter()
-                            .map(|(key, value)| {
-                                format!(
-                                    "[{},{}]",
-                                    serde_json::to_string(key).unwrap_or_else(|_| "\"\"".into()),
-                                    serde_json::to_string(value).unwrap_or_else(|_| "\"\"".into()),
-                                )
-                            })
-                            .collect::<Vec<_>>()
-                            .join(",");
+               и тему, и режим генератора. Копия в базе это переживает.
 
-                        let script = format!(
-                            "(function(){{try{{var s=[{pairs}];for(var i=0;i<s.length;i++){{\
-                             if(localStorage.getItem(s[i][0])===null)localStorage.setItem(s[i][0],s[i][1]);}}\
-                             var t=localStorage.getItem('utmka.theme');\
-                             if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;\
-                             }}catch(e){{}}}})()"
-                        );
-
-                        for window in app.webview_windows().values() {
-                            let _ = window.eval(&script);
-                        }
-                    }
-                }
-            }
+               ⚠️ Раньше это делал `eval` по уже созданному окну — и опаздывал.
+               Замер в живом окне: на бутстрапе темы в `<head>` ключей ещё нет,
+               они появляются только к `main.tsx`. То есть ровно тот скрипт,
+               который написан против мигания темы, читал пустое хранилище.
+               `initialization_script` выполняется до разбора документа и до
+               любого его скрипта, поэтому окно создаётся здесь, а не само по
+               конфигу (`"create": false` в `tauri.conf.json`; остальные его
+               поля — размеры, отсутствие декораций, заголовок — по-прежнему
+               читаются оттуда через `from_config`). */
+            let boot = pool
+                .get()
+                .ok()
+                .and_then(|conn| store::settings_all(&conn).ok())
+                .filter(|saved| !saved.is_empty())
+                .map(|saved| restore_script(&saved));
 
             app.manage(pool);
+
+            let config = app
+                .config()
+                .app
+                .windows
+                .first()
+                .cloned()
+                .ok_or_else(|| std::io::Error::other("в tauri.conf.json не описано окно"))?;
+
+            let mut window = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
+            if let Some(script) = boot {
+                window = window.initialization_script(script);
+            }
+            window.build()?;
 
             Ok(())
         })

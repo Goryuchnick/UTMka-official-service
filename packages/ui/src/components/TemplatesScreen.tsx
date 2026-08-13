@@ -16,6 +16,8 @@ import {
   isAuthError,
   parseTemplatesCsv,
   parseTemplatesJson,
+  templatesSampleCsv,
+  templatesSampleJson,
   templatesToCsv,
   templatesToJson,
   UTM_KEYS,
@@ -118,6 +120,8 @@ export function TemplatesScreen() {
 
   /** Открытая карточка шаблона. null — модалка закрыта. */
   const [details, setDetails] = useState<Template | null>(null)
+  /** Шаблон в правке. null — форма сбоку заводит новый. */
+  const [editing, setEditing] = useState<Template | null>(null)
 
   const sorting = useSort(SORT_COLUMNS)
 
@@ -241,6 +245,13 @@ export function TemplatesScreen() {
         onClose={() => setDetails(null)}
         onApply={apply}
         onDelete={drop}
+        onEdit={(template) => {
+          // Карточка закрывается: правка идёт в форме сбоку, и держать поверх
+          // неё модалку с прежними значениями — врать о том, что видно.
+          setDetails(null)
+          setTab('templates')
+          setEditing(template)
+        }}
       />
 
       {/* Колонки начинаются от самого верха: форма создания выравнивается по
@@ -303,6 +314,27 @@ export function TemplatesScreen() {
               <button type="button" className="btn btn--sm" onClick={() => fileRef.current?.click()}>
                 <PixelIcon name="save" />
                 Загрузить файл
+              </button>
+              {/* Образец — паритет с 2.2. Импорт понимает и свой формат, и
+                  плоский из 2.2, но узнать, какие нужны колонки, до этой
+                  кнопки было неоткуда: файл просто не принимался. */}
+              <button
+                type="button"
+                className="btn btn--sm"
+                title="Пример файла: те же колонки, что ждёт загрузка"
+                onClick={() => void exportJson('utmka-templates-пример', templatesSampleJson())}
+              >
+                <PixelIcon name="help" />
+                Пример JSON
+              </button>
+              <button
+                type="button"
+                className="btn btn--sm"
+                title="Пример файла для Excel: те же колонки, что ждёт загрузка"
+                onClick={() => void exportCsv('utmka-templates-пример', templatesSampleCsv())}
+              >
+                <PixelIcon name="help" />
+                Пример CSV
               </button>
               <button
                 type="button"
@@ -420,6 +452,14 @@ export function TemplatesScreen() {
                   <button
                     type="button"
                     className="ibtn"
+                    title="Изменить шаблон"
+                    onClick={() => setEditing(template)}
+                  >
+                    <PixelIcon name="wand" />
+                  </button>
+                  <button
+                    type="button"
+                    className="ibtn"
                     title="Подставить в генератор"
                     onClick={() => apply(template)}
                   >
@@ -465,6 +505,9 @@ export function TemplatesScreen() {
                 >
                   <PixelIcon name="eye" />
                 </button>
+                <button type="button" className="ibtn" title="Изменить шаблон" onClick={() => setEditing(template)}>
+                  <PixelIcon name="wand" />
+                </button>
                 <button type="button" className="ibtn" title="Подставить в генератор" onClick={() => apply(template)}>
                   <PixelIcon name="use" />
                 </button>
@@ -481,10 +524,16 @@ export function TemplatesScreen() {
         <div className="lib-side">
           {tab === 'templates' ? (
             <TemplateForm
-              onCreated={(template) => {
+              edit={editing}
+              onCancelEdit={() => setEditing(null)}
+              onSaved={(template) => {
                 // Кладём в список сразу, не дожидаясь перечитывания: человек
                 // видит результат нажатия, а не «ничего не произошло».
-                setItems((prev) => [template, ...(prev ?? [])])
+                setItems((prev) => {
+                  const rest = (prev ?? []).filter((item) => item.id !== template.id)
+                  return [template, ...rest]
+                })
+                setEditing(null)
               }}
             />
           ) : (

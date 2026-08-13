@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Создание шаблона прямо в библиотеке.
+ * Заведение и правка шаблона прямо в библиотеке.
  *
  * Раньше шаблон рождался только в генераторе: собрал ссылку → «Сохранить
  * шаблон». Но набор меток часто заводят заранее — под запуск, который ещё не
@@ -9,12 +9,18 @@
  *
  * На широком экране форма стоит боковой колонкой рядом со списком: видно, что
  * уже есть, и не нужно закрывать список, чтобы добавить ещё один.
+ *
+ * Правка — вторая роль той же формы (ARCHITECTURE §11, 2026-08-13: «чиним в
+ * обеих оболочках»). В 2.2 шаблон редактировался, в 3.0 ручка `update` была
+ * написана в обеих оболочках, но из интерфейса не звалась ни разу: поменять
+ * одну метку означало удалить шаблон и завести заново, потеряв дату.
  */
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { backendMessage, UTM_KEYS, type Template, type UtmKey } from '@utmka/core'
 
 import { PixelIcon } from './PixelIcon'
+import { TagHints } from './TagHints'
 import { TAG_COLORS } from './TemplatesScreen'
 import { backend } from '../shell'
 import { sayAbout } from '../lib/mascot-lines'
@@ -36,11 +42,15 @@ const FIELD_PLACEHOLDER: Record<UtmKey, string> = {
 }
 
 interface TemplateFormProps {
-  /** Сообщить списку, что появился новый шаблон. */
-  onCreated: (template: Template) => void
+  /** Сообщить списку, что шаблон появился или изменился. */
+  onSaved: (template: Template) => void
+  /** Шаблон в правке. `null` — форма заводит новый. */
+  edit?: Template | null
+  /** Правку закрыли — хост обязан забыть, что редактировалось. */
+  onCancelEdit?: () => void
 }
 
-export function TemplateForm({ onCreated }: TemplateFormProps) {
+export function TemplateForm({ onSaved, edit, onCancelEdit }: TemplateFormProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
@@ -50,6 +60,20 @@ export function TemplateForm({ onCreated }: TemplateFormProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
+  /* Форма подхватывает шаблон, который прислал хост, и разворачивается сама:
+     человек нажал «Изменить» в карточке и ждёт заполненные поля, а не пустую
+     кнопку «Новый шаблон» где-то сбоку. */
+  useEffect(() => {
+    if (!edit) return
+    setName(edit.name)
+    setBaseUrl(edit.baseUrl ?? '')
+    setParams({ ...edit.params })
+    setTag(edit.tagName ?? '')
+    setColor(edit.tagColor || TAG_COLORS[0] || '')
+    setError('')
+    setOpen(true)
+  }, [edit])
+
   const reset = useCallback(() => {
     setName('')
     setBaseUrl('')
@@ -58,28 +82,42 @@ export function TemplateForm({ onCreated }: TemplateFormProps) {
     setError('')
   }, [])
 
+  const close = useCallback(() => {
+    setOpen(false)
+    reset()
+    onCancelEdit?.()
+  }, [reset, onCancelEdit])
+
   const submit = useCallback(async () => {
     if (!name.trim()) return
     setBusy(true)
     setError('')
+
+    const fields = {
+      name: name.trim(),
+      baseUrl: baseUrl.trim(),
+      params,
+      tagName: tag.trim() || undefined,
+      tagColor: tag.trim() ? color : undefined,
+    }
+
     try {
-      const created = await backend.templates.create({
-        name: name.trim(),
-        baseUrl: baseUrl.trim(),
-        params,
-        tagName: tag.trim() || undefined,
-        tagColor: tag.trim() ? color : undefined,
-      })
-      onCreated(created)
+      /* Правка идёт через `update`, а не «удалить и создать заново»: у шаблона
+         есть дата создания и он мог уже попасть в чужие выгрузки по имени. */
+      const saved = edit
+        ? await backend.templates.update(edit.id, fields)
+        : await backend.templates.create(fields)
+      onSaved(saved)
       sayAbout('saveTemplate')
       reset()
       setOpen(false)
+      onCancelEdit?.()
     } catch (failure) {
       setError(backendMessage(failure))
     } finally {
       setBusy(false)
     }
-  }, [name, baseUrl, params, tag, color, onCreated, reset])
+  }, [name, baseUrl, params, tag, color, edit, onSaved, onCancelEdit, reset])
 
   if (!open) {
     return (
@@ -96,9 +134,9 @@ export function TemplateForm({ onCreated }: TemplateFormProps) {
         <span className="qchip">
           <PixelIcon name="star" />
         </span>
-        <span className="qtitle qtitle--amber">Новый шаблон</span>
+        <span className="qtitle qtitle--amber">{edit ? 'Правка шаблона' : 'Новый шаблон'}</span>
         <span className="spacer" />
-        <button type="button" className="iconbtn" onClick={() => setOpen(false)} aria-label="Закрыть">
+        <button type="button" className="iconbtn" onClick={close} aria-label="Закрыть">
           <PixelIcon name="close" />
         </button>
       </div>
@@ -181,6 +219,12 @@ export function TemplateForm({ onCreated }: TemplateFormProps) {
             />
           ))}
         </div>
+        <TagHints
+          onPick={(picked, pickedColor) => {
+            setTag(picked)
+            if (pickedColor) setColor(pickedColor)
+          }}
+        />
       </div>
 
       {error ? <p className="hint hint--error">{error}</p> : null}
@@ -188,9 +232,9 @@ export function TemplateForm({ onCreated }: TemplateFormProps) {
       <div className="result-row">
         <button type="button" className="btn btn--main" disabled={!name.trim() || busy} onClick={submit}>
           <PixelIcon name="save" />
-          {busy ? 'Сохраняю…' : 'Сохранить'}
+          {busy ? 'Сохраняю…' : edit ? 'Сохранить правку' : 'Сохранить'}
         </button>
-        <button type="button" className="btn btn--sm" onClick={() => setOpen(false)} disabled={busy}>
+        <button type="button" className="btn btn--sm" onClick={close} disabled={busy}>
           Отмена
         </button>
       </div>

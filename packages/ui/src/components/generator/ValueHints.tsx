@@ -18,20 +18,17 @@ import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion
 import { VALUE_HINTS, type UtmKey } from '@utmka/core'
 
 import { PixelIcon } from '../PixelIcon'
+import { place } from '../../lib/popover'
 
-/** Высота панели с запасом — по ней решается, откидывать вверх или вниз. */
+/** Желаемые размеры панели — дублируют CSS, по ним считается место. */
 const PANEL_HEIGHT = 260
+const PANEL_WIDTH = 288
 
+/** Зазор между кнопкой и панелью — дублирует `top`/`bottom` в `.vhints-panel`. */
 const GAP = 8
 
-/** Ближайший предок, который прокручивается: экран инструмента, а не окно. */
-function scrollBox(from: HTMLElement | null): HTMLElement | null {
-  for (let node = from?.parentElement ?? null; node; node = node.parentElement) {
-    const overflow = getComputedStyle(node).overflowY
-    if (overflow === 'auto' || overflow === 'scroll') return node
-  }
-  return null
-}
+/** Ниже этого панель показывать бессмысленно — две строки списка. */
+const MIN_HEIGHT = 104
 
 const PANEL: Variants = {
   hidden: { opacity: 0, scale: 0.96, y: -6 },
@@ -66,6 +63,9 @@ interface ValueHintsProps {
 export function ValueHints({ field, value, onPick }: ValueHintsProps) {
   const [open, setOpen] = useState(false)
   const [up, setUp] = useState(false)
+  /** Раскладка на момент открытия: сколько места по высоте и сдвиг от кромки. */
+  const [room, setRoom] = useState(PANEL_HEIGHT)
+  const [shiftX, setShiftX] = useState(0)
 
   const wrapRef = useRef<HTMLSpanElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -88,12 +88,15 @@ export function ValueHints({ field, value, onPick }: ValueHintsProps) {
   const toggle = useCallback(() => {
     setOpen((was) => {
       if (was) return false
-      const rect = buttonRef.current?.getBoundingClientRect()
-      if (rect) {
-        const edge = scrollBox(buttonRef.current)?.getBoundingClientRect()
-        const below = (edge ? edge.bottom : window.innerHeight) - rect.bottom
-        const above = rect.top - (edge ? edge.top : 0)
-        setUp(below < PANEL_HEIGHT && above > below)
+      const anchor = buttonRef.current
+      if (anchor) {
+        const spot = place(anchor, PANEL_WIDTH, PANEL_HEIGHT, GAP)
+        setUp(spot.up)
+        /* Панель не выталкивает себя за кромку экрана, а укорачивается: список
+           и так прокручивается внутри, поэтому потерять пару строк дешевле,
+           чем обрезать их краем без всякого признака, что там что-то есть. */
+        setRoom(Math.max(MIN_HEIGHT, Math.min(PANEL_HEIGHT, spot.room)))
+        setShiftX(spot.shiftX)
       }
       return true
     })
@@ -122,18 +125,28 @@ export function ValueHints({ field, value, onPick }: ValueHintsProps) {
     }
     /* Панель привязана к полю: уехало поле — панель обязана исчезнуть, иначе
        она висит посреди экрана над чужим содержимым. Слушаем на фазе
-       перехвата, потому что скроллится внутренний контейнер, а не окно. */
-    const onScroll = () => setOpen(false)
+       перехвата, потому что скроллится внутренний контейнер, а не окно.
+
+       ⚠️ Но список сам прокручивается (в нём до двух десятков значений), и на
+       фазе перехвата сюда прилетала и его собственная прокрутка: колесо над
+       панелью закрывало её вместо того, чтобы листать. Своё событие узнаём по
+       цели — она лежит внутри обёртки поля. */
+    const onScroll = (event: Event) => {
+      const target = event.target as Node | null
+      if (target && target.nodeType === Node.ELEMENT_NODE && wrapRef.current?.contains(target)) return
+      setOpen(false)
+    }
+    const onResize = () => setOpen(false)
 
     document.addEventListener('pointerdown', onDown)
     document.addEventListener('keydown', onKey)
     document.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', onScroll)
+    window.addEventListener('resize', onResize)
     return () => {
       document.removeEventListener('pointerdown', onDown)
       document.removeEventListener('keydown', onKey)
       document.removeEventListener('scroll', onScroll, true)
-      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('resize', onResize)
     }
   }, [open])
 
@@ -164,7 +177,20 @@ export function ValueHints({ field, value, onPick }: ValueHintsProps) {
             initial={reduced ? false : 'hidden'}
             animate="shown"
             exit={reduced ? undefined : 'gone'}
-            style={{ transformOrigin: up ? 'bottom right' : 'top right', top: `${GAP}px` }}
+            /* ⚠️ Ни `top`, ни `bottom` отсюда не задавать. Отступ от кнопки
+               описан в CSS двумя взаимоисключающими правилами (`top` у обычной
+               панели, `bottom` у откинутой вверх), и инлайновый `top` перебивал
+               `top: auto` у `--up`: заданными оказывались ОБА края, и высота
+               считалась как расстояние между ними — минус шестнадцать пикселей,
+               то есть полоска в один padding. Видно это было только там, где
+               панель откидывается вверх: в невысоком окне и на нижних полях. */
+            style={
+              {
+                transformOrigin: up ? 'bottom right' : 'top right',
+                '--vhints-room': `${room}px`,
+                '--vhints-shift': `${shiftX}px`,
+              } as React.CSSProperties
+            }
           >
             {shown.map((hint) => (
               <motion.button

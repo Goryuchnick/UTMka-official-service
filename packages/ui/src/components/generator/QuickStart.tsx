@@ -6,24 +6,35 @@
  * Смысл в том, чтобы не ходить в библиотеку за тем, чем пользуешься каждый
  * день: три последних набора меток подставляются одним нажатием. Без входа
  * блок не показывается вовсе — шаблонов там просто нет.
+ *
+ * Остальные достаёт окно выбора (`TemplatePicker`), как «Открыть все» в 2.2.
+ * ⚠️ Раньше на его месте стояла обычная `<a href="/templates">`: в вебе она
+ * работала, а в окне десктопа роутер хеш-овый, и такая ссылка вела в никуда —
+ * нажатие просто гасило приложение до пустого экрана.
  */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { LinkDraft, Template } from '@utmka/core'
 
 import { PixelIcon } from '../PixelIcon'
+import { TemplatePicker } from './TemplatePicker'
 import { useAccount } from '../../lib/account'
 import { backend } from '../../shell'
 
 const SHOWN = 3
 
-async function fetchRecent(): Promise<Template[]> {
+async function fetchTemplates(): Promise<Template[]> {
   try {
-    return (await backend.templates.list()).slice(0, SHOWN)
+    return await backend.templates.list()
   } catch {
     // Без фразы шаблонов просто нет — блок не показывается, и это не ошибка.
     return []
   }
+}
+
+/** Шаблон → черновик генератора. Пустой адрес не затирает набранный. */
+function toDraft(template: Template): LinkDraft {
+  return { baseUrl: template.baseUrl ?? '', params: template.params ?? {} }
 }
 
 interface QuickStartProps {
@@ -33,12 +44,13 @@ interface QuickStartProps {
 export function QuickStart({ onPick }: QuickStartProps) {
   const { state } = useAccount()
   const [items, setItems] = useState<Template[]>([])
+  const [picking, setPicking] = useState(false)
 
   useEffect(() => {
     if (state !== 'member') return undefined
 
     let alive = true
-    void fetchRecent().then((rows) => {
+    void fetchTemplates().then((rows) => {
       if (alive) setItems(rows)
     })
     return () => {
@@ -46,13 +58,20 @@ export function QuickStart({ onPick }: QuickStartProps) {
     }
   }, [state])
 
+  const pick = useCallback(
+    (template: Template) => {
+      onPick(toDraft(template))
+    },
+    [onPick],
+  )
+
   if (state !== 'member' || items.length === 0) return null
 
   return (
     <div className="quick">
       <span className="field-label">Недавние шаблоны</span>
       <div className="chips">
-        {items.map((template) => (
+        {items.slice(0, SHOWN).map((template) => (
           <button
             key={template.id}
             type="button"
@@ -62,7 +81,7 @@ export function QuickStart({ onPick }: QuickStartProps) {
                 .map(([key, value]) => `${key}=${value}`)
                 .join(' · ') || 'Без меток'
             }
-            onClick={() => onPick({ baseUrl: template.baseUrl ?? '', params: template.params ?? {} })}
+            onClick={() => pick(template)}
           >
             {template.tagColor ? (
               <span className="tag-dot" style={{ background: template.tagColor }} aria-hidden="true" />
@@ -70,11 +89,20 @@ export function QuickStart({ onPick }: QuickStartProps) {
             {template.name}
           </button>
         ))}
-        <a className="chip" href="/templates">
+        {/* Кнопка показывается всегда: даже при двух шаблонах она объясняет,
+            где лежит остальное, — а при двадцати без неё не обойтись. */}
+        <button type="button" className="chip" onClick={() => setPicking(true)}>
           <PixelIcon name="star" size={12} />
-          Все
-        </a>
+          {items.length > SHOWN ? `Все — ${items.length}` : 'Все'}
+        </button>
       </div>
+
+      <TemplatePicker
+        items={items}
+        open={picking}
+        onClose={() => setPicking(false)}
+        onPick={pick}
+      />
     </div>
   )
 }

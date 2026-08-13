@@ -163,6 +163,12 @@ button {
 
 .dev--framed {
   padding-top: 0;
+  /* В окне прокручиваться имеет право только содержимое экрана. Корпус
+     устройства со строкой заголовка, шапкой и строкой состояния прибит к
+     кромкам: если что-то внутри окажется выше окна (масштаб системы, чужая
+     версия WebView2, будущая правка шапки), это обрежется, но не превратит
+     всё приложение в длинную страницу, где заголовок уезжает вверх. */
+  overflow: hidden;
 }
 
 .titlebar {
@@ -1327,6 +1333,54 @@ html[data-theme='light'] .crt {
   margin-left: auto;
 }
 
+/* Плашка обновления — та же плашка, но с содержимым: заметки о версии и ход
+   скачивания. Кнопки уходят вниз, иначе в одну строку с полосой они не встают. */
+.invite--update {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.invite--update .btn {
+  margin-left: 0;
+}
+
+.update-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Заметки к версии приходят как есть из релиза — перенос строк сохраняем,
+   но не даём им растянуть плашку на весь экран. */
+.update-notes {
+  white-space: pre-line;
+  max-height: 96px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.update-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.update-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--hv2-fg) 12%, transparent);
+}
+
+.update-bar__fill {
+  display: block;
+  height: 100%;
+  background: var(--hv2-course);
+  transition: width 0.24s ease;
+}
+
 /* ═══════════ ЗАМЕЧАНИЯ ═══════════ */
 
 .issue {
@@ -1719,6 +1773,11 @@ html[data-theme='light'] .crt {
   display: flex;
   gap: 16px;
   align-items: center;
+  /* Карточка результата бывает узкой (в генераторе она делит экран с формой),
+     и рядом с кодом на пояснение остаётся полторы сотни пикселей: текст
+     сыплется по одному слову в строку, а подписи кнопок рвутся по слогам.
+     Не помещается — сторона уезжает под код целиком. */
+  flex-wrap: wrap;
   padding: 14px;
   border-radius: var(--r-md);
   border: 1px solid var(--g-line);
@@ -1744,6 +1803,8 @@ html[data-theme='light'] .crt {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Полоса уже этой ширины нечитаема — тогда лучше перенос на свою строку. */
+  flex: 1 1 220px;
   min-width: 0;
 }
 
@@ -1816,10 +1877,17 @@ html[data-theme='light'] .crt {
   position: absolute;
   z-index: 40;
   top: calc(100% + 8px);
-  right: -12px;
+  /* Сдвиг вправо, когда панель шире поля и не помещается левым краем: считает
+     его компонент по кромке прокручиваемой области. */
+  right: calc(-12px - var(--vhints-shift, 0px));
   width: 288px;
-  max-height: 260px;
+  /* Потолок высоты — меньшее из 260 и того, что реально осталось до кромки. */
+  max-height: var(--vhints-room, 260px);
   overflow-y: auto;
+  /* Долистал список до конца — дальше прокручиваться нечему. Без этого колесо
+     подхватывал экран под панелью, а прокрутка экрана панель закрывает: список
+     захлопывался ровно в тот момент, когда человек дочитывал его до низа. */
+  overscroll-behavior: contain;
   padding: 6px;
   display: flex;
   flex-direction: column;
@@ -1875,9 +1943,11 @@ html[data-theme='light'] .crt {
 .cal {
   position: absolute;
   z-index: 40;
-  /* --cal-shift — доводка от компонента, когда панель не влезает в экран. */
+  /* --cal-shift — доводка от компонента, когда панель не влезает в экран,
+     --cal-shift-x — то же по горизонтали: календарь шире поля и в правой
+     колонке сетки уходил левым краем за кромку. */
   top: calc(100% + 10px + var(--cal-shift, 0px));
-  right: -12px;
+  right: calc(-12px - var(--cal-shift-x, 0px));
   width: 272px;
   padding: 12px;
   display: flex;
@@ -1972,6 +2042,14 @@ html[data-theme='light'] .crt {
 .cal-day[data-today] {
   color: var(--hv2-primary);
   border-color: color-mix(in srgb, var(--hv2-primary) 50%, transparent);
+}
+
+/* Выбранный день — там, где выбор вообще существует (фильтр периода).
+   В полях UTM дата дописывается к значению, и «текущего дня» там нет. */
+.cal-day[data-picked] {
+  background: color-mix(in srgb, var(--hv2-primary) 26%, transparent);
+  border-color: var(--hv2-primary);
+  color: var(--hv2-fg);
 }
 
 .cal-foot {
@@ -2080,20 +2158,67 @@ html[data-theme='light'] .crt {
   gap: 8px;
 }
 
-.datefield {
+/* Граница периода: показанная дата плюс кнопка календаря. Нативное поле
+   `<input type="date">` убрано — оно открывало окно операционной системы,
+   чужое по виду и не подчиняющееся оболочке. */
+.datebound {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   height: 36px;
-  padding: 0 10px;
+  padding: 0 6px 0 10px;
   border-radius: var(--r-md);
   border: 1px solid var(--g-line);
   background: color-mix(in srgb, var(--hv2-bg2) 62%, transparent);
-  color: var(--hv2-fg);
-  font-family: var(--hv2-mono);
-  font-size: 12px;
+  /* Своя точка отсчёта для панели календаря — как у поля ввода. */
+  position: relative;
 }
 
-.datefield::-webkit-calendar-picker-indicator {
-  filter: invert(0.6) sepia(1) saturate(4) hue-rotate(3deg);
+.datebound-value {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-fg);
+  min-width: 76px;
+}
+
+.datebound-value--empty {
+  color: color-mix(in srgb, var(--hv2-subtle) 60%, transparent);
+}
+
+.datebound .ibtn {
+  background: none;
+  border: none;
+  color: var(--hv2-subtle);
   cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+}
+
+.datebound .ibtn:hover {
+  color: var(--hv2-primary);
+}
+
+.datebound .ibtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Панель календаря лежит внутри поля, а у поля есть фон и своя глубина —
+   поднимаем на время раскрытия, как у полей генератора. */
+.datebound:has(.cal) {
+  z-index: 40;
+}
+
+/* ⚠️ И саму карточку с фильтрами тоже. У `.glass` есть `backdrop-filter`, а он
+   заводит свой контекст наложения: всё, что внутри карточки, сравнивается по
+   глубине только с её содержимым. Раскрытый календарь оказывался под списком
+   истории, который лежит ниже по дереву, — сквозь панель просвечивали чужие
+   строки. Тот же приём, что поднимает поле генератора над соседними полями. */
+.glass:has(.cal),
+.glass:has(.vhints-panel) {
+  position: relative;
+  z-index: 40;
 }
 
 /* ═══════════ БИБЛИОТЕКА: СПИСКИ, ТАБЛИЦА, СПРАВОЧНИК ═══════════ */
@@ -2340,6 +2465,38 @@ html[data-theme='light'] .crt {
   flex-wrap: wrap;
 }
 
+/* Подсказки тегов: частые и недавние. Стоят под палитрой и подставляют
+   название вместе с цветом — иначе один тег расползается по палитре. */
+.taghints {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.taghints-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.taghints-label {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--hv2-subtle) 72%, transparent);
+}
+
+/* Тег подставляется нажатием, поэтому он кнопка — но кнопка тихая: рядом
+   стоит настоящее действие «Сохранить», и спорить с ним подсказке нечем. */
+.chip--tag {
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  letter-spacing: 0;
+  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .swatch {
   width: 22px;
   height: 22px;
@@ -2411,6 +2568,45 @@ html[data-theme='light'] .crt {
     padding: 15px;
     max-height: 90vh;
   }
+}
+
+/* Список выбора внутри окна («Все шаблоны»). Прокручивается сам, а не тянет
+   карточку в длину: под ним остаются счётчик и переход в библиотеку, и они
+   не должны уезжать за нижнюю кромку, когда шаблонов три десятка. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 46vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
+.picker-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  color: var(--hv2-fg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.picker-row:hover,
+.picker-row:focus-visible {
+  border-color: color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--hv2-primary) 12%, transparent);
+}
+
+/* Метки в строке — второй по важности слой: их читают, когда имена похожи. */
+.picker-row .hist-url {
+  font-size: 12px;
 }
 
 /* ═══════════ ОБУЧЕНИЕ ═══════════
