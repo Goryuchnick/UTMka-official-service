@@ -192,6 +192,24 @@ button {
   letter-spacing: 0.02em;
 }
 
+/* Написание бренда: «UTM» амбером, «ka» бирюзой — одинаково в заголовке окна,
+   на иконке приложения, в фавиконе и в строке состояния. */
+.wordmark {
+  font-family: var(--hv2-pixel);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.wordmark b {
+  color: var(--hv2-primary);
+  font-weight: inherit;
+}
+
+.wordmark i {
+  color: var(--hv2-teal);
+  font-style: normal;
+}
+
 .titlebar__hint {
   color: var(--hv2-subtle);
 }
@@ -2063,24 +2081,42 @@ html[data-theme='light'] .crt {
 }
 
 .tag-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
+  width: 8px;
+  height: 8px;
+  /* Тот же квадратный пиксель, что и в палитре: метка тега в списке обязана
+     совпадать с образцом, которым её выбирали. */
+  border-radius: 0;
   flex: none;
   display: inline-block;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 /* Плитки — та же карточка, только в сетке. Разметка одна на оба вида. */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* `min(300px, 100%)`, а не голые 300px: на узком экране колонка не сжимается
+     ниже 300px, и плитки уезжали за край — это и ломало планшетную раскладку. */
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 12px;
 }
 
 .cards .hist-row {
   flex-direction: column;
-  align-items: flex-start;
+  /* ⚠️ Не `flex-start`: в колоночной раскладке он оставляет содержимому ширину
+     по контенту, и длинная строка меток задавала ширину карточки сама — текст
+     вылезал за границу, хотя многоточие у него настроено. */
+  align-items: stretch;
   gap: 10px;
+}
+
+.cards .hist-main {
+  width: 100%;
+}
+
+/* Действия в плитке прижаты влево: в строке они справа, а в карточке справа
+   от них пусто. */
+.cards .htable-acts {
+  align-self: flex-start;
 }
 
 .cards .hist-when {
@@ -2189,7 +2225,41 @@ html[data-theme='light'] .crt {
   opacity: 0.55;
 }
 
-/* Палитра тегов — восемь кружков, паритет с 2.2. */
+/* ═══════════ БИБЛИОТЕКА: СПИСОК + ФОРМА ═══════════
+
+   На широком экране форма создания стоит сбоку: видно, что уже есть, и не
+   нужно закрывать список, чтобы добавить ещё один шаблон. На узком колонки
+   схлопываются, и форма встаёт над списком. */
+
+.lib-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+@media (min-width: 1180px) {
+  .lib-cols {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.44fr);
+  }
+}
+
+.lib-main,
+.lib-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Кнопка «Новый шаблон» тянется на всю ширину колонки: в свёрнутом виде она
+   и есть вся боковая панель. */
+.lib-add {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Палитра тегов — восемь образцов, паритет с 2.2. */
 .palette {
   display: flex;
   gap: 7px;
@@ -2197,17 +2267,34 @@ html[data-theme='light'] .crt {
 }
 
 .swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  /* Квадрат, а не кружок: интерфейс собран из пиксельной сетки — шрифт,
+     иконки, маскот, — и круглые образцы выпадали из этого языка. */
+  border-radius: 0;
   border: 2px solid transparent;
   cursor: pointer;
   padding: 0;
+  /* Скос «пикселя»: светлая грань сверху, тёмная снизу — как у клавиш в
+     восьмибитных интерфейсах. */
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.28);
+}
+
+.swatch:hover {
+  outline: 2px solid color-mix(in srgb, var(--hv2-fg) 45%, transparent);
+  outline-offset: 1px;
 }
 
 .swatch[aria-pressed='true'] {
   border-color: var(--hv2-fg);
-  box-shadow: 0 0 0 2px var(--hv2-bg2);
+  /* Ступенчатая обводка вместо мягкого ореола — по сетке, без сглаживания. */
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.28),
+    0 0 0 2px var(--hv2-bg2),
+    0 0 0 4px var(--hv2-primary);
 }
 
 /* ═══════════ МОДАЛКА ДЕТАЛЕЙ ═══════════ */

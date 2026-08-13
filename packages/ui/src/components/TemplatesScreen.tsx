@@ -26,6 +26,8 @@ import {
 } from '@utmka/core'
 
 import { PixelIcon } from './PixelIcon'
+import { DictionaryForm } from './DictionaryForm'
+import { TemplateForm } from './TemplateForm'
 import { EmptyNote, ViewSwitch } from './ViewSwitch'
 import { VaultGate } from './VaultGate'
 import { useAccount } from '../lib/account'
@@ -317,11 +319,15 @@ export function TemplatesScreen() {
         {report ? <p className="hint">{report}</p> : null}
       </div>
 
-      {busy ? (
-        <p className="empty">Читаю библиотеку…</p>
-      ) : tab === 'dictionary' ? (
-        <DictionaryView dict={dict} splits={splits} onMerge={merge} />
-      ) : shown.length === 0 ? (
+      {/* Форма создания — рядом со списком, а не вместо него: на широком
+          экране она уходит в боковую колонку, на узком встаёт сверху. */}
+      <div className="lib-cols">
+        <div className="lib-main">
+          {busy ? (
+            <p className="empty">Читаю библиотеку…</p>
+          ) : tab === 'dictionary' ? (
+            <DictionaryView dict={dict} splits={splits} onMerge={merge} />
+          ) : shown.length === 0 ? (
         <EmptyNote
           text={
             list.length === 0
@@ -416,7 +422,23 @@ export function TemplatesScreen() {
             </div>
           ))}
         </div>
-      )}
+          )}
+        </div>
+
+        <div className="lib-side">
+          {tab === 'templates' ? (
+            <TemplateForm
+              onCreated={(template) => {
+                // Кладём в список сразу, не дожидаясь перечитывания: человек
+                // видит результат нажатия, а не «ничего не произошло».
+                setItems((prev) => [template, ...(prev ?? [])])
+              }}
+            />
+          ) : (
+            <DictionaryForm onAdded={() => setReload((value) => value + 1)} />
+          )}
+        </div>
+      </div>
     </div>
   )
 }

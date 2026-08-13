@@ -158,10 +158,16 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
             rel="noopener noreferrer"
             title="Поддержать автора рублём"
           >
-            <PixelIcon name="heart" size={12} />
+            <PixelIcon name="donut" size={12} />
             Поблагодарить
           </a>
-          <span className="sb-item sb-item--flat">UTMKA 3.0</span>
+          <span className="sb-item sb-item--flat">
+            <span className="wordmark">
+              <b>UTM</b>
+              <i>ka</i>
+            </span>
+            <span>3.0</span>
+          </span>
         </div>
       </div>
 

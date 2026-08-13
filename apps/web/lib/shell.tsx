@@ -177,10 +177,14 @@ export const backend: UtmkaBackend = {
   dictionary: {
     list: () => call<{ items: DictEntry[] }>('/api/dictionary').then((data) => data.items ?? []),
 
-    /* Справочник наполняется побочным эффектом сохранения ссылки — отдельной
-       ручки у роутов нет и в десктопе не будет: там то же самое делает
-       транзакция внутри `history_add`. */
-    track: async () => undefined,
+    /* Главный путь наполнения — сохранение ссылки: `addHistory` вызывает
+       `trackValues` сам. Эта ручка нужна, чтобы завести канон заранее, и ведёт
+       в ту же функцию на сервере. */
+    track: (params) =>
+      call<void>('/api/dictionary', {
+        method: 'POST',
+        body: JSON.stringify({ track: params }),
+      }).then(() => undefined),
 
     merge: (kind, alias, canonical) =>
       call<void>('/api/dictionary', {

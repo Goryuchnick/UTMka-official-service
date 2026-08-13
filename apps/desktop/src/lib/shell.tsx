@@ -69,9 +69,10 @@ export const backend: UtmkaBackend = {
 
   dictionary: {
     list: () => cmd('dictionary_list'),
-    /* Отдельной ручки у справочника нет и здесь: его наполняет сохранение
-       ссылки, ровно как в вебе. */
-    track: () => cmd('dictionary_track'),
+    /* Главный путь наполнения — сохранение ссылки: `history_add` вызывает
+       `track_values` внутри своей транзакции. Эта ручка нужна, чтобы завести
+       канон заранее, и ведёт в ту же функцию. */
+    track: (params) => cmd('dictionary_track', { params }),
     merge: (kind, alias, canonical) => cmd('dictionary_merge', { kind, alias, canonical }),
     remove: (kind, value) => cmd('dictionary_remove', { kind, value }),
   },

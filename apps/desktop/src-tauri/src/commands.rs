@@ -136,11 +136,21 @@ pub async fn dictionary_list(db: State<'_, Db>) -> CmdResult<Vec<DictEntry>> {
     blocking(&db, |conn| store::dictionary_list(conn)).await
 }
 
-/// Отдельного `track` в интерфейсе нет: справочник наполняет `history_add`.
-/// Команда оставлена ради полноты контракта и ничего не делает.
+/// Учесть значения вручную.
+///
+/// Обычно справочник наполняет `history_add` побочным эффектом сохранения
+/// ссылки, и это главный путь. Но канон полезно завести заранее — до первой
+/// ссылки, — поэтому та же функция доступна отдельной командой. Путь один и
+/// тот же (`track_values`), иначе счётчики разошлись бы с обычной записью.
 #[tauri::command]
-pub async fn dictionary_track(_db: State<'_, Db>) -> CmdResult<()> {
-    Ok(())
+pub async fn dictionary_track(db: State<'_, Db>, params: UtmParams) -> CmdResult<()> {
+    blocking(&db, move |conn| {
+        let tx = conn.transaction()?;
+        store::track_values(&tx, &params)?;
+        tx.commit()?;
+        Ok(())
+    })
+    .await
 }
 
 #[tauri::command]

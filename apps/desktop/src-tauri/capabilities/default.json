@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Права окна: буфер обмена, системный диалог сохранения и запись выбранного файла. Список закрытый — вебвью не получает ни произвольного доступа к файловой системе, ни своего HTTP-клиента: наружу за него ходят команды Rust с предохранителями.",
+  "description": "Права окна: буфер обмена, системный диалог сохранения, запись выбранного файла, управление собственным окном (рамка своя) и открытие ссылок наружу. Список закрытый — вебвью не получает ни произвольного доступа к файловой системе, ни своего HTTP-клиента: наружу за него ходят команды Rust с предохранителями.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -14,7 +14,13 @@
     "fs:allow-write-file",
     "updater:default",
     "process:allow-restart",
-    "opener:allow-open-url",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        { "url": "https://*" },
+        { "url": "http://*" }
+      ]
+    },
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
     "core:window:allow-is-maximized",

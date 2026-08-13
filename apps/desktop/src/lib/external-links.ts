@@ -27,9 +27,11 @@ export function catchExternalLinks(): () => void {
     if (!/^https?:\/\//i.test(href)) return
 
     event.preventDefault()
-    void openUrl(href).catch(() => {
-      /* Браузера нет или система отказала — молчим: приложение от этого
-         не ломается, а ругаться на нажатие по ссылке некуда. */
+    void openUrl(href).catch((error: unknown) => {
+      /* Приложение от этого не ломается, но молчать нельзя: именно так
+         выглядела пропажа прав (`opener:allow-open-url` без списка адресов) —
+         нажатие просто ничего не делало, и причину было не найти. */
+      console.warn('не удалось открыть ссылку', href, error)
     })
   }
 

@@ -30,6 +30,7 @@ export type IconName =
   | 'share'
   | 'mail'
   | 'heart'
+  | 'donut'
   | 'code'
   | 'send'
 
@@ -162,6 +163,21 @@ const GLYPHS: Record<IconName, ReactElement> = {
       d="M8 13.5S2 10 2 6.2A3.2 3.2 0 018 4.4a3.2 3.2 0 016 1.8C14 10 8 13.5 8 13.5z"
       fill="currentColor"
     />
+  ),
+  /* Пончик: кольцо теста, глазурь сверху и три посыпки. Рисуется по той же
+     сетке 16×16, что и остальные глифы, поэтому в строке состояния он стоит
+     ровно там же, где стояло сердце. */
+  donut: (
+    <g fill="none" stroke="currentColor">
+      <circle cx="8" cy="8" r="6" strokeWidth="1.5" />
+      <circle cx="8" cy="8" r="2.1" strokeWidth="1.4" />
+      <path
+        d="M2.6 5.6c1-1.2 2.2.6 3.4-.6s2.4.4 3.6-.6 2.4.5 3.6-.4"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+      <path d="M5.2 10.6l.9-.9M10.1 10.9l.9-.9M8 12.3l.8-.8" strokeWidth="1.2" strokeLinecap="round" />
+    </g>
   ),
   code: (
     <g stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">

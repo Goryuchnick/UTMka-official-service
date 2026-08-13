@@ -8,9 +8,9 @@
 
 import { readJson } from '@/lib/rate-limit'
 import { currentUser } from '@/lib/session'
-import { listDictionary, mergeValue, removeValue } from '@/lib/store'
+import { listDictionary, mergeValue, removeValue, trackValues } from '@/lib/store'
 import { storageConfigured } from '@/lib/supabase'
-import { UTM_KEYS, type DictKind } from '@utmka/core'
+import { UTM_KEYS, type DictKind, type UtmParams } from '@utmka/core'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,10 +44,30 @@ export async function POST(request: Request): Promise<Response> {
   const auth = await guard()
   if (auth instanceof Response) return auth
 
-  const body = await readJson<{ kind?: unknown; alias?: unknown; canonical?: unknown }>(request, 4096)
+  const body = await readJson<{
+    kind?: unknown
+    alias?: unknown
+    canonical?: unknown
+    track?: unknown
+  }>(request, 4096)
   if (!body) return Response.json({ error: 'Слишком большой или битый запрос' }, { status: 400 })
 
   try {
+    /* Учесть значения вручную — тем же путём, каким их учитывает сохранение
+       ссылки. Нужно, чтобы канон можно было завести до первой ссылки; отдельной
+       записи в обход `trackValues` не заводим, иначе счётчики разъедутся. */
+    if (body.track && typeof body.track === 'object') {
+      const params: UtmParams = {}
+      for (const [key, value] of Object.entries(body.track as Record<string, unknown>)) {
+        if (isKind(key) && typeof value === 'string' && value.trim()) params[key] = value.trim()
+      }
+      if (Object.keys(params).length === 0) {
+        return Response.json({ error: 'Нечего добавлять' }, { status: 400 })
+      }
+      await trackValues(auth.hash, params)
+      return Response.json({ ok: true })
+    }
+
     if (!isKind(body.kind) || typeof body.alias !== 'string' || typeof body.canonical !== 'string') {
       return Response.json({ error: 'Не хватает данных для сведения' }, { status: 400 })
     }

@@ -119,7 +119,7 @@ export function BatchScreen() {
                 className="ym-disable-keys ym-hide-content"
                 value={baseUrl.replace(/^https?:\/\//, '')}
                 onChange={(event) => setBaseUrl(event.target.value)}
-                placeholder="studiowelcome.ru/rostov"
+                placeholder="test.ru/page"
                 aria-label="Общий адрес страницы"
                 autoComplete="off"
                 spellCheck={false}

@@ -66,8 +66,10 @@ export function TitleBar() {
       <span className="titlebar__mark" data-tauri-drag-region>
         <PixelIcon name="link" />
       </span>
-      <span className="titlebar__name" data-tauri-drag-region>
-        UTMka
+      {/* Двухцветное написание — то же, что на иконке приложения и фавиконе. */}
+      <span className="titlebar__name wordmark" data-tauri-drag-region>
+        <b>UTM</b>
+        <i>ka</i>
       </span>
       <span className="titlebar__hint" data-tauri-drag-region>
         конструктор UTM-меток

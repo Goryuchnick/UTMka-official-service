@@ -345,7 +345,7 @@ function SimpleMode({
                       className="ym-disable-keys ym-hide-content"
                       value={draft.baseUrl.replace(/^https?:\/\//, '')}
                       onChange={(event) => onBaseUrl(event.target.value)}
-                      placeholder="studiowelcome.ru/rostov"
+                      placeholder="test.ru/page"
                       aria-label="Адрес страницы"
                       autoComplete="off"
                       spellCheck={false}
@@ -441,7 +441,7 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
               className="ym-disable-keys ym-hide-content"
               value={draft.baseUrl.replace(/^https?:\/\//, '')}
               onChange={(event) => onBaseUrl(event.target.value)}
-              placeholder="studiowelcome.ru/rostov"
+              placeholder="test.ru/page"
               aria-label="Адрес страницы"
               autoComplete="off"
               spellCheck={false}
