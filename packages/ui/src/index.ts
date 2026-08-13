@@ -21,6 +21,7 @@ export { LoginScreen } from './components/LoginScreen'
 export { VaultGate } from './components/VaultGate'
 export { Soon } from './components/Soon'
 export { PixelIcon, type IconName } from './components/PixelIcon'
+export { ChainMark } from './components/ChainMark'
 
 export type { Nav, NavLink, UseNavParams } from './nav'
 

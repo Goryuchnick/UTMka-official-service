@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { PixelIcon } from '@utmka/ui'
+import { ChainMark } from '@utmka/ui'
 
 /**
  * Своя строка заголовка вместо системной рамки Windows.
@@ -64,7 +64,7 @@ export function TitleBar() {
   return (
     <div className="titlebar" data-tauri-drag-region onDoubleClick={toggle}>
       <span className="titlebar__mark" data-tauri-drag-region>
-        <PixelIcon name="link" />
+        <ChainMark size={17} />
       </span>
       {/* Двухцветное написание — то же, что на иконке приложения и фавиконе. */}
       <span className="titlebar__name wordmark" data-tauri-drag-region>

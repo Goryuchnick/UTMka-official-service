@@ -388,6 +388,30 @@ pub fn dictionary_remove(conn: &Connection, kind: &str, value: &str) -> CmdResul
     Ok(())
 }
 
+/* ─────────────────────────── настройки ─────────────────────────── */
+
+/// Настройки интерфейса: тема, режим генератора, вид списков.
+///
+/// ⚠️ Дублируют `localStorage` вебвью намеренно. Профиль вебвью лежит рядом с
+/// приложением и теряется при переустановке, смене идентификатора или чистке
+/// кэша, а «тема слетела после обновления» читается как поломка. База это
+/// переживает, и при старте значения возвращаются в `localStorage` — фронт
+/// продолжает читать их синхронно, как читал.
+pub fn settings_all(conn: &Connection) -> CmdResult<Vec<(String, String)>> {
+    let mut stmt = conn.prepare("select key, value from settings")?;
+    let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?;
+    Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+}
+
+pub fn settings_set(conn: &Connection, key: &str, value: &str) -> CmdResult<()> {
+    conn.execute(
+        "insert into settings (key, value) values (?1, ?2) \
+         on conflict(key) do update set value = excluded.value",
+        params![key, value],
+    )?;
+    Ok(())
+}
+
 /* ─────────────────────────── служебное ─────────────────────────── */
 
 /// Отметки в таблице `meta`: например, «импорт из 2.2 уже предлагали».

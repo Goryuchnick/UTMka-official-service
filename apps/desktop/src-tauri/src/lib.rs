@@ -60,6 +60,41 @@ pub fn run() {
                 // старте, чем показывать пустые списки как норму.
                 std::io::Error::other(error.message)
             })?;
+
+            /* Настройки возвращаем в `localStorage` ДО первой отрисовки.
+               Фронт читает тему синхронно (иначе она мигает тёмной на светлой),
+               а профиль вебвью не вечен: переустановка или чистка кэша сбрасывали
+               и тему, и режим генератора. Копия в базе это переживает. */
+            if let Ok(conn) = pool.get() {
+                if let Ok(saved) = store::settings_all(&conn) {
+                    if !saved.is_empty() {
+                        let pairs = saved
+                            .iter()
+                            .map(|(key, value)| {
+                                format!(
+                                    "[{},{}]",
+                                    serde_json::to_string(key).unwrap_or_else(|_| "\"\"".into()),
+                                    serde_json::to_string(value).unwrap_or_else(|_| "\"\"".into()),
+                                )
+                            })
+                            .collect::<Vec<_>>()
+                            .join(",");
+
+                        let script = format!(
+                            "(function(){{try{{var s=[{pairs}];for(var i=0;i<s.length;i++){{\
+                             if(localStorage.getItem(s[i][0])===null)localStorage.setItem(s[i][0],s[i][1]);}}\
+                             var t=localStorage.getItem('utmka.theme');\
+                             if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;\
+                             }}catch(e){{}}}})()"
+                        );
+
+                        for window in app.webview_windows().values() {
+                            let _ = window.eval(&script);
+                        }
+                    }
+                }
+            }
+
             app.manage(pool);
 
             Ok(())
@@ -84,6 +119,7 @@ pub fn run() {
             commands::import22_probe,
             commands::import22_run,
             commands::import22_dismiss,
+            commands::settings_set,
         ])
         .run(tauri::generate_context!())
         .expect("окно Tauri не запустилось");

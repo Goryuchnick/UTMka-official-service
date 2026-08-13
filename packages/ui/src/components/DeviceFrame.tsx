@@ -30,7 +30,7 @@ interface Section {
 
 export const SECTIONS: readonly Section[] = [
   { href: '/', label: 'Генератор', short: 'Ссылка', icon: 'link' },
-  { href: '/batch', label: 'Пакет', short: 'Пакет', icon: 'grid' },
+  { href: '/batch', label: 'Пакетный режим', short: 'Пакет', icon: 'grid' },
   { href: '/parse', label: 'Разбор', short: 'Разбор', icon: 'search' },
   { href: '/history', label: 'История', short: 'История', icon: 'clock' },
   { href: '/templates', label: 'Шаблоны', short: 'Шаблоны', icon: 'star' },
