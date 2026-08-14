@@ -124,10 +124,20 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
   useEffect(() => {
     const current = new URL(window.location.href)
 
-    const mode = current.searchParams.get('mode')
+    /* ⚠️ Параметры лежат в разных местах в разных оболочках. В вебе это
+       обычная строка запроса, а в окне роутер хеш-овый, и переход «подставить
+       в генератор» даёт адрес вида `#/?url=…&source=…` — там `search` пуст, и
+       чтение только из него молча открывало пустую форму. */
+    const hashQuery = current.hash.indexOf('?')
+    const inHash = hashQuery >= 0
+    const search = inHash
+      ? new URLSearchParams(current.hash.slice(hashQuery + 1))
+      : current.searchParams
+
+    const mode = search.get('mode')
     if (mode === 'pro' || mode === 'simple') setForced(mode)
 
-    const incoming = draftFromBootstrap() ?? draftFromSearch(current.searchParams)
+    const incoming = draftFromBootstrap() ?? draftFromSearch(search)
     if (incoming) {
       setDraft(incoming)
       setStep(4)
@@ -135,13 +145,18 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
 
     let cleaned = false
     for (const key of ['url', ...UTM_KEYS]) {
-      if (current.searchParams.has(key)) {
-        current.searchParams.delete(key)
+      if (search.has(key)) {
+        search.delete(key)
         cleaned = true
       }
     }
     if (cleaned) {
-      window.history.replaceState(null, '', `${current.pathname}${current.search}${current.hash}`)
+      // Убираем ровно оттуда, откуда взяли, — иначе адрес остаётся с метками.
+      const tail = search.toString()
+      const next = inHash
+        ? `${current.pathname}${current.search}${current.hash.slice(0, hashQuery)}${tail ? `?${tail}` : ''}`
+        : `${current.pathname}${tail ? `?${tail}` : ''}${current.hash}`
+      window.history.replaceState(null, '', next)
     }
   }, [])
 
