@@ -32,7 +32,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg5MjMyQjA4QzNFQjVDNUQKUldSZFhPdkRDQ3NqaVNZRlhOWU1HbnFoa3VKQkU1V2hzWndvMW5tUDBjUitnclVwazYzdUtjdGgK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENGMEY1NUQ3QjBDRTU0N0YKUldSL1ZNNncxMVVQenllQlJDRC9USUVoWXhKclFsN2wzWHVRZFJSK2ZBb28wMm16RWF4UHIzNE0K",
       "endpoints": [
         "https://github.com/Goryuchnick/UTMka-official-service/releases/latest/download/latest.json"
       ],
@@ -43,7 +43,11 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "app", "dmg"],
+    "targets": [
+      "nsis",
+      "app",
+      "dmg"
+    ],
     "createUpdaterArtifacts": true,
     "category": "Productivity",
     "shortDescription": "Конструктор UTM-меток",
@@ -63,7 +67,10 @@
       },
       "nsis": {
         "installMode": "currentUser",
-        "languages": ["Russian", "English"],
+        "languages": [
+          "Russian",
+          "English"
+        ],
         "startMenuFolder": "UTMka"
       }
     }
