@@ -27,7 +27,6 @@ import {
 } from '@utmka/core'
 
 import { PixelIcon } from '../PixelIcon'
-import { useNavParams } from '../../shell'
 import { readBootstrapDraft } from '../../lib/draft-bootstrap'
 import { useSetMascotLine, type MascotTone } from '../../lib/mascot'
 import { useGeneratorMode } from '../../lib/mode'
@@ -88,28 +87,52 @@ const LINES = {
 
 type Step = 1 | 2 | 3 | 4
 
-export function GeneratorScreen() {
-  const search = useNavParams()
+interface GeneratorScreenProps {
+  /**
+   * Площадка, метки которой подставлены заранее. Так генератор открывается на
+   * посадочных страницах вида `/yandex-direct`: человек пришёл по запросу про
+   * конкретную площадку, и переспрашивать её плиткой незачем.
+   *
+   * Заготовка из адреса приоритетнее: ссылка «в генератор» из истории несёт
+   * осознанный выбор пользователя, а пресет — лишь умолчание страницы.
+   */
+  preset?: Preset
+}
+
+export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
   const { mode: savedMode, setMode } = useGeneratorMode()
 
-  // Заготовку берём один раз при монтировании: дальше это обычная форма,
-  // и перезатирать введённое при смене адреса было бы враньём.
-  const [draft, setDraft] = useState<LinkDraft>(
-    () => draftFromBootstrap() ?? draftFromSearch(search) ?? EMPTY,
+  /* Первый кадр не зависит от адресной строки, и это принципиально.
+     `useSearchParams()` выводит компонент из статического рендера: главная
+     уезжала в динамику целиком, а поисковику вместо генератора доставалась
+     заглушка Suspense — 291 символ на всю страницу. Теперь сервер рисует
+     форму, а заготовка из адреса приезжает эффектом ниже. */
+  const [draft, setDraft] = useState<LinkDraft>(() =>
+    preset ? applyPreset(EMPTY, preset) : EMPTY,
   )
-  const [step, setStep] = useState<Step>(() =>
-    draftFromBootstrap() ?? draftFromSearch(search) ? 4 : 1,
-  )
+  const [step, setStep] = useState<Step>(1)
+  const [forced, setForced] = useState<'simple' | 'pro' | null>(null)
 
-  /* Страховка на случай, если бутстрап в `<head>` не отработал (заблокирован
-     расширением, старый браузер): чистим адрес хотя бы здесь. В норме к этому
-     моменту чистить уже нечего — см. `lib/draft-bootstrap.ts`, там же
-     объяснение, почему основную работу делает синхронный скрипт, а не эффект.
+  /* Заготовка из адреса — и уборка адреса за собой.
+     Оба пути ведут сюда: при полной загрузке параметры уже сняты синхронным
+     скриптом в `<head>` и ждут в `window.__utmkaDraft` (см. `draft-bootstrap`),
+     при переходе внутри приложения — лежат в строке запроса, потому что
+     скрипт в `<head>` при клиентской навигации не выполняется.
 
      `history.replaceState`, а не `router.replace`: адрес меняется, состояние
      React и скролл не трогаются. */
   useEffect(() => {
     const current = new URL(window.location.href)
+
+    const mode = current.searchParams.get('mode')
+    if (mode === 'pro' || mode === 'simple') setForced(mode)
+
+    const incoming = draftFromBootstrap() ?? draftFromSearch(current.searchParams)
+    if (incoming) {
+      setDraft(incoming)
+      setStep(4)
+    }
+
     let cleaned = false
     for (const key of ['url', ...UTM_KEYS]) {
       if (current.searchParams.has(key)) {
@@ -124,8 +147,7 @@ export function GeneratorScreen() {
 
   // `?mode=` перебивает сохранённый выбор — чтобы можно было прислать ссылку
   // «открой сразу в простом» (ARCHITECTURE §4.2).
-  const forced = search.get('mode')
-  const mode = forced === 'pro' || forced === 'simple' ? forced : savedMode
+  const mode = forced ?? savedMode
 
   const issues = useMemo(() => validateDraft(draft), [draft])
   const url = useMemo(() => buildUrl(draft), [draft])
