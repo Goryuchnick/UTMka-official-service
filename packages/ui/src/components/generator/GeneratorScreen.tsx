@@ -88,14 +88,29 @@ const LINES = {
 
 type Step = 1 | 2 | 3 | 4
 
-export function GeneratorScreen() {
+interface GeneratorScreenProps {
+  /**
+   * Площадка, метки которой подставлены заранее. Так генератор открывается на
+   * посадочных страницах вида `/yandex-direct`: человек пришёл по запросу про
+   * конкретную площадку, и переспрашивать её плиткой незачем.
+   *
+   * Заготовка из адреса приоритетнее: ссылка «в генератор» из истории несёт
+   * осознанный выбор пользователя, а пресет — лишь умолчание страницы.
+   */
+  preset?: Preset
+}
+
+export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
   const search = useNavParams()
   const { mode: savedMode, setMode } = useGeneratorMode()
 
   // Заготовку берём один раз при монтировании: дальше это обычная форма,
   // и перезатирать введённое при смене адреса было бы враньём.
   const [draft, setDraft] = useState<LinkDraft>(
-    () => draftFromBootstrap() ?? draftFromSearch(search) ?? EMPTY,
+    () =>
+      draftFromBootstrap() ??
+      draftFromSearch(search) ??
+      (preset ? applyPreset(EMPTY, preset) : EMPTY),
   )
   const [step, setStep] = useState<Step>(() =>
     draftFromBootstrap() ?? draftFromSearch(search) ? 4 : 1,

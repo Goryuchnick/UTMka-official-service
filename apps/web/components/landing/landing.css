@@ -1,0 +1,187 @@
+/**
+ * Раскладка посадочных страниц.
+ *
+ * Только геометрия и типографика: цвета, шрифты и стекло берутся токенами
+ * `--hv2-*` и классами из `@utmka/ui`. Своей палитры у посадочных нет —
+ * иначе страница выглядела бы чужой в той же рамке устройства.
+ */
+
+/* Ширину не режем: генератор внутри раскладывается в две колонки, и колонка
+   ограничителя оказывалась вдвое уже, чем на главной. Читаемость строки
+   держим не шириной блоков, а мерой самого текста — в `ch` ниже. */
+.lp {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lp-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Единственный h1 на странице: у остальных экранов заголовка первого уровня
+   нет вовсе, и это ровно то, из-за чего им нечего показать поисковику. */
+.lp-h1 {
+  margin: 0;
+  font-family: var(--hv2-sans);
+  font-size: clamp(22px, 4.2vw, 30px);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--hv2-fg);
+}
+
+.lp-lead {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--hv2-muted);
+}
+
+/* Генератор — самостоятельный экран и приносит свой `.screen-scroll`: свой
+   отступ и свой скролл. Внутри посадочной это второй такой контейнер, и он
+   сдвигал колонки генератора на 52px внутрь относительно текстовых блоков.
+   Снимаем у вложенного и отступ, и прокрутку — страница скроллится одна.
+   Заодно это возвращает липкость: `sticky` считается от внешнего контейнера,
+   а не от обёртки генератора. */
+.lp > .screen-scroll {
+  padding: 0;
+  overflow: visible;
+  gap: 18px;
+}
+
+/* Ограничитель («что сломается в отчёте») липнет к верху при прокрутке:
+   замечания нужны, пока человек правит поля, а поля длиннее экрана.
+   Скоуп — только посадочные: на главной раскладка своя, и менять её из-за
+   этих страниц нельзя. */
+.lp .pro-cols > .glass:last-child {
+  position: sticky;
+  top: 0;
+}
+
+.lp-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lp-block .qtitle {
+  margin: 0;
+  font-size: 16px;
+}
+
+.lp-p {
+  margin: 0;
+  max-width: 68ch;
+  line-height: 1.6;
+}
+
+.lp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  /* Блок во всю ширину, строка — нет: длинная строка читается тяжело. */
+  max-width: 96ch;
+}
+
+.lp-item {
+  display: grid;
+  grid-template-columns: minmax(120px, 200px) 1fr;
+  gap: 4px 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--hv2-border);
+}
+
+.lp-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.lp-term {
+  margin: 0;
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  color: var(--hv2-fg);
+  overflow-wrap: anywhere;
+}
+
+.lp-token {
+  color: var(--hv2-primary);
+}
+
+.lp-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--hv2-muted);
+}
+
+/* Оговорка площадки — то место, где чаще всего теряют данные. Отбивка слева
+   цветом границы, без заливки: заливка тут читается как цитата. */
+.lp-caveat {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--hv2-destructive);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--hv2-muted);
+}
+
+.lp-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lp-q {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hv2-border);
+}
+
+.lp-q:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.lp-q > summary {
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--hv2-fg);
+  list-style-position: outside;
+}
+
+.lp-q > summary:hover {
+  color: var(--hv2-primary);
+}
+
+.lp-q[open] > summary {
+  margin-bottom: 6px;
+  color: var(--hv2-primary);
+}
+
+.lp-q > .lp-text {
+  max-width: 68ch;
+}
+
+.lp-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.lp-next .chip {
+  text-decoration: none;
+}
+
+@media (max-width: 620px) {
+  .lp-item {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
