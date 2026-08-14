@@ -17,6 +17,7 @@ import { PRESETS, UTM_PARAM_NAMES, type UtmKey } from '@utmka/core'
 
 import { PixelIcon } from './PixelIcon'
 import { Onboarding } from './Onboarding'
+import { SyncPanel } from './SyncPanel'
 import { useSetMascotLine } from '../lib/mascot'
 import { backend } from '../shell'
 
@@ -290,6 +291,9 @@ export function HelpScreen() {
               </div>
             </div>
           )}
+
+          {/* Обмен с аккаунтом — только в приложении: вебу обмениваться не с чем. */}
+          <SyncPanel />
 
           <div className="glass">
             <div className="qhead">

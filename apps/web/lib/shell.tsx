@@ -244,6 +244,10 @@ export const backend: UtmkaBackend = {
         body: JSON.stringify({ brief: text }),
       }),
   },
+
+  /* Обмениваться вебу не с кем: это и есть та сторона, где живёт аккаунт.
+     Роут `/api/sync` существует ради приложения, а не ради этого экрана. */
+  sync: null,
 }
 
 /**
