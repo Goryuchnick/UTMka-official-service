@@ -2626,6 +2626,19 @@ html[data-theme='light'] .crt {
    экраном, и баннер, приклеенный к краю браузера, выпадал бы из этой
    метафоры. Прижата к нижней кромке экрана — над строкой состояния. */
 
+/* Затемнение под плашкой: до ответа приложение видно, но не работает —
+   выбор обязателен. Клики перехватывает подложка, и ни одно поле формы под
+   ней не нажимается. */
+.cookiebar-back {
+  position: absolute;
+  inset: 0;
+  z-index: 51;
+  background: color-mix(in srgb, var(--hv2-bg) 66%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: cookiebar-in 0.3s ease-out 0.7s backwards;
+}
+
 .cookiebar {
   position: absolute;
   left: 14px;

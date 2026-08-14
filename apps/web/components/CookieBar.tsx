@@ -14,6 +14,7 @@
  */
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { setConsent, useConsent } from '@/lib/consent'
@@ -21,34 +22,60 @@ import { PixelIcon } from '@utmka/ui'
 
 export function CookieBar() {
   const consent = useConsent()
+  const pathname = usePathname()
   /* Гидратация: на сервере согласия нет, и без этой отсрочки плашка мигала бы
      на первом кадре даже у тех, кто давно ответил. */
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
-  if (!mounted || consent !== 'unknown') return null
+  /* ⚠️ На странице «Что мы собираем» плашки нет намеренно. Человек пришёл туда
+     читать именно про это — накрывать текст затемнением и требовать ответа
+     раньше, чем он дочитает, значит мешать ровно тому, ради чего он пришёл.
+     Выбор там делается переключателем внизу раздела про счётчик. */
+  if (!mounted || consent !== 'unknown' || pathname === '/privacy') return null
 
   return (
-    <div className="cookiebar" role="region" aria-label="Счётчик посещаемости">
-      <span className="cookiebar__mark" aria-hidden="true">
-        <PixelIcon name="shield" />
-      </span>
+    <>
+      {/* Затемнение: выбор обязателен, пока он не сделан — приложение под
+          плашкой не работает. Клик по подложке ничего не закрывает: «закрыть,
+          не ответив» — это молчаливое согласие, а его мы не принимаем. */}
+      <div className="cookiebar-back" aria-hidden="true" />
 
-      <p className="cookiebar__text">
-        <b>Считаем визиты Яндекс.Метрикой</b> — сколько людей пришло и откуда. Ссылки, которые
-        вы собираете, и кодовая фраза туда не попадают: запись экрана выключена, поля скрыты
-        от счётчика. Без согласия он не загружается, и инструмент работает полностью.{' '}
-        <Link href="/privacy">Подробнее</Link>
-      </p>
+      <div
+        className="cookiebar"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Счётчик посещаемости"
+      >
+        <span className="cookiebar__mark" aria-hidden="true">
+          <PixelIcon name="shield" />
+        </span>
 
-      <div className="cookiebar__acts">
-        <button type="button" className="btn btn--sm" onClick={() => setConsent('denied')}>
-          Только необходимое
-        </button>
-        <button type="button" className="btn btn--main" onClick={() => setConsent('granted')}>
-          Согласен
-        </button>
+        <p className="cookiebar__text">
+          <b>Считаем визиты Яндекс.Метрикой</b> — сколько людей пришло и откуда. Ссылки, которые
+          вы собираете, и кодовая фраза туда не попадают: запись экрана выключена, поля скрыты
+          от счётчика. Без согласия он не загружается, и инструмент работает полностью.{' '}
+          <Link href="/privacy">Подробнее</Link>
+        </p>
+
+        <div className="cookiebar__acts">
+          <button
+            type="button"
+            className="btn btn--sm"
+            onClick={() => setConsent('denied')}
+          >
+            Только необходимое
+          </button>
+          <button
+            type="button"
+            className="btn btn--main"
+            onClick={() => setConsent('granted')}
+            autoFocus
+          >
+            Согласен
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
