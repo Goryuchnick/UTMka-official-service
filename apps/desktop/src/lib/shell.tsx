@@ -47,7 +47,7 @@ async function cmd<T>(name: string, args?: Record<string, unknown>): Promise<T> 
 export const backend: UtmkaBackend = {
   /* Вход и помощник на LLM в этой оболочке не существуют как понятия —
      не «выключены»: интерфейс не должен предлагать завести кодовую фразу. */
-  caps: { auth: false, assistant: false, storage: true, fileSave: 'native' },
+  caps: { shell: 'desktop', auth: false, assistant: false, storage: true, fileSave: 'native' },
 
   templates: {
     list: () => cmd('templates_list'),

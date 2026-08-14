@@ -50,7 +50,20 @@ export async function POST(request: Request): Promise<Response> {
     })
 
     if (!response.ok) {
-      return Response.json({ error: `Сервис ответил ${response.status}` }, { status: 502 })
+      /* Код чужого сервиса человеку ничего не говорит, а решение у него всего
+         два: повторить или жить с длинной ссылкой. Код оставляем в скобках —
+         по нему можно понять, отказал clck.ru или мы прислали ему что-то не
+         то, и без него разбирать жалобу «не работает» не с чем. */
+      const reason =
+        response.status === 400
+          ? 'clck.ru не принял этот адрес'
+          : response.status === 429
+            ? 'clck.ru просит подождать — слишком много запросов'
+            : 'clck.ru сейчас не отвечает как надо'
+      return Response.json(
+        { error: `${reason} (код ${response.status}). Ссылка работает и без сокращения.` },
+        { status: 502 },
+      )
     }
 
     const short = (await response.text()).trim()

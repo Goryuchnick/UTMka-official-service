@@ -28,6 +28,27 @@ interface Section {
   icon: IconName
 }
 
+/**
+ * Дорога во вторую оболочку.
+ *
+ * У инструмента их две, и человек, зашедший в одну, о второй не знает. В вебе
+ * зовём на версию для компьютера — на лендинг, а не сразу на файл: там сказано,
+ * чем она отличается (офлайн, без фразы, данные в файле на своём диске). В окне
+ * зовём на веб-версию — она нужна, когда компьютер чужой.
+ */
+const OTHER_SHELL = {
+  web: {
+    href: 'https://alex-pronin.ru/tools/utmka#offline',
+    label: 'Версия для ПК',
+    title: 'Портативная версия для компьютера: офлайн и без кодовой фразы',
+  },
+  desktop: {
+    href: 'https://utmka.alex-pronin.ru',
+    label: 'Веб-версия',
+    title: 'Та же UTMka в браузере — пригодится на чужом компьютере',
+  },
+} as const
+
 export const SECTIONS: readonly Section[] = [
   { href: '/', label: 'Генератор', short: 'Ссылка', icon: 'link' },
   { href: '/batch', label: 'Пакетный режим', short: 'Пакет', icon: 'grid' },
@@ -63,6 +84,7 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
      сохранение работает всегда и приглашать не к чему. */
   const withAuth = backend.caps.auth
   const signedIn = account === 'member'
+  const other = OTHER_SHELL[backend.caps.shell]
 
   const isCurrent = (href: string): boolean =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -151,6 +173,17 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
             Сохранение: <b>{withAuth && !signedIn ? 'нужна фраза' : 'включено'}</b>
           </span>
           <span className="spacer" />
+          {/* Соседняя оболочка: в вебе — портативная версия, в окне — веб. */}
+          <a
+            className="sb-item"
+            href={other.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={other.title}
+          >
+            <PixelIcon name={backend.caps.shell === 'web' ? 'save' : 'link'} size={12} />
+            {other.label}
+          </a>
           <a
             className="sb-item sb-item--heart"
             href="https://alex-pronin.ru/donate"

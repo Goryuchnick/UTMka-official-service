@@ -111,7 +111,7 @@ export const backend: UtmkaBackend = {
   /* Возможности оболочки, а не текущее состояние: `storage: true` означает
      «хранилище в вебе существует как понятие». Настроено ли оно в env —
      отвечает `account.state()`, потому что это меняется без пересборки. */
-  caps: { auth: true, assistant: true, storage: true, fileSave: 'browser' },
+  caps: { shell: 'web', auth: true, assistant: true, storage: true, fileSave: 'browser' },
 
   templates: {
     list: () => call<{ items: Template[] }>('/api/templates').then((data) => data.items ?? []),

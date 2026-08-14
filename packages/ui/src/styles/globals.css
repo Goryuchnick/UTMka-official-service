@@ -2620,6 +2620,95 @@ html[data-theme='light'] .crt {
   z-index: 60;
 }
 
+/* ═══════════ ПРИГЛАШЕНИЕ ПРОЙТИ ОБУЧЕНИЕ ═══════════
+
+   Тур больше не открывается сам: он закрывал собой весь экран, и первое, что
+   видел человек, было не инструментом, а пятью экранами текста поверх него.
+   Вместо этого — тихая плашка в углу: подсветка мягкая, крестик убирает
+   предложение навсегда. Появляется с задержкой, чтобы не спорить с первым
+   впечатлением от экрана. */
+
+.onb-invite {
+  /* Внутри корпуса, а не поверх окна: иначе плашка вылезала за рамку
+     устройства и накрывала кнопку помощника в правом нижнем углу.
+     Слева — потому что справа живёт помощник, и спорить им не за что. */
+  position: absolute;
+  left: 18px;
+  bottom: 54px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(420px, calc(100vw - 44px));
+  padding: 11px 12px 11px 14px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-course) 42%, transparent);
+  background: color-mix(in srgb, var(--hv2-course) 12%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop);
+  animation: onb-invite-in 0.5s ease-out 1.2s backwards, onb-invite-pulse 3.4s ease-in-out 2s infinite;
+}
+
+@keyframes onb-invite-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Дыхание вместо мигания: подсказка обязана быть заметной ровно настолько,
+   чтобы её нашли глазами, и не настолько, чтобы мешать работать. */
+@keyframes onb-invite-pulse {
+  0%, 100% { box-shadow: var(--g-inner), var(--g-drop), 0 0 0 color-mix(in srgb, var(--hv2-course) 30%, transparent); }
+  50% { box-shadow: var(--g-inner), var(--g-drop), 0 0 26px color-mix(in srgb, var(--hv2-course) 34%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onb-invite {
+    animation: none;
+  }
+}
+
+.onb-invite__mark {
+  display: inline-flex;
+  color: var(--hv2-course);
+}
+
+.onb-invite__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--hv2-muted);
+  min-width: 0;
+}
+
+.onb-invite__text b {
+  color: var(--hv2-fg);
+  font-weight: 600;
+}
+
+.onb-invite__text i {
+  font-style: normal;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--hv2-subtle) 74%, transparent);
+}
+
+.onb-invite__close {
+  flex: none;
+}
+
+@media (max-width: 767px) {
+  .onb-invite {
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    bottom: 52px;
+  }
+
+  .onb-invite__text i {
+    display: none;
+  }
+}
+
 /* Затемнение с вырезом вокруг цели. Клик по нему закрывает тур — так же,
    как клик мимо модалки в 2.2. */
 .onb-mask {
