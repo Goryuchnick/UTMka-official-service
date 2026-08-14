@@ -3,6 +3,7 @@ import { Press_Start_2P } from 'next/font/google'
 
 import { DeviceFrame, DRAFT_BOOTSTRAP, THEME_BOOTSTRAP } from '@utmka/ui'
 
+import { CookieBar } from '@/components/CookieBar'
 import { Metrika } from '@/components/Metrika'
 
 import '@utmka/ui/styles.css'
@@ -96,9 +97,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        {/* Счётчик доносит хост: в десктопе аналитики нет как понятия, и
-            рамка устройства о ней ничего не знает. */}
-        <DeviceFrame extras={<Metrika />}>{children}</DeviceFrame>
+        {/* Счётчик и плашка согласия доносит хост: в десктопе аналитики нет
+            как понятия, и рамка устройства о ней ничего не знает.
+            ⚠️ Порядок важен: `Metrika` сама решает, грузиться ли, — она читает
+            то же согласие, которым управляет плашка. */}
+        <DeviceFrame
+          extras={
+            <>
+              <Metrika />
+              <CookieBar />
+            </>
+          }
+        >
+          {children}
+        </DeviceFrame>
       </body>
     </html>
   )

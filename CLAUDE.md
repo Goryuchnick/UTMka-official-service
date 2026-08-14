@@ -25,7 +25,7 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 packages/core/        @utmka/core — слой правил: валидация, нормализация, сборка,
                       разбор, справочник, пресеты, пакет, редиректы, форматы
                       обмена, правила хранения, контракт оболочки. Чистый TS.
-packages/ui/          @utmka/ui — экраны: 29 компонентов + globals.css (2460 строк).
+packages/ui/          @utmka/ui — экраны: 38 компонентов + globals.css (3118 строк).
                       Ни fetch, ни next/*, ни invoke: внешний мир приходит
                       через алиас `#shell`
 apps/web/             Next.js-приложение (utmka.alex-pronin.ru) — ШАГ 3
@@ -57,7 +57,7 @@ docs/                 архитектура, брифы, скриншоты 2.2
 cd apps/desktop
 npx tauri dev            # окно + Vite на 1420
 npx tauri build          # NSIS-установщик (нужен ключ апдейтера в env)
-cd src-tauri && cargo test   # 28 тестов: хранилище, сеть, импорт 2.2
+cd src-tauri && cargo test   # 30 тестов: хранилище, сеть, импорт 2.2
 ```
 
 Сборка требует Rust (`stable-msvc`). Переменные `CARGO_HOME`, `RUSTUP_HOME`,

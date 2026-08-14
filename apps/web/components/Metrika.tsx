@@ -20,6 +20,8 @@ import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import { UTM_KEYS } from '@utmka/core'
 
+import { useConsent } from '@/lib/consent'
+
 const COUNTER = process.env.NEXT_PUBLIC_YM_ID
 
 /**
@@ -48,15 +50,19 @@ declare global {
 
 export function Metrika() {
   const pathname = usePathname()
+  const consent = useConsent()
 
   /* Переходы между экранами — фронт-роутинг, сама Метрика их не видит.
      Отдаём адрес БЕЗ параметров заготовки: в них адрес чужой кампании. */
   useEffect(() => {
-    if (!COUNTER || typeof window === 'undefined') return
+    if (!COUNTER || consent !== 'granted' || typeof window === 'undefined') return
     window.ym?.(Number(COUNTER), 'hit', safeHref())
-  }, [pathname])
+  }, [pathname, consent])
 
-  if (!COUNTER) return null
+  /* ⚠️ Пока согласия нет — нет и счётчика: ни скрипта, ни пикселя в noscript.
+     Это то, что делает плашку настоящей, а не картинкой. «Ещё не спросили»
+     считается отказом до ответа, а не молчаливым согласием. */
+  if (!COUNTER || consent !== 'granted') return null
 
   return (
     <>

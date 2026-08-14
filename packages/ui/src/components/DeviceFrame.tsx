@@ -172,6 +172,13 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
           <span className="sb-item sb-item--flat sb-quota">
             Сохранение: <b>{withAuth && !signedIn ? 'нужна фраза' : 'включено'}</b>
           </span>
+          {/* Только в вебе: в окне нет ни счётчика, ни аккаунта — рассказывать
+              там не о чем, а страницы такой в десктопной сборке нет вовсе. */}
+          {backend.caps.shell === 'web' ? (
+            <NavLink to="/privacy" className="sb-item" title="Что мы собираем">
+              Данные
+            </NavLink>
+          ) : null}
           <span className="spacer" />
           {/* Соседняя оболочка: в вебе — портативная версия, в окне — веб. */}
           <a
