@@ -18,11 +18,12 @@ import { PRESETS, UTM_PARAM_NAMES, type UtmKey } from '@utmka/core'
 import { PixelIcon } from './PixelIcon'
 import { Onboarding } from './Onboarding'
 import { useSetMascotLine } from '../lib/mascot'
+import { backend } from '../shell'
 
 const GITHUB = 'https://github.com/Goryuchnick/UTMka-official-service'
-const WINDOWS_EXE = `${GITHUB}/releases/download/2.2.0/UTMka-Setup-2.2.0.exe`
-const MACOS_ARM = `${GITHUB}/releases/download/2.2.1/UTMka-2.2.1-macOS-arm64.dmg`
-const MACOS_INTEL = `${GITHUB}/releases/download/2.2.1/UTMka-2.2.1-macOS-x86_64.dmg`
+/** Последний релиз, а не файл конкретной версии: номера тут устаревают сразу. */
+const RELEASES = `${GITHUB}/releases/latest`
+const WEB_APP = 'https://utmka.alex-pronin.ru'
 const DONATE = 'https://alex-pronin.ru/donate'
 const SITE = 'https://alex-pronin.ru/tools/utmka'
 const TELEGRAM = 'https://t.me/pronin_marketing'
@@ -172,27 +173,51 @@ export function HelpScreen() {
             ))}
           </div>
 
-          <div className="glass">
-            <div className="qhead">
-              <span className="qchip">
-                <PixelIcon name="key" />
-              </span>
-              <span className="qtitle qtitle--teal">Кодовая фраза и помощник</span>
+          {/* Фразы и помощника на LLM в окне нет как понятия (ARCHITECTURE §11),
+              поэтому там этот блок рассказывает про хранение на своём диске. */}
+          {backend.caps.shell === 'web' ? (
+            <div className="glass">
+              <div className="qhead">
+                <span className="qchip">
+                  <PixelIcon name="key" />
+                </span>
+                <span className="qtitle qtitle--teal">Кодовая фраза и помощник</span>
+              </div>
+              <p className="hint">
+                Инструмент работает целиком без входа: генератор, пакет, разбор, QR и сокращатель.
+                Фраза нужна только чтобы сохранять — шаблоны, историю и справочник значений. Ни
+                почты, ни пароля, ни персональных данных мы не собираем: в базе лежит только
+                отпечаток фразы. Обратная сторона честная — фразу нельзя восстановить.
+              </p>
+              <p className="explain">
+                <b>Почему у помощника лимит.</b> Всё, что инструмент проверяет и чинит, — обычные
+                правила: они мгновенные и ничего не стоят. А вот разобрать бриф «запускаем осенний
+                набор на Директ и ВК» умеет только языковая модель, и каждый её ответ сервис UTMka
+                оплачивает самостоятельно. Отсюда 50 запросов в сутки на фразу. Кончились —
+                инструмент работает дальше, просто без разбора текста. Платных тарифов не будет.
+              </p>
             </div>
-            <p className="hint">
-              Инструмент работает целиком без входа: генератор, пакет, разбор, QR и сокращатель.
-              Фраза нужна только чтобы сохранять — шаблоны, историю и справочник значений. Ни
-              почты, ни пароля, ни персональных данных мы не собираем: в базе лежит только
-              отпечаток фразы. Обратная сторона честная — фразу нельзя восстановить.
-            </p>
-            <p className="explain">
-              <b>Почему у помощника лимит.</b> Всё, что инструмент проверяет и чинит, — обычные
-              правила: они мгновенные и ничего не стоят. А вот разобрать бриф «запускаем осенний
-              набор на Директ и ВК» умеет только языковая модель, и каждый её ответ сервис UTMka
-              оплачивает самостоятельно. Отсюда 50 запросов в сутки на фразу. Кончились —
-              инструмент работает дальше, просто без разбора текста. Платных тарифов не будет.
-            </p>
-          </div>
+          ) : (
+            <div className="glass">
+              <div className="qhead">
+                <span className="qchip">
+                  <PixelIcon name="save" />
+                </span>
+                <span className="qtitle qtitle--teal">Где лежат ваши данные</span>
+              </div>
+              <p className="hint">
+                Шаблоны, история и справочник значений хранятся в файле на этом компьютере —
+                никакого входа и никакой отправки наружу. Скопируйте его, и всё уедет с вами:
+                <br />
+                <code className="param-code">%APPDATA%\UTMka\3.0\utmka.db</code>
+              </p>
+              <p className="explain">
+                <b>Наружу приложение ходит в двух случаях</b>, и оба — по вашему нажатию:
+                сократить ссылку через clck.ru и проверить переадресации у адреса, который вы
+                сами ввели. Плюс проверка обновлений при запуске. Больше ничего не отправляется.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ─────────────── действия ─────────────── */}
@@ -211,32 +236,60 @@ export function HelpScreen() {
             </button>
           </div>
 
-          <div className="glass">
-            <div className="qhead">
-              <span className="qchip">
-                <PixelIcon name="save" />
-              </span>
-              <span className="qtitle qtitle--amber">Версия для компьютера</span>
+          {/* ⚠️ Каждая оболочка рассказывает про соседнюю, а не про себя. В окне
+              приложения блок «поставьте версию для компьютера» — сообщение о
+              том, что человек и так держит в руках. */}
+          {backend.caps.shell === 'web' ? (
+            <div className="glass">
+              <div className="qhead">
+                <span className="qchip">
+                  <PixelIcon name="save" />
+                </span>
+                <span className="qtitle qtitle--amber">Версия для компьютера</span>
+              </div>
+              <p className="hint">
+                То же самое, но офлайн и без всякого входа: история и шаблоны лежат в файле на
+                вашем диске. Обновляется сама.
+              </p>
+              <div className="help-links">
+                {/* Номера версий здесь не пишем: они устаревают в тот же день,
+                    когда выходит следующая. Ссылка ведёт на последний релиз, и
+                    там всегда лежит актуальный файл под каждую систему. */}
+                <a className="btn btn--sm" href={RELEASES} target="_blank" rel="noopener noreferrer">
+                  <PixelIcon name="save" />
+                  Windows — установщик
+                </a>
+                <a className="btn btn--sm" href={RELEASES} target="_blank" rel="noopener noreferrer">
+                  <PixelIcon name="save" />
+                  Windows — портативная
+                </a>
+                <a className="btn btn--sm" href={RELEASES} target="_blank" rel="noopener noreferrer">
+                  <PixelIcon name="save" />
+                  macOS — Apple Silicon и Intel
+                </a>
+              </div>
             </div>
-            <p className="hint">
-              То же самое, но офлайн и без всякого входа: история и шаблоны лежат в файле на вашем
-              диске. Ставится из релизов на GitHub.
-            </p>
-            <div className="help-links">
-              <a className="btn btn--sm" href={WINDOWS_EXE}>
-                <PixelIcon name="save" />
-                Windows · 2.2.0
-              </a>
-              <a className="btn btn--sm" href={MACOS_ARM}>
-                <PixelIcon name="save" />
-                macOS · Apple Silicon
-              </a>
-              <a className="btn btn--sm" href={MACOS_INTEL}>
-                <PixelIcon name="save" />
-                macOS · Intel
-              </a>
+          ) : (
+            <div className="glass">
+              <div className="qhead">
+                <span className="qchip qchip--teal">
+                  <PixelIcon name="link" />
+                </span>
+                <span className="qtitle qtitle--teal">Веб-версия</span>
+              </div>
+              <p className="hint">
+                Тот же инструмент в браузере — пригодится на чужом компьютере или с телефона.
+                Там есть кодовая фраза: с ней шаблоны и история хранятся на сервере, а не в файле
+                на этом диске.
+              </p>
+              <div className="help-links">
+                <a className="btn btn--sm" href={WEB_APP} target="_blank" rel="noopener noreferrer">
+                  <PixelIcon name="link" />
+                  Открыть utmka.alex-pronin.ru
+                </a>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="glass">
             <div className="qhead">
