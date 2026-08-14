@@ -105,7 +105,12 @@ jobs:
           # Подпись апдейтера обязательна и отключить её нельзя. Ключ живёт
           # только здесь; файлы .env экшеном не читаются.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # ⚠️ Пустая строка, а не секрет. Ключ выпущен без пароля, но GitHub
+          # не сохраняет пустые секреты — туда физически нельзя положить «ничего».
+          # Любое непустое значение (пробел в том числе) Tauri примет за пароль,
+          # попробует им расшифровать ключ и упадёт уже после сборки бандлов.
+          # Появится ключ с паролем — здесь ставится ссылка на секрет.
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
         with:
           projectPath: apps/desktop
           args: --target ${{ matrix.target }}
