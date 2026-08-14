@@ -315,3 +315,134 @@ export async function removeValue(userHash: string, kind: DictKind, value: strin
     .eq('value', value)
   if (error) throw new Error(error.message)
 }
+
+/* ─────────────────────────── обмен с приложением ─────────────────────────── */
+
+/**
+ * Всё содержимое аккаунта одним запросом — для синхронизации с десктопом.
+ *
+ * Отдельно от `listTemplates`/`listHistory` не ради экономии: приложению нужен
+ * снимок обеих таблиц на один момент, иначе между двумя запросами человек
+ * успевает что-то сохранить в браузере, и план слияния считается по данным,
+ * которых уже нет.
+ */
+export async function syncPull(
+  userHash: string,
+): Promise<{ templates: Template[]; links: HistoryItem[] }> {
+  const [templates, links] = await Promise.all([
+    listTemplates(userHash),
+    listHistory(userHash),
+  ])
+  return { templates, links }
+}
+
+export interface SyncPushResult {
+  templatesAdded: number
+  linksAdded: number
+  /** Имена шаблонов, которые сервер не принял (обычно имя уже занято). */
+  skipped: string[]
+}
+
+/**
+ * Приём пачки от приложения.
+ *
+ * ⚠️ Даты сохраняются **как есть**: `addHistory` ставит серверное «сейчас», и
+ * через него вся принесённая история схлопнулась бы в сегодня — ровно та
+ * грабля, из-за которой перенос из 2.2 идёт чтением базы, а не штатным
+ * экспортом. Поэтому здесь своя вставка с явными `created_at`.
+ *
+ * Решение о том, что именно слать, принимает клиент по правилам ядра
+ * (`planTemplates`/`planHistory`). Сервер всё равно проверяет дубли: повторный
+ * запрос — обычное дело при обрыве связи, и задваивать записи он не должен.
+ */
+export async function syncPush(
+  userHash: string,
+  input: { templates?: Omit<Template, 'id'>[]; links?: Omit<HistoryItem, 'id'>[] },
+): Promise<SyncPushResult> {
+  const skipped: string[] = []
+  let templatesAdded = 0
+  let linksAdded = 0
+
+  const templates = input.templates ?? []
+  if (templates.length > 0) {
+    const existing = await listTemplates(userHash)
+    const taken = new Set(existing.map((item) => item.name.trim().toLowerCase()))
+    let room = TEMPLATES_LIMIT - existing.length
+
+    const rows = []
+    for (const item of templates) {
+      const name = item.name?.trim()
+      if (!name) continue
+      if (taken.has(name.toLowerCase())) {
+        skipped.push(name)
+        continue
+      }
+      if (room <= 0) {
+        skipped.push(name)
+        continue
+      }
+      taken.add(name.toLowerCase())
+      room -= 1
+      rows.push({
+        user_hash: userHash,
+        name,
+        base_url: item.baseUrl ?? '',
+        params: item.params ?? {},
+        tag_name: item.tagName ?? null,
+        tag_color: item.tagColor ?? null,
+        preset_id: item.presetId ?? null,
+        // Даты приложения: шаблон мог быть заведён год назад.
+        created_at: item.createdAt ?? new Date().toISOString(),
+        updated_at: item.updatedAt ?? item.createdAt ?? new Date().toISOString(),
+      })
+    }
+
+    if (rows.length > 0) {
+      const { error } = await supabase().from('templates').insert(rows)
+      if (error) throw new Error(error.message)
+      templatesAdded = rows.length
+    }
+  }
+
+  const links = input.links ?? []
+  if (links.length > 0) {
+    const existing = await listHistory(userHash)
+    // Тот же ключ, что в ядре: ссылка плюс секунда сохранения.
+    const seen = new Set(
+      existing.map((item) => `${item.url} ${(item.createdAt ?? '').slice(0, 19)}`),
+    )
+
+    const rows = []
+    for (const item of links) {
+      if (!item.url) continue
+      const key = `${item.url} ${(item.createdAt ?? '').slice(0, 19)}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      rows.push({
+        user_hash: userHash,
+        url: item.url,
+        base_url: item.baseUrl ?? '',
+        params: item.params ?? {},
+        short_url: item.shortUrl ?? null,
+        tag_name: item.tagName ?? null,
+        tag_color: item.tagColor ?? null,
+        origin: item.origin ?? 'single',
+        batch_id: item.batchId ?? null,
+        created_at: item.createdAt ?? new Date().toISOString(),
+      })
+    }
+
+    if (rows.length > 0) {
+      const { error } = await supabase().from('links').insert(rows)
+      if (error) throw new Error(error.message)
+      linksAdded = rows.length
+
+      // Потолок и справочник — как при обычном сохранении: справочник
+      // наполняется только побочным эффектом вставки, отдельной ручки нет.
+      await trimHistory(userHash)
+      for (const row of rows) await trackValues(userHash, row.params as UtmParams)
+    }
+  }
+
+  return { templatesAdded, linksAdded, skipped }
+}

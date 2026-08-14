@@ -96,6 +96,16 @@ export const backend: UtmkaBackend = {
 
   account: null,
   assistant: null,
+
+  /* Обмен с веб-аккаунтом. Фраза уходит в `sync_link` один раз и на диск не
+     ложится — Rust сохраняет только выданную сессию. */
+  sync: {
+    state: () => cmd('sync_state'),
+    link: (passphrase) => cmd('sync_link', { passphrase }),
+    unlink: () => cmd('sync_unlink'),
+    pull: () => cmd('sync_pull'),
+    push: (templates, links) => cmd('sync_push', { templates, links }),
+  },
 }
 
 /**

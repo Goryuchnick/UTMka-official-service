@@ -20,6 +20,7 @@ mod import22;
 mod models;
 mod net;
 mod store;
+mod sync;
 
 use tauri::Manager;
 
@@ -149,6 +150,11 @@ pub fn run() {
             commands::import22_run,
             commands::import22_dismiss,
             commands::settings_set,
+            commands::sync_state,
+            commands::sync_link,
+            commands::sync_unlink,
+            commands::sync_pull,
+            commands::sync_push,
         ])
         .run(tauri::generate_context!())
         .expect("окно Tauri не запустилось");

@@ -134,6 +134,29 @@ export interface AssistantPort {
  */
 export type SaveFile = (name: string, mime: string, body: string | Uint8Array) => Promise<void>
 
+/**
+ * Обмен с веб-аккаунтом по кодовой фразе.
+ *
+ * Есть только в приложении на компьютере: у веба данные и так в аккаунте,
+ * обмениваться ему не с кем. Транспорт — оболочка, правила слияния — ядро
+ * (`planTemplates` / `planHistory`), решение «что отправить» принимает экран.
+ *
+ * ⚠️ Фраза уходит один раз, в обмен на сессию; хранится только сессия.
+ */
+export interface SyncPort {
+  /** Привязан ли аккаунт и когда обменивались последний раз. */
+  state(): Promise<{ linked: boolean; lastAt?: string }>
+  link(passphrase: string): Promise<{ linked: boolean; lastAt?: string }>
+  unlink(): Promise<{ linked: boolean; lastAt?: string }>
+  /** Снимок аккаунта целиком — по нему считается план слияния. */
+  pull(): Promise<{ templates: Template[]; links: HistoryItem[] }>
+  /** Отправить недостающее одной пачкой, а не по записи на запрос. */
+  push(
+    templates: Omit<Template, 'id'>[],
+    links: Omit<HistoryItem, 'id'>[],
+  ): Promise<{ templatesAdded: number; linksAdded: number; skipped: string[] }>
+}
+
 export interface UtmkaBackend {
   caps: Capabilities
   templates: TemplatesPort & ImportablePort<Omit<Template, 'id'>>
@@ -144,6 +167,8 @@ export interface UtmkaBackend {
   account: AccountPort | null
   /** `null` — помощника на LLM нет как понятия. */
   assistant: AssistantPort | null
+  /** `null` — обмениваться не с кем: это и есть та сторона, где лежит аккаунт. */
+  sync: SyncPort | null
 }
 
 /**

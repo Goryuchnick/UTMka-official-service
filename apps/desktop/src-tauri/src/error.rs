@@ -11,7 +11,8 @@ use serde::Serialize;
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Kind {
-    /// Нужна кодовая фраза. В десктопе не встречается никогда — входа нет.
+    /// Нужна кодовая фраза. В самом приложении входа нет; приходит только из
+    /// синхронизации с веб-аккаунтом, когда сессия устарела.
     Auth,
     /// Упёрлись в потолок хранения.
     Limit,
@@ -48,6 +49,10 @@ impl CmdError {
 
     pub fn offline(message: impl Into<String>) -> Self {
         Self::new(Kind::Offline, message)
+    }
+
+    pub fn auth(message: impl Into<String>) -> Self {
+        Self::new(Kind::Auth, message)
     }
 }
 

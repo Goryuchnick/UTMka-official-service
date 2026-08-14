@@ -429,6 +429,12 @@ pub fn meta_set(conn: &Connection, key: &str, value: &str) -> CmdResult<()> {
     Ok(())
 }
 
+/// Убрать отметку. Нужна выходу из аккаунта: сессия не должна его пережить.
+pub fn meta_remove(conn: &Connection, key: &str) -> CmdResult<()> {
+    conn.execute("delete from meta where key = ?1", params![key])?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

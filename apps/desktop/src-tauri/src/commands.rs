@@ -240,3 +240,85 @@ pub async fn import22_run(db: State<'_, Db>, path: String) -> CmdResult<import22
 pub async fn import22_dismiss(db: State<'_, Db>) -> CmdResult<()> {
     blocking(&db, |conn| store::meta_set(conn, import22::META_IMPORTED, "dismissed")).await
 }
+
+/* ─────────────────────────── обмен с веб-аккаунтом ─────────────────────────── */
+
+/// Состояние синхронизации для интерфейса.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncState {
+    /// Есть ли живая сессия. Фразу при этом не храним — только куку.
+    pub linked: bool,
+    /// Когда обменивались последний раз, ISO. `None` — ещё ни разу.
+    pub last_at: Option<String>,
+}
+
+fn session_of(conn: &rusqlite::Connection) -> CmdResult<Option<String>> {
+    store::meta_get(conn, crate::sync::SESSION_META_KEY)
+}
+
+#[tauri::command]
+pub async fn sync_state(db: State<'_, Db>) -> CmdResult<SyncState> {
+    blocking(&db, |conn| {
+        Ok(SyncState {
+            linked: session_of(conn)?.is_some(),
+            last_at: store::meta_get(conn, "sync.last_at")?,
+        })
+    })
+    .await
+}
+
+/// Вход по фразе. На диск ложится сессия, сама фраза не сохраняется нигде.
+#[tauri::command]
+pub async fn sync_link(db: State<'_, Db>, passphrase: String) -> CmdResult<SyncState> {
+    let session = crate::sync::login(passphrase.trim()).await?;
+
+    blocking(&db, move |conn| {
+        store::meta_set(conn, crate::sync::SESSION_META_KEY, &session)?;
+        Ok(SyncState { linked: true, last_at: store::meta_get(conn, "sync.last_at")? })
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn sync_unlink(db: State<'_, Db>) -> CmdResult<SyncState> {
+    let session = blocking(&db, |conn| session_of(conn)).await?;
+    if let Some(session) = session {
+        crate::sync::logout(&session).await?;
+    }
+
+    blocking(&db, |conn| {
+        store::meta_remove(conn, crate::sync::SESSION_META_KEY)?;
+        Ok(SyncState { linked: false, last_at: store::meta_get(conn, "sync.last_at")? })
+    })
+    .await
+}
+
+/// Забрать снимок аккаунта. План слияния по нему считает ядро на фронте.
+#[tauri::command]
+pub async fn sync_pull(db: State<'_, Db>) -> CmdResult<crate::sync::RemoteState> {
+    let session = blocking(&db, |conn| session_of(conn))
+        .await?
+        .ok_or_else(|| CmdError::auth("Сначала введите кодовую фразу"))?;
+
+    crate::sync::pull(&session).await
+}
+
+/// Отправить недостающее в аккаунт и отметить время обмена.
+#[tauri::command]
+pub async fn sync_push(
+    db: State<'_, Db>,
+    templates: Vec<serde_json::Value>,
+    links: Vec<serde_json::Value>,
+) -> CmdResult<crate::sync::PushResult> {
+    let session = blocking(&db, |conn| session_of(conn))
+        .await?
+        .ok_or_else(|| CmdError::auth("Сначала введите кодовую фразу"))?;
+
+    let result = crate::sync::push(&session, templates, links).await?;
+
+    let now = store::now();
+    blocking(&db, move |conn| store::meta_set(conn, "sync.last_at", &now)).await?;
+
+    Ok(result)
+}
