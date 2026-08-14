@@ -1,0 +1,426 @@
+'use client'
+
+/**
+ * История собранных ссылок.
+ *
+ * Паритет с 2.2: поиск, три вида отображения с запоминанием выбора, действия
+ * над записью. Потолок 500 держит сервер, здесь его только объясняем.
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  backendMessage,
+  historyToCsv,
+  historyToJson,
+  isAuthError,
+  parseHistory,
+  type HistoryItem,
+} from '@utmka/core'
+
+import { PixelIcon } from './PixelIcon'
+import { DatePopover } from './generator/DatePopover'
+import { EmptyNote, ViewSwitch } from './ViewSwitch'
+import { VaultGate } from './VaultGate'
+import { LinkDetails } from './LinkDetails'
+import { useAccount } from '../lib/account'
+import { backend, useNav } from '../shell'
+import { useSetMascotLine } from '../lib/mascot'
+import { useViewMode } from '../lib/view'
+import { exportCsv, exportJson } from '../lib/exchange'
+import { sayAbout } from '../lib/mascot-lines'
+import { useSort, type SortColumn } from '../lib/sorting'
+import { SortHead } from './SortHead'
+
+/** По чему упорядочиваем историю — те же колонки, что были в 2.2. */
+const SORT_COLUMNS: readonly SortColumn<HistoryItem>[] = [
+  { key: 'createdAt', label: 'Когда', value: (item) => item.createdAt, numeric: true },
+  { key: 'source', label: 'Источник', value: (item) => item.params?.source },
+  { key: 'medium', label: 'Канал', value: (item) => item.params?.medium },
+  { key: 'campaign', label: 'Кампания', value: (item) => item.params?.campaign },
+  { key: 'url', label: 'Ссылка', value: (item) => item.shortUrl ?? item.url },
+]
+
+const ORIGIN_LABEL: Record<HistoryItem['origin'], string> = {
+  single: 'Генератор',
+  batch: 'Пакет',
+  brief: 'Помощник',
+  parse: 'Разбор',
+}
+
+/**
+ * Чтение вынесено из компонента: эффект должен только подписываться на внешний
+ * мир и класть результат в колбэке — тогда React не получает каскад рендеров,
+ * а правило `set-state-in-effect` видит корректный паттерн.
+ */
+async function fetchHistory(): Promise<{ items: HistoryItem[]; error: string }> {
+  try {
+    return { items: await backend.history.list(), error: '' }
+  } catch (error) {
+    // «Фразы нет» — не ошибка чтения: об этом говорит отдельный экран.
+    return { items: [], error: isAuthError(error) ? '' : backendMessage(error) }
+  }
+}
+
+/**
+ * Граница периода — свой календарь вместо `<input type="date">`.
+ *
+ * Нативное поле открывает окно операционной системы: в вебвью оно чужое по
+ * виду, а на некоторых сборках якорится мимо поля. Тот же довод, по которому
+ * из полей UTM в 3.0 убрали нативный `showPicker()` (ARCHITECTURE §11,
+ * 2026-08-11) — здесь он просто задержался.
+ */
+function DateBound({
+  value,
+  label,
+  onPick,
+}: {
+  value: string
+  label: string
+  onPick: (iso: string) => void
+}) {
+  return (
+    <span className="datebound">
+      <span className={`datebound-value${value ? '' : ' datebound-value--empty'}`}>
+        {value ? new Date(`${value}T00:00:00`).toLocaleDateString('ru-RU') : 'любая'}
+      </span>
+      <DatePopover value={value} label={label} onPick={onPick} />
+    </span>
+  )
+}
+
+function when(iso: string | undefined): string {
+  if (!iso) return ''
+  const date = new Date(iso)
+  return date.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+export function HistoryScreen() {
+  const nav = useNav()
+  const { state } = useAccount()
+  const { view, setView } = useViewMode('history')
+
+  // null — «ещё не читали». Отдельного флага загрузки нет намеренно: он
+  // требовал бы setState прямо в эффекте, а это лишний каскад рендеров.
+  const [items, setItems] = useState<HistoryItem[] | null>(null)
+  const [query, setQuery] = useState('')
+  /** Диапазон дат — паритет с 2.2 (`historyDateRange`). Пусто = без границы. */
+  const [from, setFrom] = useState('')
+  const [till, setTill] = useState('')
+  const [error, setError] = useState('')
+  /* Итог импорта — отдельно от ошибки чтения: следом за импортом экран
+     перечитывает историю и кладёт в `error` пустую строку, затирая отчёт. */
+  const [report, setReport] = useState('')
+  /** Открытая карточка ссылки. null — модалка закрыта. */
+  const [details, setDetails] = useState<HistoryItem | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  /** Счётчик перечитываний: растёт после импорта, эффект на него подписан. */
+  const [reload, setReload] = useState(0)
+
+  const sorting = useSort(SORT_COLUMNS)
+
+  const busy = state === 'unknown' || (state === 'member' && items === null)
+
+  useSetMascotLine(
+    state === 'member'
+      ? 'Здесь всё, что вы собрали. Поиск идёт и по ссылке, и по меткам.'
+      : 'История живёт за фразой: без неё собранная ссылка исчезает с закрытием вкладки.',
+    state === 'member' ? 'neutral' : 'alert',
+  )
+
+  useEffect(() => {
+    if (state !== 'member') return undefined
+
+    let alive = true
+    void fetchHistory().then((result) => {
+      if (!alive) return
+      setItems(result.items)
+      setError(result.error)
+    })
+    return () => {
+      alive = false
+    }
+  }, [state, reload])
+
+  const list = useMemo(() => items ?? [], [items])
+
+  const shown = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    // Границы включительные: «с 1 по 3» должно включать и первое, и третье.
+    const after = from ? new Date(`${from}T00:00:00`).getTime() : null
+    const before = till ? new Date(`${till}T23:59:59`).getTime() : null
+
+    const found = list.filter((item) => {
+      if (after !== null || before !== null) {
+        const at = item.createdAt ? new Date(item.createdAt).getTime() : null
+        if (at === null) return false
+        if (after !== null && at < after) return false
+        if (before !== null && at > before) return false
+      }
+      if (!needle) return true
+      const haystack = [item.url, ...Object.values(item.params ?? {})].join(' ').toLowerCase()
+      return haystack.includes(needle)
+    })
+    // Порядок задаётся данными, а не таблицей: список, плитки и таблица
+    // показывают одно и то же, переключение вида не тасует записи.
+    return sorting.sort(found)
+  }, [list, query, from, till, sorting])
+
+  const drop = useCallback(
+    async (id: string) => {
+      setItems((prev) => (prev ?? []).filter((item) => item.id !== id))
+      await backend.history.remove(id)
+      sayAbout('removed')
+    },
+    [],
+  )
+
+  const wipe = useCallback(async () => {
+    setItems([])
+    await backend.history.clear()
+    sayAbout('cleared')
+  }, [])
+
+  /** Импорт истории — паритет с 2.2: перенос между устройствами файлом. */
+  const importFile = useCallback(async (file: File) => {
+    const parsed = parseHistory(await file.text(), file.name.toLowerCase().endsWith('.csv'))
+    if (parsed.length === 0) {
+      setReport('В файле не нашлось ни одной ссылки')
+      return
+    }
+
+    /* Цикл по строкам — забота адаптера: в вебе это запрос на строку, в
+       десктопе одна транзакция на весь файл. */
+    try {
+      const { added, skipped } = await backend.history.importMany(parsed)
+      setReport(
+        skipped.length === 0
+          ? `Загружено ${added} из ${parsed.length}.`
+          : `Загружено ${added} из ${parsed.length}. Не легли: ${skipped.join('; ')}`,
+      )
+    } catch (error) {
+      setReport(backendMessage(error))
+    }
+    setReload((value) => value + 1)
+    sayAbout('imported')
+  }, [])
+
+  const reuse = useCallback(
+    (item: HistoryItem) => {
+      const params = new URLSearchParams({ url: item.baseUrl || item.url })
+      for (const [key, value] of Object.entries(item.params ?? {})) {
+        if (value) params.set(key, value)
+      }
+      nav.go(`/?${params.toString()}`)
+    },
+    [nav],
+  )
+
+  if (state === 'guest') {
+    return (
+      <div className="screen-scroll">
+        <VaultGate
+          title="История"
+          what="Каждая собранная ссылка попадает сюда вместе с метками и датой — можно найти прошлый запуск и повторить его, не собирая заново."
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="screen-scroll">
+      <LinkDetails item={details} onClose={() => setDetails(null)} onDelete={drop} />
+
+      <div className="glass">
+        <div className="qhead">
+          <span className="qchip">
+            <PixelIcon name="clock" />
+          </span>
+          <span className="qtitle qtitle--amber">История</span>
+        </div>
+
+        <div className="field">
+          <div className="input">
+            <PixelIcon name="search" />
+            <input
+              type="text"
+              className="ym-disable-keys ym-hide-content"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Поиск по ссылке и меткам"
+              aria-label="Поиск по истории"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+
+        <div className="result-row dates">
+          <span className="field-label">Период</span>
+          <DateBound value={from} label="Начало периода" onPick={setFrom} />
+          <span className="hint">—</span>
+          <DateBound value={till} label="Конец периода" onPick={setTill} />
+          {from || till ? (
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => {
+                setFrom('')
+                setTill('')
+              }}
+            >
+              Сбросить
+            </button>
+          ) : null}
+        </div>
+
+        <div className="result-row">
+          <ViewSwitch view={view} onChange={setView} />
+          <span className="result-len">
+            {list.length} из 500
+          </span>
+        </div>
+
+        <div className="result-row">
+          <button type="button" className="btn btn--sm" onClick={() => fileRef.current?.click()}>
+            <PixelIcon name="save" />
+            Загрузить файл
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".json,.csv"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (file) void importFile(file)
+              event.target.value = ''
+            }}
+          />
+          <button
+            type="button"
+            className="btn btn--sm"
+            disabled={list.length === 0}
+            onClick={() => {
+              void exportJson('utmka-history', historyToJson(list))
+              sayAbout('exported')
+            }}
+          >
+            <PixelIcon name="save" />
+            Выгрузить JSON
+          </button>
+          <button
+            type="button"
+            className="btn btn--sm"
+            disabled={list.length === 0}
+            onClick={() => {
+              void exportCsv('utmka-history', historyToCsv(list))
+              sayAbout('exported')
+            }}
+          >
+            <PixelIcon name="save" />
+            Выгрузить CSV
+          </button>
+          <button type="button" className="btn btn--sm" disabled={list.length === 0} onClick={wipe}>
+            <PixelIcon name="trash" />
+            Очистить
+          </button>
+        </div>
+
+        {error ? <p className="hint hint--error">{error}</p> : null}
+        {report ? <p className="hint">{report}</p> : null}
+      </div>
+
+      {busy ? (
+        <p className="empty">Читаю историю…</p>
+      ) : shown.length === 0 ? (
+        <EmptyNote
+          text={
+            list.length === 0
+              ? 'Пока пусто. Соберите ссылку — она сохранится сюда сама.'
+              : 'По этому запросу и периоду ничего нет.'
+          }
+        />
+      ) : view === 'table' ? (
+        <div className="glass">
+          <div className="htable" role="table">
+            <div className="htable-head" role="row">
+              {(['createdAt', 'source', 'campaign', 'url'] as const).map((key) => {
+                const meta = SORT_COLUMNS.find((column) => column.key === key)
+                return (
+                  <span role="columnheader" key={key}>
+                    <SortHead
+                      column={key}
+                      label={meta?.label ?? key}
+                      state={sorting.state}
+                      onToggle={sorting.toggle}
+                    />
+                  </span>
+                )
+              })}
+              <span role="columnheader" />
+            </div>
+            {shown.map((item) => (
+              <div className="htable-row" role="row" key={item.id}>
+                <span role="cell">{when(item.createdAt)}</span>
+                <span role="cell">{item.params?.source ?? '—'}</span>
+                <span role="cell">{item.params?.campaign ?? '—'}</span>
+                <span role="cell" className="htable-url">
+                  {item.shortUrl ?? item.url}
+                </span>
+                <span role="cell" className="htable-acts">
+                  <button type="button" className="ibtn" title="Посмотреть запись" onClick={() => setDetails(item)}>
+                    <PixelIcon name="eye" />
+                  </button>
+                  <button type="button" className="ibtn" title="Подставить в генератор" onClick={() => reuse(item)}>
+                    <PixelIcon name="use" />
+                  </button>
+                  <button type="button" className="ibtn" title="Удалить" onClick={() => drop(item.id)}>
+                    <PixelIcon name="trash" />
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className={view === 'grid' ? 'cards' : 'hist'}>
+          {shown.map((item) => (
+            <div className="hist-row" key={item.id}>
+              <div className="hist-main">
+                <div className="hist-name">
+                  {item.params?.campaign || item.params?.source || 'Без названия'}
+                  <span className="hist-tag">{ORIGIN_LABEL[item.origin]}</span>
+                </div>
+                <div className="hist-url">{item.shortUrl ?? item.url}</div>
+              </div>
+              <span className="hist-when">{when(item.createdAt)}</span>
+              <span className="htable-acts">
+                <button
+                  type="button"
+                  className="ibtn"
+                  title="Скопировать"
+                  onClick={() => void navigator.clipboard.writeText(item.shortUrl ?? item.url)}
+                >
+                  <PixelIcon name="copy" />
+                </button>
+                <button type="button" className="ibtn" title="Посмотреть запись" onClick={() => setDetails(item)}>
+                  <PixelIcon name="search" />
+                </button>
+                <button type="button" className="ibtn" title="Подставить в генератор" onClick={() => reuse(item)}>
+                  <PixelIcon name="use" />
+                </button>
+                <button type="button" className="ibtn" title="Удалить" onClick={() => drop(item.id)}>
+                  <PixelIcon name="trash" />
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

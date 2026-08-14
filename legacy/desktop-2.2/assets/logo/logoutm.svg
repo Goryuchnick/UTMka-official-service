@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 16 16" shape-rendering="crispEdges" role="img" aria-label="UTMka">
+  <title>UTMka — UTM link builder</title>
+  <!-- Amber-pixel «UTM link» монограмма. Линия U, стрелка-ссылка наружу.
+       Светлая тема — оранжевый (#E08000 + тень #C26210).
+       Тёмная тема — amber (#FFB000 + тень #8C5A14).
+       Переключение делается селектором `:root[data-theme="dark"]`. -->
+  <style>
+    .lo-fg { fill: #E08000; }
+    .lo-sh { fill: #C26210; }
+    :root[data-theme="dark"] .lo-fg { fill: #FFB000; }
+    :root[data-theme="dark"] .lo-sh { fill: #8C5A14; }
+  </style>
+
+  <!-- Тень букв U (нижний-правый сдвиг на 1 пиксель) -->
+  <!-- U -->
+  <rect class="lo-sh" x="3" y="3" width="1" height="7"/>
+  <rect class="lo-sh" x="7" y="3" width="1" height="7"/>
+  <rect class="lo-sh" x="4" y="9" width="3" height="1"/>
+
+  <!-- Основные пиксели буквы U (свечение) -->
+  <rect class="lo-fg" x="2" y="2" width="1" height="7"/>
+  <rect class="lo-fg" x="6" y="2" width="1" height="7"/>
+  <rect class="lo-fg" x="3" y="8" width="3" height="1"/>
+
+  <!-- Стрелка-ссылка (link-tag) вправо-вверх из правого верхнего угла U -->
+  <!-- тень стрелки -->
+  <rect class="lo-sh" x="11" y="2" width="3" height="1"/>
+  <rect class="lo-sh" x="13" y="3" width="1" height="3"/>
+  <rect class="lo-sh" x="10" y="6" width="1" height="1"/>
+  <rect class="lo-sh" x="11" y="5" width="1" height="1"/>
+  <rect class="lo-sh" x="12" y="4" width="1" height="1"/>
+
+  <!-- светлая стрелка -->
+  <rect class="lo-fg" x="10" y="1" width="3" height="1"/>
+  <rect class="lo-fg" x="12" y="2" width="1" height="3"/>
+  <rect class="lo-fg" x="9" y="5" width="1" height="1"/>
+  <rect class="lo-fg" x="10" y="4" width="1" height="1"/>
+  <rect class="lo-fg" x="11" y="3" width="1" height="1"/>
+
+  <!-- Нижняя метка «UTM» — 3 маленьких пикселя-точки = метка-тег  -->
+  <rect class="lo-sh" x="2" y="12" width="2" height="1"/>
+  <rect class="lo-sh" x="6" y="12" width="2" height="1"/>
+  <rect class="lo-sh" x="10" y="12" width="2" height="1"/>
+
+  <rect class="lo-fg" x="2" y="11" width="2" height="1"/>
+  <rect class="lo-fg" x="6" y="11" width="2" height="1"/>
+  <rect class="lo-fg" x="10" y="11" width="2" height="1"/>
+</svg>

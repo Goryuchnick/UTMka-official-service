@@ -1,103 +1,134 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) when working in this repository.
+Рабочий язык — русский: комментарии, документация, коммиты.
 
-## Project Overview
+## Что это за репозиторий
 
-UTMka is a standalone desktop application for building UTM-tagged links, managing campaign templates, and tracking link history. It runs as a Flask web server displayed inside a PyWebView native window. All data is stored locally in SQLite — no accounts or cloud required.
+**UTMka** — конструктор UTM-меток. Сейчас в репозитории два поколения продукта:
 
-The codebase is written in Russian (comments, docs, git messages). Follow this convention.
+| Что | Где | Состояние |
+|---|---|---|
+| **3.0** — веб + десктоп на общих экранах и правилах | `packages/`, `apps/` | в работе, ветка `v3.0` |
+| **2.2.1** — десктоп на Flask + PyWebView | `legacy/desktop-2.2/` | **заморожен**, правки только критические |
 
-## Development Commands
+⚠️ **Работа над 3.0 идёт в ветке `v3.0`.** В `main` лежит выпущенный десктоп 2.2.1,
+туда ничего не коммитим до слияния.
 
-```bash
-# Run in dev mode (opens in browser with hot reload)
-python run_desktop.py --dev
+**Источник правды по архитектуре — [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).**
+Все решения фиксируются там, в журнале решений (§11). Рядом: [docs/DESIGN-BRIEF.md](docs/DESIGN-BRIEF.md)
+(визуал, три оболочки) и [docs/ASSISTANT-SPEC.md](docs/ASSISTANT-SPEC.md) (ассистент, три слоя).
 
-# Run in desktop mode (PyWebView native window)
-python run_desktop.py
+## Раскладка
 
-# Quick rebuild with PyInstaller (produces dist/UTMka/UTMka.exe)
-python rebuild.py
-
-# Clean rebuild
-python rebuild.py --clean
-
-# Rebuild and launch the .exe
-python rebuild.py --run
-
-# Full build with Windows installer (requires Inno Setup 6)
-python installers/windows/build.py
+```
+packages/core/        @utmka/core — слой правил: валидация, нормализация, сборка,
+                      разбор, справочник, пресеты, пакет, редиректы, форматы
+                      обмена, правила хранения, контракт оболочки. Чистый TS.
+packages/ui/          @utmka/ui — экраны: 29 компонентов + globals.css (2460 строк).
+                      Ни fetch, ни next/*, ни invoke: внешний мир приходит
+                      через алиас `#shell`
+apps/web/             Next.js-приложение (utmka.alex-pronin.ru) — ШАГ 3
+apps/desktop/         Tauri + Vite — ШАГ 7. src-tauri/: SQLite, сеть, импорт 2.2
+legacy/desktop-2.2/   замороженный Python-десктоп
+docs/                 архитектура, брифы, скриншоты 2.2
 ```
 
-No linter, formatter, or test runner is configured. Pytest is in requirements.txt but the `tests/` directory is empty.
+**Направление зависимостей:** `core ← ui ← оболочки`. Ядро не знает ни React,
+ни сети; экраны не знают, где они выполняются.
 
-## Architecture
+### Алиас `#shell` — граница оболочки
 
-### Backend (Python / Flask)
+Экраны импортируют `backend`, `saveFile`, `useNav`, `useNavParams`, `NavLink`
+из `../shell`, а он реэкспортирует алиас `#shell`. Каждое приложение направляет
+алиас в свою реализацию:
 
-- **Entry point**: `run_desktop.py` — CLI launcher. `--dev` starts Flask directly; without it, launches via PyWebView (`src/desktop/main.py`).
-- **App factory**: `src/api/__init__.py` — `create_app(config_name)` builds the Flask app, initializes SQLAlchemy, registers blueprints.
-- **Config**: `src/core/config.py` — `DevelopmentConfig` (SQLite, debug), `DesktopConfig` (SQLite, no debug), `WebConfig`/`ProductionConfig` (PostgreSQL, OAuth, payments — future web version).
-- **Models**: `src/core/models.py` — SQLAlchemy models: `User`, `History` (table `history_new`), `Template`, `Subscription`. DB auto-created on startup via `db.create_all()`.
-- **Services**: `src/core/services.py` — `UTMService` with static methods for parsing/building UTM URLs.
-- **API routes**: See "API Routes" section below.
+| Приложение | `#shell` | Задаётся |
+|---|---|---|
+| `apps/web` | `lib/shell.tsx` (fetch + next/navigation) | `tsconfig.paths` + `turbopack.resolveAlias` |
+| `apps/desktop` | `src/lib/shell.tsx` (invoke + react-router) | `tsconfig.paths` + `resolve.alias` в `vite.config.ts` |
 
-### Frontend (Vanilla JS / ES6 modules)
+Новую возможность оболочки заводить **в контракте ядра** (`backend.ts`), потом
+реализовывать в обеих — иначе экран, написанный под одну, молча ломается в другой.
 
-Served as static files from `frontend/`. No bundler (no Webpack/Vite).
+## Десктоп 3.0 (`apps/desktop/`)
 
-- `frontend/index.html` — single-page HTML
-- `frontend/js/app.js` — main app logic and event handlers (~1130 lines)
-- `frontend/js/ui.js` — state management and DOM rendering
-- `frontend/js/api.js` — fetch wrapper for REST calls
-- `frontend/js/translations.js` — i18n (Russian/English)
-- `frontend/js/utils.js` — helper utilities
-- `frontend/css/main.css` — Tailwind CSS + custom styles
+```bash
+cd apps/desktop
+npx tauri dev            # окно + Vite на 1420
+npx tauri build          # NSIS-установщик (нужен ключ апдейтера в env)
+cd src-tauri && cargo test   # 28 тестов: хранилище, сеть, импорт 2.2
+```
 
-External libs loaded via CDN: Tailwind CSS, Lucide Icons, Flatpickr, QRCode.js.
+Сборка требует Rust (`stable-msvc`). Переменные `CARGO_HOME`, `RUSTUP_HOME`,
+`CARGO_TARGET_DIR` уведены на `D:\rust\*` — `target/` у Tauri разрастается до
+десятков гигабайт.
 
-### Build & Packaging
+Подробности релиза — [docs/DESKTOP-BUILD.md](docs/DESKTOP-BUILD.md).
 
-- **PyInstaller spec**: `installers/windows/UTMka.spec` — bundles `src/desktop/main.py` as entry, includes `frontend/`, `logo/`, template examples. Excludes tkinter, matplotlib, numpy, pandas.
-- **Inno Setup**: `installers/windows/setup.iss` — Windows installer script.
-- **Version info**: `installers/windows/version_info.txt`.
+### Что нельзя сломать в десктопе
 
-### Database Paths
+- **Справочник наполняет `history_add`**, отдельной ручки нет. Реализация,
+  которая просто пишет строку, не упадёт и ничего не скажет — справочник просто
+  останется пустым.
+- **Уникальность имени шаблона держит колонка `name_key`**, а не индекс по
+  `lower(name)`: встроенный `lower()` в SQLite не понижает регистр кириллицы,
+  и «Осень» с «ОСЕНЬ» разъехались бы на два шаблона.
+- **База 2.2 открывается только на чтение.** 2.2.1 остаётся установленной.
+- **Цепочку редиректов ведёт ядро**, Rust делает один хоп (`net_hop`).
+  Переписать обход на Rust — значит завести второй экземпляр логики.
 
-- Dev mode: `./utm_data.db` (project root)
-- Desktop (Windows): `%AppData%\Roaming\UTMka\databases\utmka.db`
-- Desktop (macOS): `~/Library/Application Support/UTMka/databases/utmka.db`
-- Frozen detection: `sys.frozen` attribute (via `is_frozen()` in config)
+## Правила ядра (`packages/core`)
 
-### Resource Resolution
+Ядро едет и в веб, и в будущий десктоп на Tauri, поэтому:
 
-`get_resource_path()` in `src/core/config.py` resolves paths relative to `sys._MEIPASS` when frozen (PyInstaller) or relative to project root in dev mode. Use this for any file that must be accessible in both dev and packaged builds.
+- **ноль зависимостей, ноль сети, ноль DOM.** Всё внешнее принимается параметром
+  (fetcher в `redirect.ts`, репозиторий в `repository.ts`);
+- тексты замечаний живут в `validate.ts`, а не в интерфейсе — одни и те же формулировки
+  нужны форме, маскоту, разбору и пакетному режиму;
+- каждое замечание объясняет **что сломается в отчёте**, а не «неверный формат»;
+- любое изменение поведения — с тестом. `npm test` в корне гоняет все воркспейсы.
 
-### Versioning & OTA Updates
+```bash
+npm test                       # тесты всех пакетов
+npm run type-check             # tsc --noEmit по всем пакетам
+cd packages/core && npx vitest  # watch-режим по ядру
+```
 
-- **Single source of truth**: `src/core/version.py` — `__version__ = "X.Y.Z"`. Change only this file when bumping version.
-- **Auto-sync on build**: `installers/windows/build.py` reads `__version__` and patches `setup.iss` (`MyAppVersion`) and `version_info.txt` (`filevers`, `prodvers`, `FileVersion`, `ProductVersion`) before building.
-- **OTA flow**: On startup, frontend calls `GET /api/update/check` → backend (`src/core/updater.py`) queries GitHub Releases API → compares semver → if newer version found with `.exe` asset, shows update modal.
-- **GitHub Release tag must match `__version__`**: e.g., if `__version__ = "2.2.0"`, the GitHub Release tag should be `v2.2.0` (or `2.2.0`). The leading `v` is stripped during comparison.
-- **Release workflow**:
-  1. Bump version in `src/core/version.py`
-  2. Run `python installers/windows/build.py` (auto-syncs all version files)
-  3. Upload `dist/UTMka-Setup-X.Y.Z.exe` to GitHub Release with tag `vX.Y.Z`
+### Что нельзя сломать
 
-### API Routes
+- **Плейсхолдеры площадок не кодируются.** `utm_term={keyword}` обязан доехать до Директа
+  буквально; `%7Bkeyword%7D` ломает подстановку. Проверяется тестами в `test/build.test.ts`.
+- **Паритет с 2.2** по сборке ссылки: схема дописывается, чужие параметры сохраняются,
+  пустые UTM игнорируются, пробел кодируется плюсом.
+- **Предохранители SSRF** в `redirect.ts` проверяются на каждом хопе, а не только на первом.
 
-Blueprints in `src/api/routes/`:
-- `main.py` — serves `index.html`, favicon, `GET /api/version`
-- `history.py` — CRUD for link history
-- `templates.py` — CRUD for templates
-- `update.py` — `GET /api/update/check`, `POST /api/update/download`, `POST /api/update/install`
-- `auth.py` — auth placeholder for future web version
+## Десктоп 2.2 (`legacy/desktop-2.2/`)
 
-## Key Patterns
+Работает как раньше, пути внутри относительные:
 
-- Flask app factory pattern — always use `create_app()` with the appropriate config name.
-- All API endpoints return JSON. Frontend communicates via fetch calls in `api.js`.
-- History and templates are capped at 500 items per user.
-- Link shortening uses the external clck.ru API — the only feature requiring network access.
-- QR codes are generated client-side with QRCode.js.
+```bash
+cd legacy/desktop-2.2
+python run_desktop.py --dev     # Flask в браузере
+python run_desktop.py           # окно PyWebView
+python rebuild.py               # сборка dist/UTMka/UTMka.exe
+```
+
+Версия — `src/core/version.py` (единственный источник). Логика UTM — `src/core/services.py`,
+это спецификация поведения для ядра 3.0. Экраны и состояния — `frontend/`.
+
+## Аналитика: вебвизор запрещён
+
+Счётчик Метрики — **111529339** (свой, не общий с сайтом). Вебвизор выключен
+и в счётчике, и в коде, а на всех полях ввода стоят `ym-disable-keys` и
+`ym-hide-content`. Это не перестраховка: в полях живут реальные адреса
+кампаний пользователей и кодовая фраза. Включить запись сессий — значит
+утащить чужие данные на сторону при обещании «ничего о вас не собираем».
+Новые поля добавляешь — вешай те же классы.
+
+## Куда смотреть за визуалом
+
+Дизайн-система наследуется от «ПРОНИН-ОС» из репозитория сайта
+`personal/my-site/my-own-site-pronin-alex/`: токены `--hv2-*` в `app/globals.css`,
+каркас `components/layout/DeviceShell.tsx`, эталон плотности — страница `/services`.
+Своих цветов и шрифтов не заводим (см. ARCHITECTURE §9).

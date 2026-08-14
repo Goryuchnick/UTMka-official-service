@@ -1,0 +1,718 @@
+/* =============================================================
+   UTMka — Design overlay (Amber CRT × Paper)
+   Цветовая схема, шрифты, пиксельный антураж поверх существующей
+   Tailwind-вёрстки. Верстку (glass-card, grid, flex) НЕ трогаем.
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@400;500;600;700&display=swap');
+
+/* ===== TOKENS ===== */
+:root, :root[data-theme="light"], html:not(.dark) {
+  --bg: #F6F1E4;
+  --paper: #FFFDF7;
+  --card: #FFFFFF;
+  --card-2: #FBF3DE;
+  --ink: #1A1814;
+  --ink-2: #3A3530;
+  --muted: #7A6F5C;
+  --subtle: #A89F8A;
+  --line: #E4DBC2;
+  --line-2: #CFC2A0;
+
+  --amber: #E08000;
+  --amber-soft: #FFE3A8;
+  --amber-dim: #C26210;
+  --teal: #2A8F85;
+  --teal-soft: #CFEEEA;
+  --magenta: #B33A6A;
+  --red: #C64545;
+  --green: #3F8F3F;
+
+  --scanline-alpha: 0.04;
+}
+
+:root[data-theme="dark"], html.dark {
+  --bg: #0a0a08;
+  --paper: #14140f;
+  --card: #1c1c15;
+  --card-2: #222019;
+  --ink: #F3ECD4;           /* ярче, чем было #ECE5D0 — лучшая читаемость */
+  --ink-2: #D8CEB0;         /* ярче #CFC6AC */
+  --muted: #A38A48;         /* ярче #8B7534 — заметнее прозрачных под-лейблов */
+  --subtle: #7F7E6E;        /* ярче #6B6B5E */
+  --line: #3a3a30;          /* чуть ярче #2a2a24 — видимее бордеры */
+  --line-2: #55553E;        /* ярче #3a3a2e — сильнее контраст уголков */
+
+  --amber: #FFC040;         /* ярче #FFB000 — фосфорный оттенок */
+  --amber-soft: #4a3612;    /* чуть насыщеннее #3A2A0A */
+  --amber-dim: #FFA000;     /* раньше был dimmer #E08000, сейчас ближе к amber */
+  --teal: #6AEDDA;          /* ярче #5BE3D4 */
+  --teal-soft: #1E5956;
+  --magenta: #F06590;       /* ярче #E05080 */
+  --red: #FF6650;
+  --green: #76E076;
+
+  --scanline-alpha: 0.10;   /* чуть меньше — иначе всё «моргает» в тёмной теме */
+}
+
+/* ===== BODY BASE ===== */
+html, body {
+  background-color: var(--bg) !important;
+  color: var(--ink) !important;
+}
+
+body,
+.font-sans,
+button, input, select, textarea, label, a, span, p, li, td, th, div {
+  font-family: 'Inter', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+  font-feature-settings: "ss01", "ss02", "calt";
+}
+
+.font-display,
+.font-display *,
+h1, h2, h3, h4, h5, h6,
+[class*="font-display"] {
+  font-family: 'Cascadia Code', 'Cascadia Mono', Consolas, 'IBM Plex Mono', ui-monospace, monospace !important;
+  letter-spacing: -0.005em !important;
+}
+
+.font-mono, .font-mono *,
+code, kbd, samp, pre,
+[class*="font-mono"],
+input[type="text"][readonly],
+textarea[readonly],
+#resultUrl, #fullUrlText {
+  font-family: 'Cascadia Code', 'Cascadia Mono', Consolas, 'IBM Plex Mono', ui-monospace, monospace !important;
+}
+
+/* Uppercase лейблы полей формы («URL АДРЕС *», «ИСТОЧНИК» и т.п.) — моноширинные, amber-акцент */
+label.uppercase,
+label[class*="uppercase"] {
+  font-family: 'Cascadia Code', Consolas, monospace !important;
+  letter-spacing: 1.4px !important;
+}
+
+::selection {
+  background: rgba(224, 128, 0, 0.28);
+  color: var(--ink);
+}
+html.dark ::selection { background: rgba(255, 176, 0, 0.3); }
+
+/* ===== AMBIENT BLOBS — приглушаем, оставляем лёгкий фон-антураж ===== */
+.animate-float { animation: utm-float 8s ease-in-out infinite !important; }
+@keyframes utm-float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Делаем цветные blob'ы сквозь фильтр — amber/teal/magenta вместо indigo/purple/cyan */
+body > .fixed.inset-0 > div:nth-child(1) {
+  background: color-mix(in srgb, var(--amber) 22%, transparent) !important;
+}
+body > .fixed.inset-0 > div:nth-child(2) {
+  background: color-mix(in srgb, var(--magenta) 18%, transparent) !important;
+}
+body > .fixed.inset-0 > div:nth-child(3) {
+  background: color-mix(in srgb, var(--teal) 14%, transparent) !important;
+}
+/* В dark — не уменьшаем opacity, а наоборот делаем заметнее, но меняем
+   смешивание на более яркое, чтоб фон не был «блёклым». */
+html.dark body > .fixed.inset-0 > div:nth-child(1) {
+  background: color-mix(in srgb, var(--amber) 34%, transparent) !important;
+}
+html.dark body > .fixed.inset-0 > div:nth-child(2) {
+  background: color-mix(in srgb, var(--magenta) 28%, transparent) !important;
+}
+html.dark body > .fixed.inset-0 > div:nth-child(3) {
+  background: color-mix(in srgb, var(--teal) 22%, transparent) !important;
+}
+html.dark body > .fixed.inset-0 { opacity: 0.85; }
+
+/* ===== SCANLINE оверлей — ретро-антураж, очень лёгкий ===== */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2000;
+  background: repeating-linear-gradient(
+    0deg, transparent 0, transparent 2px,
+    rgba(0, 0, 0, var(--scanline-alpha)) 3px,
+    rgba(0, 0, 0, var(--scanline-alpha)) 4px
+  );
+  mix-blend-mode: multiply;
+}
+/* В dark не используем blend-mode: screen — он выбеливает и делает блёклым.
+   Используем тот же multiply + низкую alpha — получается лёгкая сетка на фоне. */
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* =============================================================
+   GLASS → PAPER+AMBER
+   (.glass / .glass-card / .glass-input сохраняют семантику из HTML,
+    но теперь плоские amber/paper-карточки с рамкой и угловыми глифами)
+   ============================================================= */
+
+.glass {
+  background: color-mix(in srgb, var(--paper) 92%, transparent) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .05) !important;
+}
+html.dark .glass {
+  background: color-mix(in srgb, var(--paper) 88%, transparent) !important;
+  border-color: var(--line) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .3) !important;
+}
+
+.glass-card {
+  background: var(--card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .05) !important;
+  position: relative;
+}
+html.dark .glass-card {
+  background: var(--card) !important;
+  border-color: var(--line) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .35) !important;
+}
+
+/* Угловые «засечки» как у fieldset-урока (4 угла) — retro-антураж */
+.glass-card::before,
+.glass-card::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  border: 1.5px solid var(--amber-dim);
+  opacity: .45;
+  pointer-events: none;
+  border-radius: 2px;
+  transition: opacity .25s ease, border-color .25s ease;
+}
+.glass-card::before {
+  top: -1.5px; left: -1.5px;
+  border-right: none;
+  border-bottom: none;
+}
+.glass-card::after {
+  bottom: -1.5px; right: -1.5px;
+  border-left: none;
+  border-top: none;
+}
+.glass-card:hover::before,
+.glass-card:hover::after {
+  opacity: .75;
+  border-color: var(--amber);
+}
+html.dark .glass-card::before,
+html.dark .glass-card::after {
+  opacity: .55;
+  border-color: var(--amber);
+}
+html.dark .glass-card:hover::before,
+html.dark .glass-card:hover::after { opacity: .9; }
+
+/* Sticky nav (glass) — 4 уголка для полноты ощущения рамки */
+nav#navbar.glass::before,
+nav#navbar.glass::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  border: 1.5px solid var(--amber-dim);
+  opacity: .4;
+  pointer-events: none;
+  border-radius: 2px;
+}
+nav#navbar.glass::before {
+  top: -1.5px; left: -1.5px;
+  border-right: none;
+  border-bottom: none;
+}
+nav#navbar.glass::after {
+  bottom: -1.5px; right: -1.5px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Inputs */
+.glass-input {
+  font-family: 'Cascadia Code', 'Cascadia Mono', Consolas, monospace !important;
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: border-color .2s, box-shadow .2s !important;
+}
+.glass-input::placeholder { color: var(--subtle) !important; opacity: 1; }
+.glass-input:focus {
+  outline: none !important;
+  border-color: var(--amber) !important;
+  background: var(--card) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 22%, transparent) !important;
+}
+html.dark .glass-input {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+html.dark .glass-input:focus {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 28%, transparent) !important;
+}
+
+/* textarea (result, modals) */
+textarea {
+  font-family: 'Cascadia Code', Consolas, monospace !important;
+  background-color: var(--card-2) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+}
+textarea:focus { outline: none !important; border-color: var(--amber) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 22%, transparent) !important; }
+html.dark textarea { background-color: var(--card-2) !important; color: var(--ink) !important; border-color: var(--line) !important; }
+
+/* =============================================================
+   TAILWIND UTILITY RECOLOR — amber/teal/magenta вместо indigo/purple/pink
+   Селекторы намеренно специфичны, чтобы перебить стандартный Tailwind.
+   ============================================================= */
+
+/* Backgrounds — сплошные indigo/purple/violet/pink/cyan */
+[class*="bg-indigo-"],
+[class*="bg-violet-"],
+[class*="bg-purple-"] {
+  background-color: var(--amber) !important;
+}
+/* Полупрозрачные варианты (bg-indigo-500/10 и т.п.) — нежный оттенок */
+[class*="bg-indigo-"][class*="/"],
+[class*="bg-violet-"][class*="/"],
+[class*="bg-purple-"][class*="/"] {
+  background-color: color-mix(in srgb, var(--amber) 14%, transparent) !important;
+}
+[class*="bg-indigo-50"],
+[class*="bg-violet-50"],
+[class*="bg-purple-50"] {
+  background-color: color-mix(in srgb, var(--amber) 12%, transparent) !important;
+}
+
+[class*="bg-emerald-"],
+[class*="bg-green-"] { background-color: var(--green) !important; }
+[class*="bg-emerald-"][class*="/"],
+[class*="bg-green-"][class*="/"] { background-color: color-mix(in srgb, var(--green) 14%, transparent) !important; }
+[class*="bg-emerald-50"],
+[class*="bg-green-50"] { background-color: color-mix(in srgb, var(--green) 14%, transparent) !important; }
+
+[class*="bg-pink-"],
+[class*="bg-rose-"] { background-color: var(--magenta) !important; }
+[class*="bg-pink-"][class*="/"],
+[class*="bg-rose-"][class*="/"] { background-color: color-mix(in srgb, var(--magenta) 14%, transparent) !important; }
+[class*="bg-pink-50"],
+[class*="bg-rose-50"] { background-color: color-mix(in srgb, var(--magenta) 14%, transparent) !important; }
+
+[class*="bg-red-"] { background-color: var(--red) !important; }
+[class*="bg-red-"][class*="/"] { background-color: color-mix(in srgb, var(--red) 14%, transparent) !important; }
+[class*="bg-red-50"] { background-color: color-mix(in srgb, var(--red) 14%, transparent) !important; }
+
+[class*="bg-cyan-"],
+[class*="bg-blue-"] { background-color: var(--teal) !important; }
+[class*="bg-cyan-"][class*="/"],
+[class*="bg-blue-"][class*="/"] { background-color: color-mix(in srgb, var(--teal) 14%, transparent) !important; }
+
+/* Нейтральные фоны slate/gray → paper/card */
+.bg-white { background-color: var(--paper) !important; }
+html.dark .bg-white { background-color: var(--card) !important; }
+[class*="bg-slate-50"], [class*="bg-gray-50"], [class*="bg-stone-50"], [class*="bg-zinc-50"] {
+  background-color: var(--card-2) !important;
+}
+[class*="bg-slate-100"], [class*="bg-gray-100"] { background-color: var(--card-2) !important; }
+html.dark [class*="bg-slate-700"],
+html.dark [class*="bg-slate-800"],
+html.dark [class*="bg-slate-900"],
+html.dark [class*="dark:bg-slate-"],
+html.dark [class*="dark:bg-"] { background-color: var(--card-2) !important; }
+
+/* Gradient-кнопки (from-indigo-600 to-purple-600) — сплошной amber с hover тенью */
+[class*="from-indigo"],
+[class*="from-violet"],
+[class*="from-purple"] {
+  background-image: none !important;
+  background-color: var(--amber) !important;
+}
+[class*="from-indigo"][class*="to-purple"],
+[class*="from-indigo"][class*="to-violet"],
+[class*="from-violet"][class*="to-indigo"],
+[class*="from-purple"][class*="to-indigo"] {
+  background-image: linear-gradient(135deg, var(--amber) 0%, var(--amber-dim) 100%) !important;
+  background-color: var(--amber) !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--amber) 28%, transparent) !important;
+}
+[class*="hover:from-indigo"]:hover,
+[class*="hover:from-violet"]:hover,
+[class*="hover:from-purple"]:hover {
+  background-image: linear-gradient(135deg, var(--amber-dim) 0%, var(--amber) 100%) !important;
+}
+
+/* Текст — indigo/purple/pink/emerald/red → наши токены */
+[class*="text-indigo-"],
+[class*="text-violet-"],
+[class*="text-purple-"] { color: var(--amber) !important; }
+[class*="text-emerald-"],
+[class*="text-green-"] { color: var(--green) !important; }
+[class*="text-pink-"],
+[class*="text-rose-"] { color: var(--magenta) !important; }
+[class*="text-red-"] { color: var(--red) !important; }
+[class*="text-cyan-"],
+[class*="text-blue-"] { color: var(--teal) !important; }
+
+/* Slate/gray text — нейтрализуем в тона бумаги */
+.text-white, html.dark .text-white { color: var(--ink) !important; }
+[class*="text-slate-900"], [class*="text-gray-900"], [class*="text-slate-800"], [class*="text-gray-800"] { color: var(--ink) !important; }
+[class*="text-slate-700"], [class*="text-slate-600"], [class*="text-gray-700"], [class*="text-gray-600"] { color: var(--ink-2) !important; }
+[class*="text-slate-500"], [class*="text-gray-500"], [class*="text-slate-400"], [class*="text-gray-400"] { color: var(--muted) !important; }
+html.dark [class*="text-slate-200"], html.dark [class*="text-gray-200"], html.dark [class*="dark:text-slate-200"] { color: var(--ink) !important; }
+html.dark [class*="text-slate-300"], html.dark [class*="dark:text-slate-300"] { color: var(--ink-2) !important; }
+html.dark [class*="text-slate-400"], html.dark [class*="dark:text-slate-400"] { color: var(--muted) !important; }
+
+/* Градиентный текст UTMka — amber/magenta вместо slate */
+[class*="bg-clip-text"][class*="text-transparent"] {
+  background-image: linear-gradient(92deg, var(--amber) 0%, var(--magenta) 60%, var(--teal) 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* Borders — slate/gray → line */
+[class*="border-slate-"], [class*="border-gray-"], [class*="border-stone-"] { border-color: var(--line) !important; }
+html.dark [class*="border-slate-"], html.dark [class*="dark:border-slate-"] { border-color: var(--line) !important; }
+[class*="border-indigo-"], [class*="border-violet-"], [class*="border-purple-"] { border-color: var(--amber) !important; }
+[class*="border-emerald-"], [class*="border-green-"] { border-color: var(--green) !important; }
+[class*="border-pink-"], [class*="border-rose-"] { border-color: var(--magenta) !important; }
+[class*="border-red-"] { border-color: var(--red) !important; }
+
+/* Buttons и ссылки с border — делаем амбер-dim по умолчанию, амбер на hover.
+   Это универсальная правка, которая стилизует все rounded-xl / rounded-lg
+   кнопки под «рамку урока». */
+button[class*="border"],
+a[class*="border"] {
+  border-color: var(--line-2) !important;
+  transition: border-color .2s ease, background-color .2s ease, color .2s ease, transform .15s ease;
+}
+button[class*="border"]:hover,
+a[class*="border"]:hover {
+  border-color: var(--amber) !important;
+}
+
+/* Dashed border (например, у «Сохранить как шаблон») — амбер-dim dashed */
+button[class*="border-dashed"],
+a[class*="border-dashed"],
+.border-dashed {
+  border-style: dashed !important;
+  border-color: var(--line-2) !important;
+}
+button[class*="border-dashed"]:hover,
+a[class*="border-dashed"]:hover {
+  border-color: var(--amber) !important;
+  background-color: color-mix(in srgb, var(--amber) 8%, transparent) !important;
+}
+
+/* Rounded: оставляем исходные размеры (rounded-xl/rounded-2xl), но чуть сильнее тень амбер у primary кнопок */
+button[class*="shadow-lg"][class*="from-indigo"],
+button[class*="shadow-lg"][class*="from-violet"],
+button[class*="shadow-lg"][class*="from-purple"],
+.btn[class*="from-indigo"] {
+  border: 1px solid var(--amber-dim) !important;
+}
+
+/* Divide (tbody divide-y divide-slate-*) */
+[class*="divide-slate-"] > * + *,
+[class*="divide-gray-"] > * + * { border-color: var(--line) !important; }
+html.dark [class*="divide-slate-"] > * + *,
+html.dark [class*="divide-gray-"] > * + * { border-color: var(--line) !important; }
+
+/* Ring colors (focus ring) */
+[class*="ring-indigo"], [class*="ring-violet"], [class*="ring-purple"] { --tw-ring-color: color-mix(in srgb, var(--amber) 50%, transparent) !important; }
+
+/* Shadow — indigo/purple tinted shadows → amber tint */
+[class*="shadow-indigo"], [class*="shadow-violet"], [class*="shadow-purple"] {
+  --tw-shadow-color: color-mix(in srgb, var(--amber) 28%, transparent) !important;
+  --tw-shadow: var(--tw-shadow-colored) !important;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--amber) 22%, transparent) !important;
+}
+
+/* Hover states для colored icon-buttons (hover:bg-pink-100/50 и т.п.) — аккуратно */
+[class*="hover:bg-pink"]:hover,
+[class*="hover:bg-rose"]:hover { background-color: color-mix(in srgb, var(--magenta) 18%, transparent) !important; }
+[class*="hover:bg-indigo"]:hover,
+[class*="hover:bg-violet"]:hover,
+[class*="hover:bg-purple"]:hover { background-color: color-mix(in srgb, var(--amber) 18%, transparent) !important; }
+[class*="hover:bg-emerald"]:hover,
+[class*="hover:bg-green"]:hover { background-color: color-mix(in srgb, var(--green) 18%, transparent) !important; }
+[class*="hover:bg-red"]:hover { background-color: color-mix(in srgb, var(--red) 18%, transparent) !important; }
+[class*="hover:bg-slate-100"]:hover,
+[class*="hover:bg-slate-200"]:hover,
+[class*="hover:bg-slate-800"]:hover,
+[class*="hover:bg-slate-700"]:hover { background-color: color-mix(in srgb, var(--amber) 10%, transparent) !important; }
+
+[class*="hover:text-indigo"]:hover,
+[class*="hover:text-violet"]:hover,
+[class*="hover:text-purple"]:hover { color: var(--amber) !important; }
+[class*="hover:text-emerald"]:hover,
+[class*="hover:text-green"]:hover { color: var(--green) !important; }
+[class*="hover:text-pink"]:hover,
+[class*="hover:text-rose"]:hover { color: var(--magenta) !important; }
+[class*="hover:text-red"]:hover { color: var(--red) !important; }
+
+[class*="hover:border-indigo"]:hover,
+[class*="hover:border-violet"]:hover,
+[class*="hover:border-purple"]:hover { border-color: var(--amber) !important; }
+[class*="hover:border-emerald"]:hover,
+[class*="hover:border-green"]:hover { border-color: var(--green) !important; }
+
+/* =============================================================
+   NAV LINKS — активное состояние
+   ============================================================= */
+.nav-link::after {
+  background: var(--amber) !important;
+}
+.nav-link.active {
+  color: var(--amber) !important;
+}
+.nav-link:hover { color: var(--amber) !important; }
+
+/* =============================================================
+   VIEW MODE SWITCHER (list/grid/table) active state
+   ============================================================= */
+.history-view-btn.active,
+.templates-view-btn.active {
+  background-color: color-mix(in srgb, var(--amber) 16%, transparent) !important;
+  color: var(--amber) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08) !important;
+}
+html.dark .history-view-btn.active,
+html.dark .templates-view-btn.active {
+  background-color: color-mix(in srgb, var(--amber) 22%, transparent) !important;
+  color: var(--amber) !important;
+}
+
+/* =============================================================
+   COLOR DOT (цвета тегов — палитра из api.js с inline background-color;
+   базовые размеры вернули, .selected — amber-рамка)
+   ============================================================= */
+.color-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--line-2) 70%, transparent), 0 1px 2px rgba(0,0,0,.08);
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+.color-dot:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 1px var(--amber-dim), 0 2px 6px rgba(0,0,0,.14);
+}
+.color-dot.selected {
+  border-color: var(--amber) !important;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 35%, transparent), 0 2px 8px rgba(0,0,0,.18);
+}
+
+/* =============================================================
+   LOADER SPINNER — amber
+   ============================================================= */
+.loader-spinner {
+  border: 2px solid var(--line) !important;
+  border-top: 2px solid var(--amber) !important;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--amber) 30%, transparent);
+}
+
+/* =============================================================
+   LOGO — заменить старый PNG на пиксельный SVG через CSS
+   (если JS-патч не сработал)
+   ============================================================= */
+img[src*="logoutm.png"] {
+  image-rendering: pixelated;
+}
+
+/* =============================================================
+   ONBOARDING / HIGHLIGHT — amber
+   ============================================================= */
+#onboardingHighlight {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--amber) 24%, transparent) !important;
+  border-style: dashed !important;
+}
+#onboardingCard {
+  background: var(--card) !important;
+  border-color: var(--line) !important;
+  backdrop-filter: none !important;
+}
+
+/* =============================================================
+   TOAST — amber-border
+   ============================================================= */
+#toast .glass.border-l-4.border-green-500 {
+  border-left-color: var(--green) !important;
+}
+#toast .glass.border-l-4.border-red-500 {
+  border-left-color: var(--red) !important;
+}
+#toast .glass {
+  font-family: 'Cascadia Code', Consolas, monospace !important;
+}
+
+/* =============================================================
+   PROGRESS BAR (updateProgressBar) — amber→magenta gradient
+   ============================================================= */
+#updateProgressBar {
+  background: linear-gradient(90deg, var(--amber), var(--magenta)) !important;
+}
+
+/* =============================================================
+   RECENT TEMPLATE CHIPS — моноширинные с рамкой (теги сохраняют user-цвет)
+   ============================================================= */
+.recent-template-btn {
+  font-family: 'Cascadia Code', Consolas, monospace !important;
+  font-size: 12px !important;
+  letter-spacing: .3px;
+  transition: transform .15s, box-shadow .15s, border-color .15s !important;
+  border: 1px solid var(--line) !important;
+}
+.recent-template-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .1);
+}
+
+/* =============================================================
+   TERMINAL PROMPT — добавляем ❯ префикс к заголовкам секций курсива
+   (только для H2/H3 внутри glass-card — деликатно)
+   ============================================================= */
+.glass-card > h2::before,
+.glass-card > h3::before,
+.glass-card .flex.items-center > h2::before,
+.glass-card .flex.items-center > h3::before {
+  content: '❯ ';
+  color: var(--amber);
+  font-family: 'Cascadia Code', Consolas, monospace;
+  opacity: .75;
+  margin-right: 2px;
+  font-weight: 700;
+}
+
+/* =============================================================
+   FLATPICKR — adapted to amber/paper
+   ============================================================= */
+.flatpickr-calendar {
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+  font-family: 'Cascadia Code', Consolas, monospace !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .25) !important;
+}
+.flatpickr-day { color: var(--ink-2) !important; border-radius: 3px !important; }
+.flatpickr-day.today { border-color: var(--amber) !important; color: var(--amber) !important; }
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: var(--amber) !important;
+  border-color: var(--amber) !important;
+  color: var(--bg) !important;
+}
+.flatpickr-day.inRange {
+  background: color-mix(in srgb, var(--amber) 18%, transparent) !important;
+  color: var(--ink) !important;
+  border-color: transparent !important;
+}
+.flatpickr-months .flatpickr-month,
+.flatpickr-weekdays,
+.flatpickr-weekday,
+.flatpickr-monthDropdown-months,
+.numInputWrapper input,
+.flatpickr-current-month,
+.flatpickr-current-month input.cur-year {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  fill: var(--ink) !important;
+}
+.flatpickr-weekday { color: var(--muted) !important; }
+.flatpickr-prev-month svg, .flatpickr-next-month svg { fill: var(--muted) !important; }
+.flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg { fill: var(--amber) !important; }
+
+/* =============================================================
+   PIXEL ICON (опциональный элемент для тех мест, где добавим data-pixel)
+   ============================================================= */
+.pixel-icon {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  shape-rendering: crispEdges;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+}
+[data-pixel] { display: inline-flex; vertical-align: middle; }
+
+/* =============================================================
+   ANIMATIONS preserved (fadeIn, float)
+   ============================================================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.delay-0 { animation-delay: 0s; }
+.delay-neg-2 { animation-delay: -2s; }
+.delay-neg-4 { animation-delay: -4s; }
+
+/* =============================================================
+   VIEW MANAGEMENT (сохраняем исходную логику)
+   ============================================================= */
+[data-view]:not(.active) { display: none !important; }
+[data-view].active { display: flex !important; }
+
+/* =============================================================
+   ONBOARDING TRANSITIONS (сохраняем)
+   ============================================================= */
+#onboardingMask { transition: clip-path 0.5s ease; }
+#onboardingHighlight { transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease; }
+#onboardingCard { transition: top 0.5s ease, left 0.5s ease, bottom 0.5s ease; }
+
+/* =============================================================
+   BUTTON HOVER EFFECT (сохраняем)
+   ============================================================= */
+.btn-hover-effect { transition: all 0.2s; }
+.btn-hover-effect:active { transform: scale(0.98); }
+
+/* =============================================================
+   REDUCED MOTION
+   ============================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  body::after { display: none; }
+}

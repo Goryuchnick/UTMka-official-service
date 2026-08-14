@@ -1,0 +1,3118 @@
+@import "tailwindcss";
+
+/* Пиксельный акцентный шрифт — Press Start 2P, подключается через next/font
+   в app/layout.tsx (переменная --font-pixel), ровно как на сайте.
+
+   ⚠️ Karmatic Arcade (public/fonts/ka1.ttf) здесь НЕ годится: в его cmap
+   кириллица объявлена, но глифы пустые (нулевая длина в glyf), поэтому
+   браузер не уходит в фолбэк, а рисует пустоту. Проверено на ka1.ttf:
+   «А» → gid 458, длина контура 0. Не возвращать. */
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTMka 3.0 — визуальный слой «ПРОНИН-ОС».
+
+   Источник токенов — pronin-alex/app/globals.css (--hv2-*). Стекло взято
+   с лендинга курса (.pexe-glass: blur 18px + saturate, внутренний блик,
+   ореолы). Перенос макета ШАГА 2 — 1:1: имена классов и структура те же,
+   что в утверждённом прототипе.
+
+   Свои цвета и шрифты здесь НЕ заводятся: всё живёт токенами ниже.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: dark;
+
+  /* Amber CRT — тёмная тема (основная).
+     Текст светлее, чем на сайте (#d4d0c8): там он лежит на чистом фоне,
+     а здесь поверх идёт CRT-стекло, и оно съедает контраст. */
+  --hv2-bg: #0a0a08;
+  --hv2-bg2: #0d0d0a;
+  --hv2-fg: #ece8df;
+  --hv2-primary: #ffb000;
+  --hv2-primary-d: #e08000;
+  --hv2-primary-dim: #8b7534;
+  --hv2-card: #12120e;
+  --hv2-card2: #15140f;
+  --hv2-muted: #b09a5c;
+  --hv2-subtle: #8e8c7f;
+  --hv2-border: #2a2a24;
+  --hv2-border2: #3a3a30;
+  --hv2-success: #40a040;
+  --hv2-info: #5b8fb9;
+  --hv2-course: #e05080;
+  --hv2-teal: #5be3d4;
+  --hv2-destructive: #e05040;
+  --hv2-onprimary: #0a0a08;
+  --hv2-glow-soft: rgba(255, 176, 0, 0.16);
+
+  /* Слои CRT — явными rgba, а не через `color-mix(… , transparent)`.
+     ⚠️ WebView2 считает такую смесь иначе, чем Chrome: прозрачность терялась,
+     и «развёртка» из еле заметного блика превращалась в жёлтую заливку на
+     пол-экрана. В браузере тот же файл выглядел правильно, поэтому поймать это
+     можно только в самом окне. Держать здесь: цвет зависит от темы. */
+  --crt-glow: rgba(255, 176, 0, 0.07);
+  --crt-sweep: rgba(255, 176, 0, 0.09);
+  --crt-tint: rgba(255, 176, 0, 0.04);
+
+  --hv2-mono: 'Cascadia Code', 'Cascadia Mono', Consolas, 'IBM Plex Mono', ui-monospace, monospace;
+  --hv2-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --hv2-pixel: var(--font-pixel), 'Press Start 2P', monospace;
+
+  /* Стекло и скругления. Заливка плотная: прозрачное стекло на мобилке,
+     где backdrop-filter часто отключён экономией батареи, превращалось
+     в кашу из наложенного текста. */
+  --g-fill: color-mix(in srgb, var(--hv2-card) 88%, transparent);
+  --g-fill-2: color-mix(in srgb, var(--hv2-card2) 82%, transparent);
+  --g-line: color-mix(in srgb, #fff 9%, transparent);
+  --g-blur: blur(18px) saturate(1.35);
+  --g-inner: inset 0 1px 0 color-mix(in srgb, #fff 11%, transparent);
+  --g-drop: 0 14px 44px rgba(0, 0, 0, 0.45);
+  --r-lg: 18px;
+  --r-md: 12px;
+}
+
+/* Paper Cream — светлая тема. Ставится атрибутом на <html>. */
+html[data-theme='light'] {
+  color-scheme: light;
+
+  --hv2-bg: #f5efe2;
+  --hv2-bg2: #efe7d4;
+  --hv2-fg: #1a1612;
+  --hv2-primary: #b8730e;
+  --hv2-primary-d: #8a5408;
+  --hv2-primary-dim: #c89858;
+  --hv2-card: #fbf6e9;
+  --hv2-card2: #f8f1df;
+  --hv2-muted: #6b5a3a;
+  --hv2-subtle: #97876a;
+  --hv2-border: #d9cdb1;
+  --hv2-border2: #c1b187;
+  --hv2-success: #2f7a2f;
+  --hv2-info: #2f6a92;
+  --hv2-course: #c13a66;
+  --hv2-teal: #2f8a82;
+  --hv2-destructive: #b8362a;
+  --hv2-onprimary: #fbf6e9;
+  --hv2-glow-soft: rgba(184, 115, 14, 0.1);
+
+  /* Те же слои CRT в цвете светлой темы (см. пояснение в тёмной). */
+  --crt-glow: rgba(184, 115, 14, 0.07);
+  --crt-sweep: rgba(184, 115, 14, 0.09);
+  --crt-tint: rgba(184, 115, 14, 0.04);
+
+  --g-fill: color-mix(in srgb, #fff 88%, transparent);
+  --g-fill-2: color-mix(in srgb, #fff 80%, transparent);
+  --g-line: color-mix(in srgb, #6b5a3a 16%, transparent);
+  --g-inner: inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+  --g-drop: 0 12px 34px rgba(90, 70, 40, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--hv2-bg2);
+  color: var(--hv2-fg);
+  font-family: var(--hv2-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--hv2-primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════ РАМКА УСТРОЙСТВА ═══════════ */
+
+.dev {
+  height: 100dvh;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--hv2-bg2);
+}
+
+@media (min-width: 768px) {
+  .dev {
+    padding: 14px;
+    border: 2px solid var(--hv2-border2);
+    border-radius: 8px;
+  }
+}
+
+/* ═══════════ СТРОКА ЗАГОЛОВКА (только десктоп) ═══════════
+
+   Окно объявлено без системных декораций: чужая рамка ОС спорила с корпусом
+   устройства. Взамен — своя строка, которая ведёт себя как системная:
+   тянется мышью (`data-tauri-drag-region`), разворачивается двойным щелчком,
+   держит три кнопки справа. В вебе этого блока нет вовсе — слот пустой. */
+
+.dev--framed {
+  padding-top: 0;
+  /* В окне прокручиваться имеет право только содержимое экрана. Корпус
+     устройства со строкой заголовка, шапкой и строкой состояния прибит к
+     кромкам: если что-то внутри окажется выше окна (масштаб системы, чужая
+     версия WebView2, будущая правка шапки), это обрежется, но не превратит
+     всё приложение в длинную страницу, где заголовок уезжает вверх. */
+  overflow: hidden;
+}
+
+.titlebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 38px;
+  padding: 0 0 0 12px;
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-muted);
+  /* Текст в перетаскиваемой полосе выделять некуда и незачем. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar__mark {
+  display: inline-flex;
+  color: var(--hv2-primary);
+}
+
+.titlebar__name {
+  font-family: var(--hv2-pixel);
+  font-size: 11px;
+  color: var(--hv2-fg);
+  letter-spacing: 0.02em;
+}
+
+/* Написание бренда: «UTM» амбером, «ka» бирюзой — одинаково в заголовке окна,
+   на иконке приложения, в фавиконе и в строке состояния. */
+.wordmark {
+  font-family: var(--hv2-pixel);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.wordmark b {
+  color: var(--hv2-primary);
+  font-weight: inherit;
+}
+
+.wordmark i {
+  color: var(--hv2-teal);
+  font-style: normal;
+}
+
+.titlebar__hint {
+  color: var(--hv2-subtle);
+}
+
+@media (max-width: 620px) {
+  .titlebar__hint {
+    display: none;
+  }
+}
+
+.titlebar__acts {
+  display: flex;
+  align-self: stretch;
+}
+
+/* Размеры и поведение — как у системных кнопок Windows: широкая зона нажатия
+   во всю высоту полосы и красная подсветка только у закрытия. */
+.wbtn {
+  width: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--hv2-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.wbtn svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+
+.wbtn:hover {
+  background: color-mix(in srgb, var(--hv2-fg) 10%, transparent);
+  color: var(--hv2-fg);
+}
+
+.wbtn--close:hover {
+  background: var(--hv2-destructive);
+  color: #fff;
+}
+
+/* ═══════════ ЭКРАН ═══════════ */
+
+.screen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--r-lg);
+  background: var(--hv2-bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 0 1px var(--g-line), 0 18px 50px rgba(0, 0, 0, 0.5);
+  /* Свой контекст наложения для CRT-слоя: у него `mix-blend-mode: screen`, и
+     без изоляции он смешивается не с экраном, а со всем, что под ним. В Chrome
+     это незаметно, а WebView2 подмешивает фон окна и заливает низ экрана
+     жёлтым — проверено в окне Tauri против того же фронта в браузере. */
+  isolation: isolate;
+}
+
+/* CRT-стекло: блик, свечение люминофора, мягкая виньетка, сканлайны.
+   ⚠️ Слои намеренно легче, чем на сайте: там стекло лежит поверх крупных
+   блоков, а здесь под ним читают мелкий текст — плотные сканлайны и тёмная
+   виньетка съедали контраст, буквы «уходили в серость». */
+.crt {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  border-radius: inherit;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 64% 34% at 50% 9%, rgba(255, 250, 235, 0.05) 0%, transparent 72%),
+    radial-gradient(ellipse 80% 72% at 50% 44%, var(--crt-glow) 0%, transparent 56%),
+    radial-gradient(ellipse 130% 132% at center, transparent 62%, rgba(0, 0, 0, 0.16) 88%, rgba(0, 0, 0, 0.3) 100%),
+    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.06) 2px 3px);
+  box-shadow:
+    inset 0 0 42px rgba(0, 0, 0, 0.2),
+    inset 0 2px 1px rgba(255, 250, 235, 0.05),
+    inset 0 0 30px var(--crt-sweep);
+}
+
+.crt::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -42%;
+  height: 40%;
+  background: linear-gradient(to bottom, transparent, var(--crt-sweep) 55%, transparent);
+  animation: crt-sweep 7.5s linear infinite;
+}
+
+.crt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--crt-tint);
+  mix-blend-mode: screen;
+  animation: crt-flicker 5s ease-in-out infinite;
+}
+
+@keyframes crt-sweep {
+  0% { top: -42%; }
+  100% { top: 118%; }
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 0.5; }
+  12% { opacity: 0.78; }
+  26% { opacity: 0.38; }
+  51% { opacity: 0.66; }
+  73% { opacity: 0.44; }
+}
+
+html[data-theme='light'] .crt {
+  opacity: 0.38;
+}
+
+/* ═══════════ ПАНЕЛЬ РАЗДЕЛОВ (приклеена к верхней кромке экрана) ═══════════ */
+
+.topbar {
+  position: relative;
+  z-index: 4;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--g-fill);
+  backdrop-filter: var(--g-blur);
+  -webkit-backdrop-filter: var(--g-blur);
+  border-bottom: 1px solid var(--g-line);
+  box-shadow: var(--g-inner);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* На мобилке разделов в шапке нет совсем — они живут в нижнем доке. */
+@media (max-width: 767px) {
+  .nav {
+    display: none;
+  }
+
+  .topbar {
+    padding: 8px 12px;
+  }
+}
+
+.keybtn__short {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .keybtn__full {
+    display: none;
+  }
+
+  .keybtn__short {
+    display: inline;
+  }
+
+  .keybtn {
+    padding: 0 14px;
+  }
+}
+
+.navbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hv2-muted);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+
+.navbtn:hover {
+  color: var(--hv2-fg);
+  background: var(--g-fill-2);
+}
+
+.navbtn[aria-current='page'] {
+  color: var(--hv2-fg);
+  background: color-mix(in srgb, var(--hv2-primary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hv2-primary) 18%, transparent),
+    0 0 22px color-mix(in srgb, var(--hv2-primary) 16%, transparent);
+}
+
+.navbtn svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.iconbtn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  color: var(--hv2-muted);
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+
+.iconbtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.iconbtn:hover {
+  color: var(--hv2-fg);
+  border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--hv2-primary) 20%, transparent);
+}
+
+/* Сердце — единственная розовая кнопка в шапке: благодарность не должна
+   выглядеть как ещё один инструмент. */
+.iconbtn--heart:hover {
+  color: var(--hv2-course);
+  border-color: color-mix(in srgb, var(--hv2-course) 45%, transparent);
+}
+
+.iconbtn--teal {
+  color: var(--hv2-teal);
+  border-color: color-mix(in srgb, var(--hv2-teal) 34%, transparent);
+}
+
+.iconbtn--teal:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hv2-teal) 30%, transparent),
+    0 0 26px color-mix(in srgb, var(--hv2-teal) 22%, transparent);
+}
+
+.iconbtn[aria-pressed='true'] {
+  color: var(--hv2-fg);
+  border-color: color-mix(in srgb, var(--hv2-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+}
+
+.keybtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 36px;
+  padding: 0 16px;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hv2-course) 45%, transparent);
+  background: color-mix(in srgb, var(--hv2-course) 16%, transparent);
+  color: var(--hv2-fg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: box-shadow 0.22s, transform 0.15s;
+}
+
+.keybtn:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hv2-course) 34%, transparent),
+    0 0 30px color-mix(in srgb, var(--hv2-course) 26%, transparent);
+  transform: translateY(-1px);
+}
+
+.keybtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ═══════════ ПРОКРУЧИВАЕМОЕ СОДЕРЖИМОЕ ═══════════ */
+
+.screen-scroll {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+@media (max-width: 767px) {
+  .screen-scroll {
+    padding: 14px 12px 18px;
+    gap: 14px;
+  }
+}
+
+/* ═══════════ СТРОКА СОСТОЯНИЯ (нижняя кромка экрана) ═══════════ */
+
+.statusbar {
+  position: relative;
+  z-index: 4;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 16px;
+  background: var(--g-fill);
+  backdrop-filter: var(--g-blur);
+  -webkit-backdrop-filter: var(--g-blur);
+  border-top: 1px solid var(--g-line);
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  color: var(--hv2-muted);
+}
+
+.sb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.sb-item:hover {
+  color: var(--hv2-fg);
+}
+
+/* Надпись, а не кнопка: состояние хранилища и версия никуда не ведут.
+   Подсветка при наведении обещала нажатие, которого не происходило. */
+.sb-item--flat {
+  cursor: default;
+}
+
+.sb-item--flat:hover {
+  color: inherit;
+}
+
+/* Единственная ссылка в строке состояния — пусть будет видно, что она живая. */
+.sb-item--heart {
+  color: var(--hv2-muted);
+}
+
+.sb-item--heart:hover {
+  color: var(--hv2-course);
+}
+
+.sb-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--hv2-success);
+  box-shadow: 0 0 10px var(--hv2-success);
+  flex: none;
+}
+
+.sb-dot--off {
+  background: var(--hv2-subtle);
+  box-shadow: none;
+}
+
+.sb-quota b {
+  color: var(--hv2-teal);
+  font-weight: 600;
+}
+
+/* ═══════════ ПЛАНКА ПОМОЩНИКА (нижняя кромка шапки) ═══════════
+
+   Часть шапки устройства, а не блок контента: высота фиксированная и от длины
+   реплики не зависит — иначе шапка «дышала» бы на каждой смене текста и
+   контент под ней прыгал. Длинная реплика обрезается многоточием. */
+
+.mascotbar {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 76px;
+  padding: 0 18px;
+  background: var(--g-fill);
+  backdrop-filter: var(--g-blur);
+  -webkit-backdrop-filter: var(--g-blur);
+  border-bottom: 1px solid var(--g-line);
+}
+
+@media (max-width: 767px) {
+  .mascotbar {
+    height: 62px;
+    padding: 0 12px;
+    gap: 10px;
+  }
+}
+
+/* Окно спрайта: ровно один кадр ленты, поэтому overflow скрыт, а масштаб
+   задаётся высотой — лента внутри едет transform'ом (см. MascotSprite). */
+.mascot {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+
+@media (max-width: 767px) {
+  .mascot {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (max-width: 767px) {
+  .mascot {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+.bubble {
+  position: relative;
+  margin: 0;
+  background: color-mix(in srgb, var(--hv2-card) 92%, transparent);
+  border: 1px solid var(--g-line);
+  border-left: 2px solid var(--hv2-course);
+  border-radius: var(--r-md);
+  padding: 9px 15px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--hv2-fg);
+  max-width: 68ch;
+  min-width: 0;
+  /* одна строка: планка не должна расти от длинной реплики */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--hv2-course) 10%, transparent);
+}
+
+@media (max-width: 767px) {
+  .bubble {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}
+
+/* ═══════════ КАРТОЧКА-СТЕКЛО ═══════════ */
+
+.glass {
+  background: var(--g-fill);
+  backdrop-filter: var(--g-blur);
+  -webkit-backdrop-filter: var(--g-blur);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--g-inner), var(--g-drop);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (max-width: 767px) {
+  .glass {
+    padding: 14px;
+    border-radius: var(--r-md);
+  }
+}
+
+.qhead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qchip {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+  color: var(--hv2-primary);
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.qchip svg {
+  width: 15px;
+  height: 15px;
+}
+
+.qchip--magenta {
+  color: var(--hv2-course);
+  border-color: color-mix(in srgb, var(--hv2-course) 45%, transparent);
+  background: color-mix(in srgb, var(--hv2-course) 14%, transparent);
+}
+
+.qchip--teal {
+  color: var(--hv2-teal);
+  border-color: color-mix(in srgb, var(--hv2-teal) 40%, transparent);
+  background: color-mix(in srgb, var(--hv2-teal) 13%, transparent);
+}
+
+.qchip--done {
+  color: var(--hv2-success);
+  border-color: color-mix(in srgb, var(--hv2-success) 45%, transparent);
+  background: color-mix(in srgb, var(--hv2-success) 12%, transparent);
+}
+
+/* Заголовки — пиксельным шрифтом. Он широкий и без строчных выносов,
+   поэтому кегль ниже, а межбуквенное расстояние чуть плотнее обычного. */
+.qtitle {
+  font-family: var(--hv2-pixel);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--hv2-fg);
+  line-height: 1.35;
+}
+
+@media (max-width: 767px) {
+  .qtitle {
+    font-size: 12px;
+  }
+}
+
+/* Акцентные цвета заголовков — чередуются по экранам, как секции /services. */
+.qtitle--amber {
+  color: var(--hv2-primary);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+}
+
+.qtitle--magenta {
+  color: var(--hv2-course);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hv2-course) 38%, transparent);
+}
+
+.qtitle--teal {
+  color: var(--hv2-teal);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hv2-teal) 34%, transparent);
+}
+
+/* Номер шага и метки в чипах — тем же пиксельным шрифтом. */
+.qchip {
+  font-family: var(--hv2-pixel);
+  font-size: 11px;
+}
+
+.step-done .qchip {
+  font-size: 9px;
+}
+
+/* ═══════════ ШАГИ ═══════════ */
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-done {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  backdrop-filter: var(--g-blur);
+  -webkit-backdrop-filter: var(--g-blur);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--hv2-subtle);
+  text-align: left;
+  width: 100%;
+}
+
+.step-done .qchip {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+
+.step-done .qchip svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Название свёрнутого шага — тем же пиксельным, что и заголовок раскрытого:
+   иначе при сворачивании шрифт подменяется и плашка «выпадает» из ряда. */
+.step-name {
+  font-family: var(--hv2-pixel);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .step-name {
+    font-size: 9px;
+  }
+}
+
+.step[data-state='done'] .step-name {
+  color: var(--hv2-muted);
+}
+
+.step-done b {
+  color: var(--hv2-fg);
+  font-weight: 600;
+  margin-left: auto;
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 40%;
+}
+
+.step[data-state='todo'] .step-done {
+  opacity: 0.45;
+}
+
+/* ═══════════ ПОЛЯ ═══════════ */
+
+.input {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: color-mix(in srgb, var(--hv2-bg2) 62%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-md);
+  padding: 0 16px;
+  height: 50px;
+  font-family: var(--hv2-mono);
+  font-size: 15px;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+@media (max-width: 767px) {
+  .input {
+    height: 46px;
+    font-size: 14px;
+  }
+}
+
+.input:focus-within {
+  border-color: color-mix(in srgb, var(--hv2-primary) 55%, transparent);
+  box-shadow: 0 0 0 3px var(--hv2-glow-soft), 0 0 24px color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+}
+
+.input--err {
+  border-color: color-mix(in srgb, var(--hv2-destructive) 62%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--hv2-destructive) 16%, transparent);
+}
+
+.input--warn {
+  border-color: color-mix(in srgb, var(--hv2-primary-dim) 70%, transparent);
+}
+
+.input .scheme {
+  color: color-mix(in srgb, var(--hv2-subtle) 55%, transparent);
+  flex: none;
+}
+
+.input input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--hv2-fg);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  height: 100%;
+  padding: 0;
+}
+
+/* Подсказка внутри поля — самый тихий слой. Она подсказывает формат, а не
+   несёт смысл: главный здесь заголовок над полем, и он не должен проигрывать
+   по весу тексту внутри рамки. */
+.input input::placeholder {
+  color: color-mix(in srgb, var(--hv2-subtle) 48%, transparent);
+  font-size: 13px;
+}
+
+.input .ibtn {
+  flex: none;
+  background: none;
+  border: none;
+  color: var(--hv2-subtle);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+}
+
+.input .ibtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.input .ibtn:hover {
+  color: var(--hv2-primary);
+}
+
+/* Пояснение под полем — служебный слой, ещё тише плейсхолдера. */
+.hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--hv2-subtle) 72%, transparent);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+/* Заголовок поля — главный ориентир: это единственное, что пользователь
+   обязан прочитать. Отсюда пиксельный шрифт и полная яркость текста,
+   тогда как всё внутри и под полем приглушено. */
+.field-label {
+  font-family: var(--hv2-pixel);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--hv2-fg);
+}
+
+@media (max-width: 767px) {
+  .field-label {
+    font-size: 9px;
+  }
+}
+
+.grid2 {
+  display: grid;
+  /* ⚠️ `minmax(0, 1fr)`, а не голый `1fr`: у элементов грида ширина по
+     умолчанию не сжимается ниже содержимого, и пара полей распирала свою
+     колонку. В расширенном режиме из-за этого «Канал — тип трафика» уезжал
+     под соседнюю карточку с замечаниями. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 767px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════ ПЛИТКИ ПЛОЩАДОК ═══════════ */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1100px) {
+  .tiles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+.tile {
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  background: var(--g-fill-2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-md);
+  padding: 14px;
+  cursor: pointer;
+  color: var(--hv2-fg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+}
+
+/* прожектор за курсором — приём двери курса (.h2-wash / .h2-glow) */
+.tile::before {
+  content: '';
+  position: absolute;
+  left: var(--mx, 50%);
+  top: var(--my, 50%);
+  width: 260px;
+  height: 260px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--hv2-primary) 26%, transparent) 0%, transparent 72%);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.tile:hover::before {
+  opacity: 1;
+}
+
+.tile > * {
+  position: relative;
+  z-index: 1;
+}
+
+.tile:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+}
+
+.tile[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--hv2-primary) 60%, transparent);
+  background: color-mix(in srgb, var(--hv2-primary) 12%, var(--g-fill-2));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hv2-primary) 26%, transparent),
+    0 0 34px color-mix(in srgb, var(--hv2-primary) 18%, transparent);
+}
+
+.tile-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--g-line);
+  background: var(--g-fill);
+}
+
+.tile-ico svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Название площадки — пиксельным, подпись под ним остаётся наборным:
+   пиксельный читается плохо на длинной строке, а тут строка короткая. */
+.tile-name {
+  font-family: var(--hv2-pixel);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+.tile-hint {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--hv2-subtle) 82%, transparent);
+  line-height: 1.4;
+}
+
+/* ═══════════ ОБЪЯСНЕНИЕ И ЧИПСЫ ═══════════ */
+
+.explain {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--hv2-muted);
+  border: 1px solid color-mix(in srgb, var(--hv2-teal) 26%, transparent);
+  background: color-mix(in srgb, var(--hv2-teal) 8%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--hv2-teal) 10%, transparent);
+}
+
+.explain b {
+  color: var(--hv2-teal);
+  font-weight: 600;
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Переключатель режима — тоже пиксельным: это развилка, а не служебная метка. */
+.chip {
+  font-family: var(--hv2-pixel);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  padding: 10px 15px;
+  background: var(--g-fill-2);
+  border: 1px solid var(--g-line);
+  color: var(--hv2-muted);
+  cursor: pointer;
+  border-radius: 999px;
+  transition: color 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+
+.chip:hover {
+  color: var(--hv2-fg);
+  border-color: color-mix(in srgb, var(--hv2-course) 45%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--hv2-course) 18%, transparent);
+}
+
+/* ═══════════ РЕЗУЛЬТАТ ═══════════ */
+
+.result {
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 42%, transparent);
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--hv2-primary) 8%, var(--g-fill));
+  backdrop-filter: var(--g-blur);
+  -webkit-backdrop-filter: var(--g-blur);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--g-inner), 0 0 34px color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+}
+
+.result-url {
+  font-family: var(--hv2-mono);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--hv2-fg);
+  word-break: break-all;
+}
+
+@media (max-width: 767px) {
+  .result-url {
+    font-size: 12px;
+  }
+}
+
+.result-url .k {
+  color: var(--hv2-subtle);
+}
+
+.result-url .v {
+  color: var(--hv2-primary);
+}
+
+.result-url .ph {
+  color: var(--hv2-teal);
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.result-len {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-subtle);
+  margin-left: auto;
+}
+
+/* ═══════════ КНОПКИ ═══════════ */
+
+/* Кнопки — пиксельным: это то, что нужно подсветить в первую очередь.
+   Кегль ниже обычного, шрифт широкий; насыщенность у него одна (400),
+   поэтому «жирность» набирается не весом, а цветом и подложкой. */
+.btn {
+  font-family: var(--hv2-pixel);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  height: 48px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 999px;
+  background: var(--g-fill-2);
+  border: 1px solid var(--g-line);
+  color: var(--hv2-fg);
+  text-decoration: none;
+  transition: box-shadow 0.22s, transform 0.15s, border-color 0.18s;
+}
+
+.btn svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.btn:hover {
+  border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--hv2-primary) 16%, transparent);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn--main {
+  background: linear-gradient(135deg, var(--hv2-primary), var(--hv2-primary-d));
+  border-color: color-mix(in srgb, var(--hv2-primary) 70%, transparent);
+  color: var(--hv2-onprimary);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hv2-primary) 30%, transparent),
+    0 8px 30px color-mix(in srgb, var(--hv2-primary) 30%, transparent);
+}
+
+.btn--main:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hv2-primary) 40%, transparent),
+    0 10px 38px color-mix(in srgb, var(--hv2-primary) 38%, transparent);
+}
+
+.btn--main:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn--sm {
+  height: 40px;
+  font-size: 9px;
+  padding: 0 18px;
+}
+
+@media (max-width: 767px) {
+  .btn {
+    font-size: 10px;
+    padding: 0 18px;
+  }
+
+  .btn--sm {
+    font-size: 9px;
+  }
+}
+
+/* ═══════════ ПРИГЛАШЕНИЕ ЗАВЕСТИ ФРАЗУ ═══════════ */
+
+.invite {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--hv2-course) 32%, transparent);
+  background: color-mix(in srgb, var(--hv2-course) 9%, var(--g-fill));
+  backdrop-filter: var(--g-blur);
+  -webkit-backdrop-filter: var(--g-blur);
+  border-radius: var(--r-lg);
+  font-size: 14px;
+  color: var(--hv2-muted);
+  flex-wrap: wrap;
+  box-shadow: 0 0 28px color-mix(in srgb, var(--hv2-course) 12%, transparent);
+}
+
+.invite b {
+  color: var(--hv2-fg);
+  font-weight: 600;
+}
+
+.invite .btn {
+  margin-left: auto;
+}
+
+/* Плашка обновления — та же плашка, но с содержимым: заметки о версии и ход
+   скачивания. Кнопки уходят вниз, иначе в одну строку с полосой они не встают. */
+.invite--update {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.invite--update .btn {
+  margin-left: 0;
+}
+
+.update-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Заметки к версии приходят как есть из релиза — перенос строк сохраняем,
+   но не даём им растянуть плашку на весь экран. */
+.update-notes {
+  white-space: pre-line;
+  max-height: 96px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.update-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.update-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--hv2-fg) 12%, transparent);
+}
+
+.update-bar__fill {
+  display: block;
+  height: 100%;
+  background: var(--hv2-course);
+  transition: width 0.24s ease;
+}
+
+/* ═══════════ ЗАМЕЧАНИЯ ═══════════ */
+
+.issue {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--g-fill-2);
+  border: 1px solid var(--g-line);
+  border-left: 2px solid var(--hv2-primary);
+}
+
+.issue--error {
+  border-left-color: var(--hv2-destructive);
+  background: color-mix(in srgb, var(--hv2-destructive) 8%, var(--g-fill-2));
+}
+
+.issue--info {
+  border-left-color: var(--hv2-teal);
+  background: color-mix(in srgb, var(--hv2-teal) 7%, var(--g-fill-2));
+}
+
+.issue-title {
+  color: var(--hv2-fg);
+  font-weight: 600;
+}
+
+.issue-text {
+  color: var(--hv2-muted);
+}
+
+.issue-fix {
+  margin-left: auto;
+  flex: none;
+  font-size: 13px;
+  background: var(--g-fill);
+  border: 1px solid var(--g-line);
+  color: var(--hv2-muted);
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.issue-fix:hover {
+  color: var(--hv2-fg);
+  border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+}
+
+/* ═══════════ ИСТОРИЯ ═══════════ */
+
+.hist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hist-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 13px;
+  text-align: left;
+  width: 100%;
+  color: var(--hv2-fg);
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.hist-row:hover {
+  border-color: color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--hv2-primary) 12%, transparent);
+}
+
+/* Тег записи — короткая подпись, а не точка: цвет несёт отдельный кружок
+   `.tag-dot`, потому что цветом одним нельзя объяснить, что он значит. */
+.hist-tag {
+  font-family: var(--hv2-pixel);
+  font-size: 7px;
+  letter-spacing: 0.02em;
+  padding: 4px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--g-line);
+  color: var(--hv2-muted);
+  flex: none;
+}
+
+.hist-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--hv2-fg);
+  font-weight: 600;
+}
+
+.hist-url {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.hist-when {
+  margin-left: auto;
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  color: var(--hv2-subtle);
+  flex: none;
+}
+
+/* ═══════════ МОБИЛЬНЫЙ ДОК (сворачивается в кнопку) ═══════════
+
+   Повторяет поведение меню на главной сайта: свёрнутый док схлопывается
+   в кнопку, развёрнутый — выезжает над ней. На десктопе не показывается
+   вовсе: там разделы живут в шапке. */
+
+.mdock-wrap,
+.mdock-fab {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .mdock-wrap {
+    display: block;
+    flex: none;
+    overflow: hidden;
+    transition: height 0.22s ease, margin-top 0.22s ease;
+  }
+
+  .mdock {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 6px;
+    background: var(--g-fill);
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+    border: 1px solid var(--g-line);
+    border-radius: 22px;
+    box-shadow: var(--g-inner);
+    transform-origin: bottom center;
+    transition: transform 0.22s ease, opacity 0.18s ease;
+  }
+
+  .dev--menuclosed .mdock-wrap {
+    height: 0;
+    margin-top: -10px;
+    pointer-events: none;
+  }
+
+  .dev--menuclosed .mdock {
+    transform: scale(0.16);
+    opacity: 0;
+  }
+
+  .mdock-fab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: center;
+    height: 42px;
+    padding: 0 22px;
+    flex: none;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+    background: color-mix(in srgb, var(--hv2-primary) 15%, var(--g-fill));
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+    color: var(--hv2-fg);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--g-inner);
+  }
+
+  .mdock-fab svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.mdock a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--hv2-subtle);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.mdock a svg {
+  width: 17px;
+  height: 17px;
+}
+
+.mdock a[aria-current='page'] {
+  color: var(--hv2-primary);
+  background: color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+}
+
+/* ═══════════ РАСШИРЕННЫЙ РЕЖИМ ═══════════ */
+
+.pro-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  gap: 18px;
+  align-items: start;
+}
+
+/* На узких экранах — одна колонка: две ужимались до нечитаемых полей
+   и накладывались друг на друга. */
+@media (max-width: 900px) {
+  .pro-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ═══════════ РАЗБОР ССЫЛКИ ═══════════ */
+
+.params {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.param {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--hv2-bg2) 45%, transparent);
+}
+
+.param:nth-child(odd) {
+  background: transparent;
+}
+
+.param-name {
+  flex: none;
+  width: 210px;
+  font-size: 13px;
+  color: var(--hv2-muted);
+}
+
+@media (max-width: 767px) {
+  .param {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .param-name {
+    width: auto;
+  }
+}
+
+.param-code {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-subtle);
+}
+
+.param-value {
+  font-family: var(--hv2-mono);
+  font-size: 14px;
+  color: var(--hv2-fg);
+  word-break: break-all;
+  min-width: 0;
+}
+
+.param-value--empty {
+  color: var(--hv2-subtle);
+  font-style: italic;
+}
+
+/* ═══════════ ПАКЕТНЫЙ РЕЖИМ ═══════════ */
+
+.area {
+  width: 100%;
+  background: color-mix(in srgb, var(--hv2-bg2) 62%, transparent);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  color: var(--hv2-fg);
+  font-family: var(--hv2-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.area:focus {
+  border-color: color-mix(in srgb, var(--hv2-primary) 55%, transparent);
+  box-shadow: 0 0 0 3px var(--hv2-glow-soft);
+}
+
+.area::placeholder {
+  color: var(--hv2-subtle);
+}
+
+.batch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.batch-row {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 6px 14px;
+  align-items: baseline;
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+}
+
+@media (max-width: 767px) {
+  .batch-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.batch-row--error {
+  border-color: color-mix(in srgb, var(--hv2-destructive) 45%, transparent);
+}
+
+.batch-row--warning {
+  border-color: color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+}
+
+.batch-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hv2-fg);
+}
+
+.batch-url {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-muted);
+  word-break: break-all;
+  min-width: 0;
+}
+
+.batch-note {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--hv2-destructive);
+}
+
+@media (max-width: 767px) {
+  .batch-note {
+    grid-column: 1;
+  }
+}
+
+.batch-row--warning .batch-note {
+  color: var(--hv2-primary);
+}
+
+/* ═══════════ QR И КОРОТКАЯ ССЫЛКА ═══════════ */
+
+.linktools {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--g-line);
+}
+
+.qrbox {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  /* Карточка результата бывает узкой (в генераторе она делит экран с формой),
+     и рядом с кодом на пояснение остаётся полторы сотни пикселей: текст
+     сыплется по одному слову в строку, а подписи кнопок рвутся по слогам.
+     Не помещается — сторона уезжает под код целиком. */
+  flex-wrap: wrap;
+  padding: 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+}
+
+@media (max-width: 767px) {
+  .qrbox {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Белая подложка обязательна: сканеры плохо читают код на тёмном. */
+.qrbox canvas {
+  flex: none;
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.qrbox-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Полоса уже этой ширины нечитаема — тогда лучше перенос на свою строку. */
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.shortbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid color-mix(in srgb, var(--hv2-teal) 34%, transparent);
+  background: color-mix(in srgb, var(--hv2-teal) 8%, transparent);
+}
+
+.shortbox-url {
+  font-family: var(--hv2-mono);
+  font-size: 15px;
+  color: var(--hv2-teal);
+  word-break: break-all;
+  min-width: 0;
+}
+
+/* ═══════════ КАЛЕНДАРЬ ПОЛЯ ═══════════
+
+   Панель якорится к кнопке: обёртка `position: relative`, панель прижата к
+   правому краю кнопки. Нативный `<input type="date">` убран — он открывал
+   окно там, где лежал скрытый инпут, то есть в случайной точке экрана. */
+
+.datepick {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  /* Та же причина, что у списка значений: поля ниже по дереву перекрывали бы
+     раскрытый календарь. */
+  z-index: 5;
+}
+
+/* ═══════════ ТИПОВЫЕ ЗНАЧЕНИЯ ПОЛЯ ═══════════
+
+   Своя панель вместо `<datalist>`: нативный список рисует браузер, он не
+   оформляется, не показывает пояснение «когда брать» и не закрывается при
+   прокрутке. Оформление и поведение — как у календаря рядом. */
+
+.vhints {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  z-index: 5;
+}
+
+/* ⚠️ Поднимать надо САМО ПОЛЕ, а не панель внутри него.
+   У `.input` есть `backdrop-filter`, а он создаёт новый контекст наложения:
+   всё, что внутри поля, сравнивается по глубине только с содержимым этого же
+   поля. Поэтому раскрытый список уходил под соседние «Кампанию», «Содержание»
+   и «Ключевое слово» — они лежат ниже по дереву и рисуются позже.
+   `:has()` поднимает поле ровно на время, пока панель раскрыта. */
+.input:has(.vhints-panel),
+.input:has(.cal) {
+  position: relative;
+  z-index: 40;
+}
+
+.field:has(.vhints-panel),
+.field:has(.cal) {
+  position: relative;
+  z-index: 40;
+}
+
+.vhints-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  /* Сдвиг вправо, когда панель шире поля и не помещается левым краем: считает
+     его компонент по кромке прокручиваемой области. */
+  right: calc(-12px - var(--vhints-shift, 0px));
+  width: 288px;
+  /* Потолок высоты — меньшее из 260 и того, что реально осталось до кромки. */
+  max-height: var(--vhints-room, 260px);
+  overflow-y: auto;
+  /* Долистал список до конца — дальше прокручиваться нечему. Без этого колесо
+     подхватывал экран под панелью, а прокрутка экрана панель закрывает: список
+     захлопывался ровно в тот момент, когда человек дочитывал его до низа. */
+  overscroll-behavior: contain;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 34%, var(--g-line));
+  /* Заливка непрозрачная: панель ложится поверх полей формы. */
+  background: color-mix(in srgb, var(--hv2-primary) 6%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop), 0 0 32px color-mix(in srgb, var(--hv2-primary) 12%, transparent);
+}
+
+.vhints-panel--up {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+.vhints-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 9px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--hv2-fg);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.vhints-row b {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.vhints-row i {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--hv2-subtle);
+}
+
+.vhints-row:hover,
+.vhints-row:focus-visible {
+  background: color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+}
+
+.vhints-row[aria-selected='true'] b {
+  color: var(--hv2-primary);
+}
+
+.cal {
+  position: absolute;
+  z-index: 40;
+  /* --cal-shift — доводка от компонента, когда панель не влезает в экран,
+     --cal-shift-x — то же по горизонтали: календарь шире поля и в правой
+     колонке сетки уходил левым краем за кромку. */
+  top: calc(100% + 10px + var(--cal-shift, 0px));
+  right: calc(-12px - var(--cal-shift-x, 0px));
+  width: 272px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 34%, var(--g-line));
+  /* Заливка непрозрачная: панель ложится поверх заголовков и полей формы,
+     и полупрозрачное стекло превращало их в кашу под цифрами. */
+  background: color-mix(in srgb, var(--hv2-primary) 6%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop), 0 0 32px color-mix(in srgb, var(--hv2-primary) 12%, transparent);
+}
+
+/* Снизу не помещается — откидываем вверх, `transform-origin` меняет компонент. */
+.cal--up {
+  top: auto;
+  bottom: calc(100% + 10px - var(--cal-shift, 0px));
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal-month {
+  flex: 1;
+  text-align: center;
+  font-family: var(--hv2-pixel);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  color: var(--hv2-primary);
+}
+
+.cal-nav {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  color: var(--hv2-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+
+.cal-nav:hover {
+  color: var(--hv2-primary);
+  border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+}
+
+.cal-week,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-week span {
+  text-align: center;
+  font-family: var(--hv2-mono);
+  font-size: 10px;
+  color: color-mix(in srgb, var(--hv2-subtle) 65%, transparent);
+}
+
+.cal-day {
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: none;
+  color: var(--hv2-fg);
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+
+.cal-day:hover {
+  background: color-mix(in srgb, var(--hv2-primary) 18%, transparent);
+  border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  color: var(--hv2-fg);
+}
+
+.cal-day[data-outside] {
+  color: color-mix(in srgb, var(--hv2-subtle) 45%, transparent);
+}
+
+.cal-day[data-today] {
+  color: var(--hv2-primary);
+  border-color: color-mix(in srgb, var(--hv2-primary) 50%, transparent);
+}
+
+/* Выбранный день — там, где выбор вообще существует (фильтр периода).
+   В полях UTM дата дописывается к значению, и «текущего дня» там нет. */
+.cal-day[data-picked] {
+  background: color-mix(in srgb, var(--hv2-primary) 26%, transparent);
+  border-color: var(--hv2-primary);
+  color: var(--hv2-fg);
+}
+
+.cal-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--g-line);
+}
+
+.cal-today {
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--hv2-primary) 14%, transparent);
+  color: var(--hv2-fg);
+  font-family: var(--hv2-pixel);
+  font-size: 8px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.cal-note {
+  font-size: 11px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--hv2-subtle) 70%, transparent);
+}
+
+.hint--examples {
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  color: color-mix(in srgb, var(--hv2-subtle) 58%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hint--error {
+  color: var(--hv2-destructive);
+}
+
+/* ═══════════ КОДОВАЯ ФРАЗА ═══════════ */
+
+/* Фраза показывается один раз и её надо переписать — отсюда крупный кегль,
+   моноширинный набор и разрядка: чтобы «л» и «п» не слились при переписывании. */
+.phrase {
+  font-family: var(--hv2-mono);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  word-break: break-word;
+  color: var(--hv2-primary);
+  background: color-mix(in srgb, var(--hv2-primary) 9%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .phrase {
+    font-size: 17px;
+    padding: 14px;
+  }
+}
+
+/* Подтверждение «записал» — оно снимает блокировку с кнопки «Продолжить»,
+   поэтому строка кликабельна целиком, а не только сам квадратик. */
+.checkline {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--hv2-muted);
+  user-select: none;
+}
+
+.checkline input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--hv2-primary);
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Быстрый старт — недавние шаблоны над формой генератора. */
+.quick {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.quick .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+}
+
+/* Период в истории. Нативное поле даты здесь уместно: это фильтр, а не
+   значение метки — привязка к кнопке и своя раскладка тут не нужны. */
+.dates {
+  align-items: center;
+  gap: 8px;
+}
+
+/* Граница периода: показанная дата плюс кнопка календаря. Нативное поле
+   `<input type="date">` убрано — оно открывало окно операционной системы,
+   чужое по виду и не подчиняющееся оболочке. */
+.datebound {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 6px 0 10px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: color-mix(in srgb, var(--hv2-bg2) 62%, transparent);
+  /* Своя точка отсчёта для панели календаря — как у поля ввода. */
+  position: relative;
+}
+
+.datebound-value {
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-fg);
+  min-width: 76px;
+}
+
+.datebound-value--empty {
+  color: color-mix(in srgb, var(--hv2-subtle) 60%, transparent);
+}
+
+.datebound .ibtn {
+  background: none;
+  border: none;
+  color: var(--hv2-subtle);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+}
+
+.datebound .ibtn:hover {
+  color: var(--hv2-primary);
+}
+
+.datebound .ibtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Панель календаря лежит внутри поля, а у поля есть фон и своя глубина —
+   поднимаем на время раскрытия, как у полей генератора. */
+.datebound:has(.cal) {
+  z-index: 40;
+}
+
+/* ⚠️ И саму карточку с фильтрами тоже. У `.glass` есть `backdrop-filter`, а он
+   заводит свой контекст наложения: всё, что внутри карточки, сравнивается по
+   глубине только с её содержимым. Раскрытый календарь оказывался под списком
+   истории, который лежит ниже по дереву, — сквозь панель просвечивали чужие
+   строки. Тот же приём, что поднимает поле генератора над соседними полями. */
+.glass:has(.cal),
+.glass:has(.vhints-panel) {
+  position: relative;
+  z-index: 40;
+}
+
+/* ═══════════ БИБЛИОТЕКА: СПИСКИ, ТАБЛИЦА, СПРАВОЧНИК ═══════════ */
+
+.hist-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tag-dot {
+  width: 8px;
+  height: 8px;
+  /* Тот же квадратный пиксель, что и в палитре: метка тега в списке обязана
+     совпадать с образцом, которым её выбирали. */
+  border-radius: 0;
+  flex: none;
+  display: inline-block;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Плитки — та же карточка, только в сетке. Разметка одна на оба вида. */
+.cards {
+  display: grid;
+  /* `min(300px, 100%)`, а не голые 300px: на узком экране колонка не сжимается
+     ниже 300px, и плитки уезжали за край — это и ломало планшетную раскладку. */
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 12px;
+}
+
+.cards .hist-row {
+  flex-direction: column;
+  /* ⚠️ Не `flex-start`: в колоночной раскладке он оставляет содержимому ширину
+     по контенту, и длинная строка меток задавала ширину карточки сама — текст
+     вылезал за границу, хотя многоточие у него настроено. */
+  align-items: stretch;
+  gap: 10px;
+}
+
+.cards .hist-main {
+  width: 100%;
+}
+
+/* Действия в плитке прижаты влево: в строке они справа, а в карточке справа
+   от них пусто. */
+.cards .htable-acts {
+  align-self: flex-start;
+}
+
+.cards .hist-when {
+  margin: 0;
+}
+
+.htable {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.htable-head,
+.htable-row {
+  display: grid;
+  grid-template-columns: 92px 96px 1fr 2fr 74px;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 4px;
+  min-width: 560px;
+}
+
+.htable-head {
+  color: color-mix(in srgb, var(--hv2-subtle) 75%, transparent);
+  border-bottom: 1px solid var(--g-line);
+}
+
+/* Заголовок-кнопка: по нему упорядочивают список, как в 2.2. Стрелка стоит
+   всегда — иначе неочевидно, что шапка вообще нажимается. */
+.sorthead {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sorthead__mark {
+  opacity: 0.45;
+  font-size: 9px;
+}
+
+.sorthead:hover {
+  color: var(--hv2-fg);
+}
+
+.sorthead--on {
+  color: var(--hv2-primary);
+}
+
+.sorthead--on .sorthead__mark {
+  opacity: 1;
+}
+
+/* У шаблонов колонок шесть, и они другие: не «когда/ссылка», а метки,
+   которые как раз и сравнивают между собой глазами. */
+.htable--templates .htable-head,
+.htable--templates .htable-row {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) 74px;
+  min-width: 640px;
+}
+
+.htable-row + .htable-row {
+  border-top: 1px solid color-mix(in srgb, var(--g-line) 55%, transparent);
+}
+
+.htable-url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--hv2-muted);
+}
+
+.htable-acts {
+  display: inline-flex;
+  gap: 2px;
+  flex: none;
+}
+
+.htable-acts .ibtn {
+  background: none;
+  border: none;
+  color: var(--hv2-subtle);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 5px;
+}
+
+.htable-acts .ibtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.htable-acts .ibtn:hover {
+  color: var(--hv2-primary);
+}
+
+.dict {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.dict-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  font-family: var(--hv2-mono);
+  font-size: 12px;
+  color: var(--hv2-fg);
+}
+
+.dict-item b {
+  color: var(--hv2-primary);
+  font-size: 11px;
+}
+
+.dict-item i {
+  font-style: normal;
+  color: var(--hv2-subtle);
+  font-size: 11px;
+}
+
+/* Сведённый алиас гаснет: он больше не предлагается в подсказках. */
+.dict-item--alias {
+  opacity: 0.55;
+}
+
+/* ═══════════ БИБЛИОТЕКА: СПИСОК + ФОРМА ═══════════
+
+   На широком экране форма создания стоит сбоку: видно, что уже есть, и не
+   нужно закрывать список, чтобы добавить ещё один шаблон. На узком колонки
+   схлопываются, и форма встаёт над списком. */
+
+.lib-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+@media (min-width: 1180px) {
+  .lib-cols {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.44fr);
+  }
+}
+
+.lib-main,
+.lib-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Кнопка «Новый шаблон» тянется на всю ширину колонки: в свёрнутом виде она
+   и есть вся боковая панель. */
+.lib-add {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Боковая колонка следует за прокруткой: список длинный, а форма нужна
+   в любой момент. */
+@media (min-width: 1180px) {
+  .lib-side {
+    position: sticky;
+    top: 0;
+  }
+}
+
+/* Пара «поле — значение» в карточке шаблона: слева подпись, справа значение
+   во всю оставшуюся ширину. */
+.htable-row--pair {
+  grid-template-columns: 132px minmax(0, 1fr);
+  min-width: 0;
+}
+
+/* Палитра тегов — восемь образцов, паритет с 2.2. */
+.palette {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+/* Подсказки тегов: частые и недавние. Стоят под палитрой и подставляют
+   название вместе с цветом — иначе один тег расползается по палитре. */
+.taghints {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.taghints-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.taghints-label {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--hv2-subtle) 72%, transparent);
+}
+
+/* Тег подставляется нажатием, поэтому он кнопка — но кнопка тихая: рядом
+   стоит настоящее действие «Сохранить», и спорить с ним подсказке нечем. */
+.chip--tag {
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  letter-spacing: 0;
+  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  /* Квадрат, а не кружок: интерфейс собран из пиксельной сетки — шрифт,
+     иконки, маскот, — и круглые образцы выпадали из этого языка. */
+  border-radius: 0;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  /* Скос «пикселя»: светлая грань сверху, тёмная снизу — как у клавиш в
+     восьмибитных интерфейсах. */
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.28);
+}
+
+.swatch:hover {
+  outline: 2px solid color-mix(in srgb, var(--hv2-fg) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.swatch[aria-pressed='true'] {
+  border-color: var(--hv2-fg);
+  /* Ступенчатая обводка вместо мягкого ореола — по сетке, без сглаживания. */
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.22),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.28),
+    0 0 0 2px var(--hv2-bg2),
+    0 0 0 4px var(--hv2-primary);
+}
+
+/* ═══════════ МОДАЛКА ДЕТАЛЕЙ ═══════════ */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.modal-back {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--hv2-bg) 74%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-card {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: min(86vh, 760px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 20px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--g-line);
+  /* Непрозрачно: под окном рабочий список, стекло дало бы кашу. */
+  background: var(--hv2-card);
+  box-shadow: var(--g-inner), var(--g-drop);
+}
+
+@media (max-width: 767px) {
+  .modal-card {
+    padding: 15px;
+    max-height: 90vh;
+  }
+}
+
+/* Список выбора внутри окна («Все шаблоны»). Прокручивается сам, а не тянет
+   карточку в длину: под ним остаются счётчик и переход в библиотеку, и они
+   не должны уезжать за нижнюю кромку, когда шаблонов три десятка. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 46vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
+.picker-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+  color: var(--hv2-fg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.picker-row:hover,
+.picker-row:focus-visible {
+  border-color: color-mix(in srgb, var(--hv2-primary) 40%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--hv2-primary) 12%, transparent);
+}
+
+/* Метки в строке — второй по важности слой: их читают, когда имена похожи. */
+.picker-row .hist-url {
+  font-size: 12px;
+}
+
+/* ═══════════ ОБУЧЕНИЕ ═══════════
+
+   Пять шагов при первом визите. Оверлей поверх всей рамки устройства: тур
+   рассказывает про инструмент целиком, а не про текущий экран. */
+
+.onb {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+/* ═══════════ ПРИГЛАШЕНИЕ ПРОЙТИ ОБУЧЕНИЕ ═══════════
+
+   Тур больше не открывается сам: он закрывал собой весь экран, и первое, что
+   видел человек, было не инструментом, а пятью экранами текста поверх него.
+   Вместо этого — тихая плашка в углу: подсветка мягкая, крестик убирает
+   предложение навсегда. Появляется с задержкой, чтобы не спорить с первым
+   впечатлением от экрана. */
+
+.onb-invite {
+  /* Внутри корпуса, а не поверх окна: иначе плашка вылезала за рамку
+     устройства и накрывала кнопку помощника в правом нижнем углу.
+     Слева — потому что справа живёт помощник, и спорить им не за что. */
+  position: absolute;
+  left: 18px;
+  bottom: 54px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(420px, calc(100vw - 44px));
+  padding: 11px 12px 11px 14px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-course) 42%, transparent);
+  background: color-mix(in srgb, var(--hv2-course) 12%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop);
+  animation: onb-invite-in 0.5s ease-out 1.2s backwards, onb-invite-pulse 3.4s ease-in-out 2s infinite;
+}
+
+@keyframes onb-invite-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Дыхание вместо мигания: подсказка обязана быть заметной ровно настолько,
+   чтобы её нашли глазами, и не настолько, чтобы мешать работать. */
+@keyframes onb-invite-pulse {
+  0%, 100% { box-shadow: var(--g-inner), var(--g-drop), 0 0 0 color-mix(in srgb, var(--hv2-course) 30%, transparent); }
+  50% { box-shadow: var(--g-inner), var(--g-drop), 0 0 26px color-mix(in srgb, var(--hv2-course) 34%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onb-invite {
+    animation: none;
+  }
+}
+
+.onb-invite__mark {
+  display: inline-flex;
+  color: var(--hv2-course);
+}
+
+.onb-invite__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--hv2-muted);
+  min-width: 0;
+}
+
+.onb-invite__text b {
+  color: var(--hv2-fg);
+  font-weight: 600;
+}
+
+.onb-invite__text i {
+  font-style: normal;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--hv2-subtle) 74%, transparent);
+}
+
+.onb-invite__close {
+  flex: none;
+}
+
+@media (max-width: 767px) {
+  .onb-invite {
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    bottom: 52px;
+  }
+
+  .onb-invite__text i {
+    display: none;
+  }
+}
+
+/* Затемнение с вырезом вокруг цели. Клик по нему закрывает тур — так же,
+   как клик мимо модалки в 2.2. */
+.onb-mask {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--hv2-bg) 76%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Рамка подсветки. Пульсирует, иначе на тёмном фоне её не замечают. */
+.onb-ring {
+  position: absolute;
+  border-radius: var(--r-md);
+  border: 2px solid var(--hv2-teal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hv2-teal) 22%, transparent),
+    0 0 26px color-mix(in srgb, var(--hv2-teal) 40%, transparent);
+  pointer-events: none;
+  animation: onb-pulse 1.8s ease-in-out infinite;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+@keyframes onb-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.onb-card {
+  position: absolute;
+  width: min(440px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 18px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-teal) 30%, var(--g-line));
+  /* Непрозрачно: под карточкой лежит рабочий экран, стекло дало бы кашу. */
+  background: color-mix(in srgb, var(--hv2-teal) 4%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop);
+}
+
+@media (max-width: 767px) {
+  .onb-card {
+    left: 12px !important;
+    right: 12px;
+    width: auto;
+    padding: 15px;
+    gap: 11px;
+  }
+}
+
+.onb-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--hv2-fg);
+  margin: 0;
+}
+
+.onb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.onb-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--hv2-subtle);
+}
+
+.onb-list svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--hv2-success);
+}
+
+.onb-foot {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.onb-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.onb-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--g-line);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.onb-dots i.on {
+  background: var(--hv2-teal);
+  transform: scale(1.25);
+}
+
+/* ═══════════ ПОМОЩЬ: ДВЕ КОЛОНКИ ═══════════
+
+   На широких экранах объяснения и действия расходятся: читать длинный текст
+   в одну колонку во всю ширину неудобно, а кнопки должны быть под рукой. */
+
+/* Колонки растут вместе с экраном, а не держат боковую на фиксированных
+   320px: на широком мониторе левая часть раздувалась, а правая оставалась
+   узкой полосой, где каждый заголовок ломался на две строки. */
+.help-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 1500px) {
+  .help-cols {
+    grid-template-columns: minmax(0, 1.35fr) minmax(420px, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .help-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.help-main,
+.help-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+@media (min-width: 1101px) {
+  .help-side {
+    position: sticky;
+    top: 0;
+  }
+}
+
+/* Колонка узкая, а пиксельный шрифт широкий — сбавляем кегль, иначе каждый
+   заголовок ломается на две строки. */
+.help-side .qtitle {
+  font-size: 12px;
+}
+
+.help-links {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: stretch;
+}
+
+.help-links .btn {
+  justify-content: flex-start;
+}
+
+.help-ver {
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* ═══════════ ПОМОЩНИК ═══════════
+
+   Кнопка живёт в правом нижнем углу экрана устройства, окно выезжает из неё.
+   На мобилке кнопка поднята над доком разделов, чтобы они не наезжали. */
+
+.ask-fab {
+  position: absolute;
+  right: 18px;
+  bottom: 56px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  padding: 0 17px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hv2-course) 50%, transparent);
+  background: color-mix(in srgb, var(--hv2-course) 18%, var(--hv2-card));
+  color: var(--hv2-fg);
+  font-family: var(--hv2-pixel);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 8px 26px color-mix(in srgb, var(--hv2-course) 24%, transparent);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.ask-fab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--hv2-course) 34%, transparent);
+}
+
+.ask-fab svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 767px) {
+  .ask-fab {
+    right: 10px;
+    bottom: 52px;
+    height: 38px;
+    padding: 0 13px;
+    font-size: 8px;
+  }
+}
+
+.ask {
+  position: absolute;
+  right: 18px;
+  bottom: 108px;
+  z-index: 31;
+  width: min(520px, calc(100% - 36px));
+  max-height: min(70%, 560px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--hv2-course) 34%, var(--g-line));
+  /* Непрозрачно: окно ложится поверх формы, стекло превращало текст в кашу. */
+  background: color-mix(in srgb, var(--hv2-course) 5%, var(--hv2-card));
+  box-shadow: var(--g-inner), var(--g-drop), 0 0 40px color-mix(in srgb, var(--hv2-course) 16%, transparent);
+  transform-origin: bottom right;
+}
+
+@media (max-width: 767px) {
+  .ask {
+    right: 10px;
+    left: 10px;
+    width: auto;
+    bottom: 98px;
+    max-height: 66%;
+  }
+}
+
+.ask-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ask-quota {
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  color: var(--hv2-subtle);
+}
+
+.ask-quota b {
+  color: var(--hv2-primary);
+}
+
+.ask-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ask-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill-2);
+}
+
+.ask-card .hist-url {
+  white-space: normal;
+  word-break: break-all;
+}
+
+/* ═══════════ ПРОВЕРКА ПЕРЕАДРЕСАЦИЙ ═══════════ */
+
+.hops {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: hop;
+}
+
+.hop {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--hv2-bg2) 45%, transparent);
+}
+
+.hop:nth-child(odd) {
+  background: transparent;
+}
+
+.hop-status {
+  flex: none;
+  width: 44px;
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hop-status--ok {
+  color: var(--hv2-teal);
+}
+
+.hop-status--redirect {
+  color: var(--hv2-primary);
+}
+
+.hop-status--bad {
+  color: var(--hv2-destructive);
+}
+
+.hop-url {
+  font-family: var(--hv2-mono);
+  font-size: 13px;
+  color: var(--hv2-muted);
+  word-break: break-all;
+  min-width: 0;
+}
+
+.verdict {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+}
+
+.verdict--ok {
+  border-color: color-mix(in srgb, var(--hv2-teal) 34%, transparent);
+  background: color-mix(in srgb, var(--hv2-teal) 8%, transparent);
+}
+
+.verdict--bad {
+  border-color: color-mix(in srgb, var(--hv2-destructive) 34%, transparent);
+  background: color-mix(in srgb, var(--hv2-destructive) 8%, transparent);
+}
+
+.verdict-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hv2-fg);
+}
+
+.verdict-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--hv2-muted);
+}
+
+/* ═══════════ ПУСТОЕ СОСТОЯНИЕ ═══════════ */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--hv2-subtle);
+  font-size: 14px;
+}
+
+/* ═══════════ ДОСТУПНОСТЬ ═══════════ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

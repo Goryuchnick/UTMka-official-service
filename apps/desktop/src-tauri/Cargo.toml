@@ -1,0 +1,62 @@
+[package]
+name = "utmka"
+version = "3.0.0"
+description = "UTMka — конструктор UTM-меток"
+authors = ["Александр Пронин"]
+license = "MIT"
+repository = "https://github.com/Goryuchnick/UTMka-official-service"
+edition = "2021"
+# Заявленный в манифестах Tauri MSRV 1.77.2 — фикция ради совместимости с
+# Windows 7: реально tauri-build требует 1.85, а у CLI на Windows фактический
+# пол ещё выше из-за транзитивных зависимостей. Пин на старую версию не ставим.
+rust-version = "1.85"
+
+[lib]
+name = "utmka_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.11.3", features = [] }
+tauri-plugin-log = "2"
+tauri-plugin-dialog = "2.7"
+tauri-plugin-fs = "2.5"
+tauri-plugin-clipboard-manager = "2.3"
+# Открыть чужой адрес в системном браузере: из вебвью ссылка наружу не ведёт.
+tauri-plugin-opener = "2.5"
+
+# Обновления «по воздуху» — пункт паритета с 2.2, а не украшение.
+# ⚠️ Подпись апдейтера у Tauri обязательна и отключить её нельзя; она своя и
+# с Authenticode никак не связана. Приватный ключ живёт только в GitHub Actions
+# Secrets и в Vaultwarden владельца — в дерево проекта он не попадает.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2.10"
+# Перезапуск после установки обновления.
+tauri-plugin-process = "2.3"
+
+# Хранилище. `bundled` — своя сборка SQLite в бинарнике: системной библиотеки
+# на машине пользователя может не быть, а версии расходятся.
+#
+# ⚠️ Плагин `tauri-plugin-sql` в этот бинарник не берём ни при каких условиях:
+# он тянет sqlx, а тот — свою редакцию `libsqlite3-sys`. Две редакции в одном
+# бинарнике падают на линковке дублирующимися символами, и ловится это не сразу
+# (ARCHITECTURE §11, 2026-08-13).
+rusqlite = { version = "0.40", features = ["bundled", "backup"] }
+r2d2 = "0.8"
+r2d2_sqlite = "0.35"
+uuid = { version = "1", features = ["v4"] }
+time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
+
+# Сеть. TLS — системный (schannel на Windows, Secure Transport на macOS):
+# под ТСПУ и корпоративными прокси он ведёт себя предсказуемее собственного
+# набора корневых сертификатов.
+reqwest = { version = "0.13", default-features = false, features = ["native-tls", "charset", "http2"] }
+url = "2.5"
+
+[dev-dependencies]
+tempfile = "3"

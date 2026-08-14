@@ -76,7 +76,8 @@ dmypy.json
 
 # Node
 node_modules/
-package-lock.json
+# package-lock.json НЕ игнорируем: без него npm ci в Docker невозможен,
+# а npm install на сборке даёт другой набор версий, чем на машине разработчика.
 
 # Template examples — track these
 !templates_example*.json
@@ -144,3 +145,16 @@ claude_*.md
 
 # Release notes
 RELEASE_*.md
+
+# Marketing materials (private)
+marketing/
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# Tauri: артефакты сборки. `target/` в debug разрастается до десятков гигабайт,
+# `gen/` пересоздаётся из конфига при каждой сборке.
+**/target/
+apps/desktop/dist/
+apps/desktop/src-tauri/gen/
