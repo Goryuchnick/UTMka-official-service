@@ -83,6 +83,21 @@ jobs:
       # Версия закреплена точно: в мажоре action-v1 выпилена поддержка Tauri v1
       # и убраны `includeRelease`/`includeDebug` — плавающий тег однажды сломает
       # сборку молча.
+      # ⚠️ Без ключа подписи сборка идёт до конца и падает на самой последней
+      # стадии — «Command failed with exit code 1» и всё. Причину видно только
+      # в полном логе, а он закрыт без токена: на разбор такого падения уходит
+      # час. Поэтому проверяем секрет ДО двадцати минут компиляции.
+      - name: Ключ апдейтера на месте?
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::Секрет TAURI_SIGNING_PRIVATE_KEY пуст или не заведён. Подпись апдейтера у Tauri обязательна и отключить её нельзя, поэтому сборка релиза без ключа невозможна. Заведите секрет в настройках репозитория (Settings → Secrets and variables → Actions); пара ключей создаётся командой 'npx tauri signer generate -w <файл>' в apps/desktop, публичная половина уже лежит в tauri.conf.json → plugins.updater.pubkey — если генерируете новую пару, её нужно заменить."
+            exit 1
+          fi
+          echo "Ключ найден, длина ${#KEY} символов."
+
       - id: tauri
         uses: tauri-apps/tauri-action@action-v1.0.0
         env:
