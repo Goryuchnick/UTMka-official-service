@@ -83,7 +83,8 @@ jobs:
       # Версия закреплена точно: в мажоре action-v1 выпилена поддержка Tauri v1
       # и убраны `includeRelease`/`includeDebug` — плавающий тег однажды сломает
       # сборку молча.
-      - uses: tauri-apps/tauri-action@action-v1.0.0
+      - id: tauri
+        uses: tauri-apps/tauri-action@action-v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Подпись апдейтера обязательна и отключить её нельзя. Ключ живёт
@@ -112,5 +113,28 @@ jobs:
             по значку → «Открыть» → «Открыть»**. Двойной клик в первый раз даст
             отказ Gatekeeper; дальше открывается как обычно.
 
+            **Портативная версия** — `UTMka-portable-*.exe`: один файл, ставить
+            ничего не нужно. Данные всё равно лежат в профиле пользователя
+            (`%APPDATA%\UTMka\3.0\`), поэтому на флешке с собой уедет
+            приложение, но не история.
+
             Данные версии 2.2 приложение предложит перенести при первом запуске
             и читает её файл только на чтение — 2.2 продолжит работать.
+
+      # Портативная версия — тот же бинарник, что кладёт установщик, только без
+      # установки. `tauri-action` собирает bundle и до самого exe не добирается,
+      # поэтому прикладываем его к релизу отдельным шагом. Только Windows: на
+      # macOS роль «одного файла» играет .dmg с приложением внутри.
+      - name: Портативная версия (Windows)
+        if: matrix.platform == 'windows-latest' && steps.tauri.outputs.releaseId != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          version=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
+          target_dir="${CARGO_TARGET_DIR:-apps/desktop/src-tauri/target}"
+          src="$target_dir/x86_64-pc-windows-msvc/release/utmka.exe"
+          out="UTMka-portable-$version-x64.exe"
+          cp "$src" "$out"
+          gh release upload "app-v$version" "$out" --clobber --repo "$GITHUB_REPOSITORY"
