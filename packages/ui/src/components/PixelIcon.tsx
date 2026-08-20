@@ -23,6 +23,8 @@ export type IconName =
   | 'key'
   | 'calendar'
   | 'wand'
+  | 'edit'
+  | 'add'
   | 'trash'
   | 'moon'
   | 'sun'
@@ -143,6 +145,13 @@ const GLYPHS: Record<IconName, ReactElement> = {
       <path d="M13.2 9.4l.4 1 1 .4-1 .4-.4 1-.4-1-1-.4 1-.4z" fill="currentColor" stroke="none" />
     </g>
   ),
+  edit: (
+    <g stroke="currentColor" strokeWidth="1.4" fill="none">
+      <path d="M10 3l3 3-7 7H3v-3l7-7z" strokeLinejoin="round" />
+      <path d="M9 4l3 3" strokeLinecap="round" />
+    </g>
+  ),
+  add: <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />,
   trash: (
     <g stroke="currentColor" strokeWidth="1.4" fill="none">
       <path d="M2.5 4h11" strokeLinecap="round" />

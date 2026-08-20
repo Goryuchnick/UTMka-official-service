@@ -8,7 +8,7 @@
 
 import { safeDecode } from './build'
 import { normalizeBaseUrl } from './normalize'
-import type { UtmKey, UtmParams } from './types'
+import type { LinkDraft, UtmKey, UtmParams } from './types'
 import { UTM_KEY_BY_PARAM } from './types'
 
 export interface ParsedLink {
@@ -88,6 +88,48 @@ export function parseUrl(raw: string): ParsedLink {
     extras,
     duplicates: [...duplicates],
     hash: url.hash,
+  }
+}
+
+/**
+ * Готовая ссылка → черновик формы. Обратная операция к `buildUrl`.
+ *
+ * Нужна правке результата: человек дописал в собранную ссылку `utm_content`
+ * руками, и это должно доехать до QR-кода, сокращателя, истории и шаблона —
+ * то есть до полей черновика, а не остаться отдельной строкой рядом с ним.
+ * Второй черновик, живущий параллельно, разошёлся бы с формой на первом же
+ * нажатии, и в шаблон уехало бы не то, что человек видел на экране.
+ *
+ * Чужие параметры (`yclid`, `ref`, `page`) и фрагмент уезжают в `baseUrl`
+ * ровно в том виде, в каком пришли: `buildUrl` сохраняет их на своих местах,
+ * а перекодировать их по дороге — значит менять чужую ссылку без спроса.
+ *
+ * Неразобранный адрес возвращается как есть: пусть валидатор скажет, что не
+ * так, — это честнее, чем молча отдать пустую форму.
+ */
+export function draftFromUrl(raw: string): LinkDraft {
+  const parsed = parseUrl(raw)
+  if (!parsed.valid) return { baseUrl: (raw ?? '').trim(), params: {} }
+
+  const base = normalizeBaseUrl(raw)
+  let tail = ''
+  try {
+    const url = new URL(base)
+    const query = url.search.startsWith('?') ? url.search.slice(1) : url.search
+    const kept = (query ? query.split('&') : []).filter((chunk) => {
+      if (!chunk) return false
+      const eq = chunk.indexOf('=')
+      const name = safeDecode(eq === -1 ? chunk : chunk.slice(0, eq))
+      return UTM_KEY_BY_PARAM[name] === undefined
+    })
+    tail = kept.join('&')
+  } catch {
+    tail = ''
+  }
+
+  return {
+    baseUrl: `${parsed.baseUrl}${tail ? `?${tail}` : ''}${parsed.hash}`,
+    params: parsed.params,
   }
 }
 

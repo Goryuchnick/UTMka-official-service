@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { hasUtm, lostParams, parseUrl } from '../src/parse'
+import { draftFromUrl, hasUtm, lostParams, parseUrl } from '../src/parse'
+import { buildUrl } from '../src/build'
 
 describe('parseUrl', () => {
   it('раскладывает метки по полям', () => {
@@ -64,5 +65,44 @@ describe('hasUtm / lostParams', () => {
     const before = 'https://example.com/?utm_source=vk&utm_medium=social&utm_campaign=a'
     const after = 'https://example.com/?utm_source=telegram&utm_campaign=a'
     expect(lostParams(before, after).sort()).toEqual(['medium', 'source'])
+  })
+})
+
+describe('draftFromUrl', () => {
+  it('раскладывает готовую ссылку обратно по полям формы', () => {
+    const draft = draftFromUrl(
+      'https://example.com/page?utm_source=vk&utm_medium=cpc&utm_campaign=osen',
+    )
+    expect(draft.baseUrl).toBe('https://example.com/page')
+    expect(draft.params).toEqual({ source: 'vk', medium: 'cpc', campaign: 'osen' })
+  })
+
+  it('чужие параметры и фрагмент оставляет в адресе', () => {
+    const draft = draftFromUrl('https://example.com/p?ref=partner&utm_source=vk&page=2#top')
+    expect(draft.baseUrl).toBe('https://example.com/p?ref=partner&page=2#top')
+    expect(draft.params.source).toBe('vk')
+  })
+
+  it('пересборка после разбора даёт ту же ссылку', () => {
+    const url = 'https://example.com/p?ref=partner&utm_source=yandex&utm_medium=cpc&utm_term={keyword}'
+    expect(buildUrl(draftFromUrl(url))).toBe(url)
+  })
+
+  it('подстановки площадок не кодирует ни в одном синтаксисе', () => {
+    const url = 'https://example.com/?utm_source=vk&utm_campaign={{ad_plan_id}}'
+    const draft = draftFromUrl(url)
+    expect(draft.params.campaign).toBe('{{ad_plan_id}}')
+    expect(buildUrl(draft)).toContain('utm_campaign={{ad_plan_id}}')
+  })
+
+  it('дописанную руками метку подхватывает в своё поле', () => {
+    const draft = draftFromUrl('https://example.com/?utm_source=vk&utm_content=banner_1')
+    expect(draft.params.content).toBe('banner_1')
+  })
+
+  it('битый адрес возвращает как есть — пусть ругается валидатор', () => {
+    const draft = draftFromUrl('  не ссылка  ')
+    expect(draft.baseUrl).toBe('не ссылка')
+    expect(draft.params).toEqual({})
   })
 })

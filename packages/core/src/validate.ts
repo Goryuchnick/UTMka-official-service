@@ -8,6 +8,7 @@
  */
 
 import { buildUrl } from './build'
+import { macroTokenNames } from './macros'
 import { hasCyrillic, needsNormalization } from './normalize'
 import type { ParsedLink } from './parse'
 import type { Issue, LinkDraft, UtmKey, UtmParams } from './types'
@@ -35,17 +36,22 @@ const PLATFORM_LIKE = new Set([
 /** Источники, у которых есть платный поиск: там `utm_term` осмыслен. */
 const SEARCH_SOURCES = new Set(['yandex', 'google', 'yandex_direct', 'google_ads'])
 
-/** Плейсхолдеры, которые реально подставляются площадками. */
-export const KNOWN_PLACEHOLDERS = new Set([
-  // Яндекс.Директ
-  'keyword', 'campaign_id', 'ad_id', 'banner_id', 'phrase_id', 'source_type',
-  'source', 'device_type', 'region_name', 'region_id', 'match_type',
-  'position_type', 'gbid', 'creative_id', 'adtarget_name',
-  // ВКонтакте
-  'client_id', 'campaign_name', 'ad_name', 'platform',
-  // Telegram Ads / прочее
-  'campaign', 'creative',
-])
+/**
+ * Подстановки, доставшиеся от старых кабинетов. Сам справочник их больше не
+ * предлагает — VK свернул `vk.com/ads` в VK Рекламу с другим синтаксисом, —
+ * но ссылки, собранные в 2.2, живут в истории у людей, и ругаться на них
+ * задним числом незачем.
+ */
+const LEGACY_PLACEHOLDERS = ['client_id', 'ad_name', 'platform', 'campaign']
+
+/**
+ * Плейсхолдеры, которые реально подставляются площадками.
+ *
+ * Собирается из справочника `macros.ts`, а не переписывается рядом: иначе
+ * выпадающий список советовал бы токен, на который валидатор тут же ругается
+ * «неизвестная подстановка». Один источник — один ответ.
+ */
+export const KNOWN_PLACEHOLDERS = new Set([...macroTokenNames(), ...LEGACY_PLACEHOLDERS])
 
 const PLACEHOLDER_RE = /\{([a-z_0-9]+)\}/gi
 

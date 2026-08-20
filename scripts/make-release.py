@@ -10,19 +10,20 @@ import json
 import pathlib
 import shutil
 
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 REPO = "https://github.com/Goryuchnick/UTMka-official-service"
 BUILD = pathlib.Path(r"D:\rust\target\utmka\release")
-OUT = pathlib.Path(r"D:\releases\utmka-3.0.0")
+OUT = pathlib.Path(r"D:\releases\utmka-3.1.0")
 
 SETUP_NAME = f"UTMka 3.0_{VERSION}_x64-setup.exe"
 PORTABLE_NAME = f"UTMka-portable-{VERSION}-x64.exe"
 
 NOTES = (
-    "Паритет с десктопом 2.2: правка шаблона, выбор шаблона из генератора с поиском, "
-    "подсказки тегов, период в истории на своём календаре, примеры файлов для импорта. "
-    "QR выгружается в 1024 пикселя с полной тихой зоной, вектор — главный формат. "
-    "Обучение больше не открывается само."
+    "Правка готовой ссылки прямо в результате — с разбором обратно по полям, "
+    "поэтому QR, короткая ссылка и сохранение берут именно её. "
+    "Системные подстановки площадок выпадающим списком: Директ, VK Реклама, Google Ads, Meta. "
+    "utm_content и utm_term появились в простом режиме. "
+    "Пресет ВК Рекламы переведён на двойные скобки нового кабинета."
 )
 
 

@@ -40,6 +40,17 @@ describe('набор пресетов', () => {
   it('предупреждает, что Telegram Ads не умеет подстановки', () => {
     expect(getPreset('telegram-ads')?.caveat).toContain('Динамических подстановок')
   })
+
+  it('ВК Реклама размечается двойными скобками нового кабинета', () => {
+    const vk = getPreset('vk-ads')!
+    expect(vk.params.campaign).toBe('{{ad_plan_id}}')
+    expect(vk.params.content).toBe('{{banner_id}}')
+    // Одинарная скобка — синтаксис закрытого vk.com/ads: ссылка откроется,
+    // а в отчёт приедет литерал вместо номера.
+    for (const { token } of vk.placeholders ?? []) {
+      expect(token.startsWith('{{'), token).toBe(true)
+    }
+  })
 })
 
 describe('applyPreset', () => {
@@ -58,7 +69,7 @@ describe('applyPreset', () => {
 
   it('по требованию перезаписывает заполненное', () => {
     const next = applyPreset(draft, getPreset('vk-ads')!, { overwriteFilled: true })
-    expect(next.params.campaign).toBe('{campaign_name}')
+    expect(next.params.campaign).toBe('{{ad_plan_id}}')
   })
 
   it('не меняет исходный черновик', () => {

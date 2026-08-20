@@ -45,8 +45,13 @@ interface LinkToolsProps {
 
 export function LinkTools({ url }: LinkToolsProps) {
   const [qrOpen, setQrOpen] = useState(false)
-  const [short, setShort] = useState<string | null>(null)
-  const [shortError, setShortError] = useState<string | null>(null)
+  /* Короткая ссылка помнит, для какой ссылки её выдали. Иначе после правки
+     результата под новой ссылкой оставалась бы висеть старая короткая — она
+     ведёт на прежний адрес, и это ровно тот случай, когда ошибка обнаружится
+     уже в отчёте. Сравнением, а не эффектом: сбрасывать состояние в эффекте —
+     лишний кадр и лишний повод для гонки. */
+  const [short, setShort] = useState<{ made: string; url: string } | null>(null)
+  const [shortError, setShortError] = useState<{ made: string; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   /** Скрытая пара копий под выгрузку — из неё и берутся файлы. */
@@ -56,10 +61,10 @@ export function LinkTools({ url }: LinkToolsProps) {
     setLoading(true)
     setShortError(null)
     try {
-      setShort(await backend.net.shorten(url))
+      setShort({ made: url, url: await backend.net.shorten(url) })
       sayAbout('shorten')
     } catch (error) {
-      setShortError(backendMessage(error))
+      setShortError({ made: url, text: backendMessage(error) })
     } finally {
       setLoading(false)
     }
@@ -68,7 +73,7 @@ export function LinkTools({ url }: LinkToolsProps) {
   const copyShort = useCallback(async () => {
     if (!short) return
     try {
-      await navigator.clipboard.writeText(short)
+      await navigator.clipboard.writeText(short.url)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -154,9 +159,9 @@ export function LinkTools({ url }: LinkToolsProps) {
         </div>
       ) : null}
 
-      {short ? (
+      {short?.made === url ? (
         <div className="shortbox">
-          <span className="shortbox-url">{short}</span>
+          <span className="shortbox-url">{short.url}</span>
           <button type="button" className="btn btn--sm" onClick={copyShort}>
             <PixelIcon name={copied ? 'check' : 'copy'} />
             {copied ? 'Скопировано' : 'Копировать'}
@@ -164,7 +169,7 @@ export function LinkTools({ url }: LinkToolsProps) {
         </div>
       ) : null}
 
-      {shortError ? <p className="hint hint--error">{shortError}</p> : null}
+      {shortError?.made === url ? <p className="hint hint--error">{shortError.text}</p> : null}
     </div>
   )
 }

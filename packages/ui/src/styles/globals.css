@@ -1214,6 +1214,35 @@ html[data-theme='light'] .crt {
   color: var(--hv2-teal);
 }
 
+/* Правка собранной ссылки. Моноширинный, как предпросмотр рядом: человек
+   правит ровно то, что видел, и символы не «прыгают» при переключении. */
+.result-edit {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  font-family: var(--hv2-mono);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--hv2-fg);
+  background: color-mix(in srgb, var(--hv2-bg2) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hv2-primary) 42%, var(--g-line));
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  word-break: break-all;
+}
+
+.result-edit:focus-visible {
+  outline: none;
+  border-color: var(--hv2-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hv2-primary) 18%, transparent);
+}
+
+@media (max-width: 767px) {
+  .result-edit {
+    font-size: 12px;
+  }
+}
+
 .result-row {
   display: flex;
   align-items: center;
@@ -1938,6 +1967,117 @@ html[data-theme='light'] .crt {
 
 .vhints-row[aria-selected='true'] b {
   color: var(--hv2-primary);
+}
+
+/* ═══════════ ПОДСТАНОВКИ ПЛОЩАДОК ═══════════
+
+   Тот же каркас, что у списка типовых значений: панель шире поля, прижата
+   правым краем, сама прокручивается. Отличие — группы: площадок несколько,
+   и раскрыта одна, иначе список уезжает на полсотни строк. */
+
+.macros-panel {
+  width: 330px;
+  gap: 4px;
+}
+
+.macros-lead {
+  margin: 2px 6px 4px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--hv2-subtle);
+}
+
+.macros-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.macros-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 9px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--hv2-primary) 8%, transparent);
+  color: var(--hv2-fg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.macros-head b {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.macros-head i {
+  font-style: normal;
+  font-family: var(--hv2-mono);
+  font-size: 11px;
+  color: var(--hv2-subtle);
+}
+
+.macros-head em {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--hv2-teal);
+  margin-left: auto;
+}
+
+.macros-head[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--hv2-primary) 16%, transparent);
+}
+
+/* Предостережение площадки — то, из-за чего метка молча ломается в отчёте.
+   Поэтому не приглушено до служебного серого, а выделено кромкой. */
+.macros-caveat {
+  margin: 2px 6px 4px;
+  padding-left: 8px;
+  border-left: 2px solid color-mix(in srgb, var(--hv2-course) 60%, transparent);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--hv2-subtle);
+}
+
+.macros-row b {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+}
+
+.macros-row .macros-fit {
+  font-style: normal;
+  font-family: var(--hv2-sans, inherit);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--hv2-teal);
+  margin-left: auto;
+}
+
+/* Три кнопки в поле (значения, подстановки, дата) съедают ширину у текста —
+   правый отступ поля им и отдаём. */
+.input:has(.macros) {
+  padding-right: 6px;
+}
+
+/* ═══════════ УТОЧНЕНИЯ ВНУТРИ ШАГА ═══════════
+
+   Содержание и ключевое слово в простом режиме: пятого вопроса не заводим —
+   он ломает обещание «четыре вопроса вместо пяти полей», — но и прятать их
+   насовсем нельзя, иначе подстановки пресета лежат в невидимых полях. */
+
+.substep {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 2px;
+  border-top: 1px dashed color-mix(in srgb, var(--hv2-primary) 26%, var(--g-line));
 }
 
 .cal {

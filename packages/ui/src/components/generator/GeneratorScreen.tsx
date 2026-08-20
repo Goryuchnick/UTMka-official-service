@@ -7,6 +7,12 @@
  * вопросами на человеческом языке; расширенный — все поля сразу, как в 2.2.
  * Модель данных общая, поэтому переключение ничего не теряет.
  *
+ * Черновик — единственное состояние ссылки, и это правило. Правка готового
+ * результата разбирается обратно в поля (`draftFromUrl`), содержание и
+ * ключевое слово простого режима — те же поля, что в расширенном. Второй
+ * источник правды («ссылка отдельно, форма отдельно») разошёлся бы с формой
+ * на первом нажатии, и в шаблон уехало бы не то, что видно на экране.
+ *
  * Вся логика — из `@utmka/core`: сборка, валидация, нормализация, пресеты.
  * Экран только отображает; правила здесь не дублируются.
  */
@@ -15,6 +21,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   applyPreset,
   buildUrl,
+  draftFromUrl,
   hasAnyParam,
   matchPreset,
   normalizeDraft,
@@ -188,6 +195,14 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
     sayAbout('fixed')
   }, [])
 
+  /* Правка готовой ссылки. Разбираем текст обратно в поля формы, а не держим
+     его отдельной строкой: иначе в шаблон и в историю уехало бы не то, что
+     человек только что видел на экране, — а разошлись бы они на первом же
+     нажатии в форме. */
+  const applyUrl = useCallback((raw: string) => {
+    setDraft(draftFromUrl(raw))
+  }, [])
+
   const reset = useCallback(() => {
     setDraft(EMPTY)
     setStep(1)
@@ -272,6 +287,7 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
           onParam={setParam}
           onPreset={pickPreset}
           onTidy={tidy}
+          onApplyUrl={applyUrl}
         />
       ) : (
         <ProMode
@@ -282,6 +298,7 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
           onParam={setParam}
           onTidy={tidy}
           onReset={reset}
+          onApplyUrl={applyUrl}
         />
       )}
     </div>
@@ -302,6 +319,7 @@ interface SimpleModeProps {
   onParam: (key: UtmKey, value: string) => void
   onPreset: (preset: Preset) => void
   onTidy: () => void
+  onApplyUrl: (url: string) => void
 }
 
 function SimpleMode({
@@ -316,7 +334,15 @@ function SimpleMode({
   onParam,
   onPreset,
   onTidy,
+  onApplyUrl,
 }: SimpleModeProps) {
+  /* Содержание и ключевое слово — по желанию, но спрятать их насовсем нельзя:
+     пресеты площадок сами кладут туда подстановки ({ad_id} у Директа), и
+     невидимое заполненное поле — худший вид сюрприза. Поэтому блок
+     раскрывается либо кнопкой, либо тем, что в нём уже что-то лежит. */
+  const [extrasOpen, setExtrasOpen] = useState(false)
+  const filledExtras = Boolean((draft.params.content ?? '').trim() || (draft.params.term ?? '').trim())
+  const showExtras = extrasOpen || filledExtras
   const answers: Record<Step, string> = {
     1: draft.baseUrl.replace(/^https?:\/\//, ''),
     2: activePresetId ? (draft.params.source ?? '') : '',
@@ -406,6 +432,16 @@ function SimpleMode({
                 <>
                   <PresetTiles activeId={activePresetId} onPick={onPreset} />
                   {explain ? <p className="explain">{explain}</p> : null}
+                  {/* Плитка сама ведёт дальше, но вернувшемуся на этот шаг
+                      идти было нечем: единственным способом уйти вперёд было
+                      нажать площадку ещё раз. */}
+                  {(draft.params.source ?? '').trim() ? (
+                    <div className="result-row">
+                      <button type="button" className="btn btn--main" onClick={() => onStep(3)}>
+                        Дальше
+                      </button>
+                    </div>
+                  ) : null}
                 </>
               )}
 
@@ -415,11 +451,52 @@ function SimpleMode({
                     field="campaign"
                     value={draft.params.campaign ?? ''}
                     onChange={(value) => onParam('campaign', value)}
+                    source={draft.params.source}
                     bare
                   />
                   <IssueList issues={validateValue('campaign', draft.params.campaign ?? '')} onFix={onTidy} />
                   {/* Про поведение даты рассказывает сам календарь — здесь не дублируем. */}
-                  <p className="hint">Латиницей, без пробелов.</p>
+                  <p className="hint">
+                    Латиницей, без пробелов. Номер кампании площадка подставит сама — подстановки
+                    лежат в поле под кнопкой с угловыми скобками.
+                  </p>
+
+                  {showExtras ? (
+                    <div className="substep">
+                      <span className="field-label">Уточнения — по желанию</span>
+                      <div className="grid2">
+                        <ValueField
+                          field="content"
+                          value={draft.params.content ?? ''}
+                          onChange={(value) => onParam('content', value)}
+                          source={draft.params.source}
+                        />
+                        <ValueField
+                          field="term"
+                          value={draft.params.term ?? ''}
+                          onChange={(value) => onParam('term', value)}
+                          source={draft.params.source}
+                        />
+                      </div>
+                      <p className="hint">
+                        Содержание (utm_content) различает креативы одной кампании, ключевое слово
+                        (utm_term) — фразу, по которой пришли. Без них отчёт соберётся, но внутри
+                        кампании всё сольётся в одну строку.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="result-row">
+                      <button
+                        type="button"
+                        className="btn btn--sm"
+                        onClick={() => setExtrasOpen(true)}
+                      >
+                        <PixelIcon name="add" />
+                        Содержание и ключевое слово
+                      </button>
+                    </div>
+                  )}
+
                   <div className="result-row">
                     <button type="button" className="btn btn--main" onClick={() => onStep(4)}>
                       Дальше
@@ -430,7 +507,11 @@ function SimpleMode({
 
               {current === 4 && (
                 <>
-                  {url ? <ResultCard url={url} /> : <p className="empty">Заполните адрес — и ссылка появится здесь.</p>}
+                  {url ? (
+                    <ResultCard url={url} onApply={onApplyUrl} />
+                  ) : (
+                    <p className="empty">Заполните адрес — и ссылка появится здесь.</p>
+                  )}
                   <IssueList issues={issues} onFix={onTidy} />
                   {url ? <SaveBar draft={draft} url={url} /> : null}
                 </>
@@ -453,9 +534,19 @@ interface ProModeProps {
   onParam: (key: UtmKey, value: string) => void
   onTidy: () => void
   onReset: () => void
+  onApplyUrl: (url: string) => void
 }
 
-function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: ProModeProps) {
+function ProMode({
+  draft,
+  url,
+  ready,
+  onBaseUrl,
+  onParam,
+  onTidy,
+  onReset,
+  onApplyUrl,
+}: ProModeProps) {
   const issues = useMemo(() => validateDraft(draft), [draft])
   const blocking = issues.filter((issue) => issue.level !== 'info')
 
@@ -501,6 +592,7 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
           field="campaign"
           value={draft.params.campaign ?? ''}
           onChange={(value) => onParam('campaign', value)}
+          source={draft.params.source}
         />
 
         <div className="grid2">
@@ -510,6 +602,7 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
               field={key}
               value={draft.params[key] ?? ''}
               onChange={(value) => onParam(key, value)}
+              source={draft.params.source}
             />
           ))}
         </div>
@@ -529,7 +622,7 @@ function ProMode({ draft, url, ready, onBaseUrl, onParam, onTidy, onReset }: Pro
       <div className="glass">
         {ready && url ? (
           <>
-            <ResultCard url={url} />
+            <ResultCard url={url} onApply={onApplyUrl} />
             <SaveBar draft={draft} url={url} />
           </>
         ) : null}

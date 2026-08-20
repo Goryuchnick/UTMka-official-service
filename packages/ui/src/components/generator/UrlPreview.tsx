@@ -12,7 +12,10 @@ interface UrlPreviewProps {
   url: string
 }
 
-const PLACEHOLDER = /\{[a-z_0-9]+\}/gi
+/* Синтаксис подстановок у площадок разный: Директ и Google — одинарные скобки,
+   VK и Meta — двойные, у Meta вдобавок точка внутри ({{campaign.name}}). Ловим
+   все три написания, иначе двойные скобки подсвечивались бы наполовину. */
+const PLACEHOLDER = /\{\{[a-z_0-9.]+\}\}|\{[a-z_0-9]+\}/gi
 
 /** Значение параметра: подстановки — бирюзой, остальное — амбером. */
 function renderValue(value: string, keyPrefix: string) {
