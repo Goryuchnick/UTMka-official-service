@@ -154,7 +154,6 @@ export function MacroPicker({ field, source, onPick }: MacroPickerProps) {
         title="Системные подстановки площадки"
         aria-label="Системные подстановки площадки"
         aria-expanded={open}
-        aria-haspopup="listbox"
         aria-controls={open ? panelId : undefined}
       >
         <PixelIcon name="code" />
@@ -164,7 +163,13 @@ export function MacroPicker({ field, source, onPick }: MacroPickerProps) {
         {open ? (
           <motion.div
             id={panelId}
-            role="listbox"
+            /* ⚠️ Не `listbox`, в отличие от списка типовых значений рядом.
+               Внутри не только варианты: заголовки площадок раскрываются
+               кнопками, а предостережения — абзацы текста. Экранный диктор
+               в режиме списка пропускает и то, и другое: незрячий не может
+               ни раскрыть группу, ни услышать, что у VK двойные скобки.
+               Обычная группа кнопок доступна целиком. */
+            role="group"
             aria-label="Системные подстановки площадки"
             className={`vhints-panel macros-panel ${up ? 'vhints-panel--up' : ''}`.trim()}
             variants={PANEL}
@@ -210,8 +215,6 @@ export function MacroPicker({ field, source, onPick }: MacroPickerProps) {
                           <motion.button
                             key={macro.token}
                             type="button"
-                            role="option"
-                            aria-selected={false}
                             variants={reduced ? undefined : ROW}
                             className="vhints-row macros-row"
                             onClick={() => pick(macro.token)}
