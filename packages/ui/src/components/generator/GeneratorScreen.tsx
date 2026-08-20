@@ -339,10 +339,20 @@ function SimpleMode({
   /* Содержание и ключевое слово — по желанию, но спрятать их насовсем нельзя:
      пресеты площадок сами кладут туда подстановки ({ad_id} у Директа), и
      невидимое заполненное поле — худший вид сюрприза. Поэтому блок
-     раскрывается либо кнопкой, либо тем, что в нём уже что-то лежит. */
+     раскрывается либо кнопкой, либо тем, что в нём уже что-то лежит.
+
+     ⚠️ Любая правка этих полей закрепляет блок раскрытым. Иначе очистка
+     подставленного пресетом значения схлопывала блок прямо под курсором:
+     условие «показан, потому что заполнен» переставало выполняться ровно тем
+     действием, которым человек его и опустошал. */
   const [extrasOpen, setExtrasOpen] = useState(false)
   const filledExtras = Boolean((draft.params.content ?? '').trim() || (draft.params.term ?? '').trim())
   const showExtras = extrasOpen || filledExtras
+
+  const setExtra = (key: 'content' | 'term', value: string) => {
+    setExtrasOpen(true)
+    onParam(key, value)
+  }
   const answers: Record<Step, string> = {
     1: draft.baseUrl.replace(/^https?:\/\//, ''),
     2: activePresetId ? (draft.params.source ?? '') : '',
@@ -468,13 +478,13 @@ function SimpleMode({
                         <ValueField
                           field="content"
                           value={draft.params.content ?? ''}
-                          onChange={(value) => onParam('content', value)}
+                          onChange={(value) => setExtra('content', value)}
                           source={draft.params.source}
                         />
                         <ValueField
                           field="term"
                           value={draft.params.term ?? ''}
-                          onChange={(value) => onParam('term', value)}
+                          onChange={(value) => setExtra('term', value)}
                           source={draft.params.source}
                         />
                       </div>
