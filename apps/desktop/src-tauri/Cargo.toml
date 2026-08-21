@@ -1,6 +1,6 @@
 [package]
 name = "utmka"
-version = "3.1.0"
+version = "3.1.1"
 description = "UTMka — конструктор UTM-меток"
 authors = ["Александр Пронин"]
 license = "MIT"

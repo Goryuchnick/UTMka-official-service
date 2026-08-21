@@ -6,6 +6,7 @@
  * Один и тот же модуль обслуживает веб и будущий десктоп на Tauri.
  */
 
+export * from './version'
 export * from './types'
 export * from './normalize'
 export * from './build'

@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { PRESETS, UTM_PARAM_NAMES, type UtmKey } from '@utmka/core'
+import { PRESETS, PRODUCT_VERSION, UTM_PARAM_NAMES, type UtmKey } from '@utmka/core'
 
 import { PixelIcon } from './PixelIcon'
 import { Onboarding } from './Onboarding'
@@ -337,7 +337,9 @@ export function HelpScreen() {
               <PixelIcon name="heart" />
               Поблагодарить автора
             </a>
-            <span className="hint help-ver">UTMka 3.0 · веб</span>
+            <span className="hint help-ver">
+              UTMka {PRODUCT_VERSION} · {backend.caps.shell === 'web' ? 'веб' : 'приложение'}
+            </span>
           </div>
         </aside>
       </div>

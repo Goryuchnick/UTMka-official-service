@@ -12,6 +12,7 @@
  */
 
 import { useState, type ReactNode } from 'react'
+import { PRODUCT_VERSION } from '@utmka/core'
 
 import { Assistant } from './Assistant'
 import { OnboardingGate } from './OnboardingGate'
@@ -206,7 +207,9 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
               <b>UTM</b>
               <i>ka</i>
             </span>
-            <span>3.0</span>
+            {/* Из ядра, не строкой: вписанная цифра переживает релиз и врёт
+                человеку, что обновление не встало. */}
+            <span>{PRODUCT_VERSION}</span>
           </span>
         </div>
       </div>

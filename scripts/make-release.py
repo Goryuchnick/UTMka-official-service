@@ -10,10 +10,10 @@ import json
 import pathlib
 import shutil
 
-VERSION = "3.1.0"
+VERSION = "3.1.1"
 REPO = "https://github.com/Goryuchnick/UTMka-official-service"
 BUILD = pathlib.Path(r"D:\rust\target\utmka\release")
-OUT = pathlib.Path(r"D:\releases\utmka-3.1.0")
+OUT = pathlib.Path(r"D:\releases\utmka-3.1.1")
 
 SETUP_NAME = f"UTMka 3.0_{VERSION}_x64-setup.exe"
 PORTABLE_NAME = f"UTMka-portable-{VERSION}-x64.exe"
