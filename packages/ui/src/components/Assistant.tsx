@@ -25,7 +25,7 @@ import { PixelIcon } from './PixelIcon'
 import { useAccount } from '../lib/account'
 import { handOffToBatch } from '../lib/assistant-bridge'
 import { useSetMascotLine } from '../lib/mascot'
-import { backend, NavLink, useNav } from '../shell'
+import { backend, NavLink, track, useNav } from '../shell'
 
 const PANEL: Variants = {
   hidden: { opacity: 0, y: 24, scale: 0.97 },
@@ -111,6 +111,10 @@ export function Assistant() {
       }
       setLinks(data.links ?? [])
       setDropped(data.dropped ?? [])
+      /* Цель — ответ, а не нажатие: отказ по квоте уходит в `catch` и
+         достижением не считается, иначе выборка распухнет на тех, кому
+         помощник как раз не помог. */
+      track('assistant_used')
     } catch (error) {
       /* Кончившаяся квота приходит тем же путём, что отказ сети, но означает
          другое: инструмент работает дальше, просто без подсказок модели. */

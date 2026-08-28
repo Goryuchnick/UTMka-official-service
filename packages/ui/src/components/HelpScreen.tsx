@@ -19,7 +19,7 @@ import { PixelIcon } from './PixelIcon'
 import { Onboarding } from './Onboarding'
 import { SyncPanel } from './SyncPanel'
 import { useSetMascotLine } from '../lib/mascot'
-import { backend } from '../shell'
+import { backend, track } from '../shell'
 
 const GITHUB = 'https://github.com/Goryuchnick/UTMka-official-service'
 /** Последний релиз, а не файл конкретной версии: номера тут устаревают сразу. */
@@ -252,7 +252,10 @@ export function HelpScreen() {
                 То же самое, но офлайн и без всякого входа: история и шаблоны лежат в файле на
                 вашем диске. Обновляется сама.
               </p>
-              <div className="help-links">
+              {/* Один обработчик на весь блок вместо трёх одинаковых на кнопках:
+                  цель отвечает на вопрос «пошли ли за приложением», а не «какую
+                  систему выбрали» — это видно по релизам на GitHub. */}
+              <div className="help-links" onClick={() => track('desktop_click')}>
                 {/* Номера версий здесь не пишем: они устаревают в тот же день,
                     когда выходит следующая. Ссылка ведёт на последний релиз, и
                     там всегда лежит актуальный файл под каждую систему. */}

@@ -20,7 +20,7 @@ import { MascotBar } from './Mascot'
 import { PixelIcon, type IconName } from './PixelIcon'
 import { useAccount } from '../lib/account'
 import { useTheme } from '../lib/theme'
-import { backend, NavLink, useNav } from '../shell'
+import { backend, NavLink, track, useNav } from '../shell'
 
 interface Section {
   href: string
@@ -188,6 +188,9 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
             target="_blank"
             rel="noopener noreferrer"
             title={other.title}
+            /* Считаем только уход из веба в приложение: обратный зов живёт в
+               окне, где счётчика нет вовсе, и цель там никогда не сработает. */
+            onClick={backend.caps.shell === 'web' ? () => track('desktop_click') : undefined}
           >
             <PixelIcon name={backend.caps.shell === 'web' ? 'save' : 'link'} size={12} />
             {other.label}

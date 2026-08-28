@@ -21,7 +21,7 @@ import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react'
 import { backendMessage } from '@utmka/core'
 
 import { PixelIcon } from '../PixelIcon'
-import { backend, saveFile } from '../../shell'
+import { backend, saveFile, track } from '../../shell'
 import { sayAbout } from '../../lib/mascot-lines'
 
 /** Сторона кода на экране: столько нужно, чтобы навести телефон. */
@@ -63,6 +63,7 @@ export function LinkTools({ url }: LinkToolsProps) {
     try {
       setShort({ made: url, url: await backend.net.shorten(url) })
       sayAbout('shorten')
+      track('short_made')
     } catch (error) {
       setShortError({ made: url, text: backendMessage(error) })
     } finally {
@@ -97,6 +98,7 @@ export function LinkTools({ url }: LinkToolsProps) {
       `<?xml version="1.0" encoding="UTF-8"?>\n${markup}\n`,
     )
     sayAbout('qr')
+    track('qr_saved')
   }, [])
 
   /* Файл кладёт оболочка: в окне Tauri `<a download>` ведёт себя не так, как в
@@ -108,6 +110,7 @@ export function LinkTools({ url }: LinkToolsProps) {
     if (!blob) return
     await saveFile('utmka-qr.png', 'image/png', new Uint8Array(await blob.arrayBuffer()))
     sayAbout('qr')
+    track('qr_saved')
   }, [])
 
   return (

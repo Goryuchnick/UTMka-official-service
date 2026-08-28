@@ -7,12 +7,13 @@
  * Разойдётся реализация с контрактом — это увидит `tsc` у приложения.
  */
 
-import type { SaveFile, UtmkaBackend } from '@utmka/core'
+import type { SaveFile, Track, UtmkaBackend } from '@utmka/core'
 
 import type { Nav, NavLink as NavLinkType, UseNavParams } from './nav'
 
 export declare const backend: UtmkaBackend
 export declare const saveFile: SaveFile
+export declare const track: Track
 export declare function useNav(): Nav
 export declare const useNavParams: UseNavParams
 export declare const NavLink: NavLinkType

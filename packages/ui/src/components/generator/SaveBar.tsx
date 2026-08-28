@@ -15,7 +15,7 @@ import { PixelIcon } from '../PixelIcon'
 import { TagHints } from '../TagHints'
 import { TAG_COLORS } from '../TemplatesScreen'
 import { useAccount } from '../../lib/account'
-import { backend, NavLink } from '../../shell'
+import { backend, NavLink, track } from '../../shell'
 import { sayAbout } from '../../lib/mascot-lines'
 
 type Saved = 'no' | 'history' | 'template'
@@ -59,6 +59,7 @@ export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
       })
       setSaved('template')
       sayAbout('saveTemplate')
+      track('template_saved')
       setNaming(false)
       setName('')
       setTag('')

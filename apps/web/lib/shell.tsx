@@ -30,8 +30,17 @@ import {
   type ImportResult,
   type SaveFile,
   type Template,
+  type Track,
   type UtmkaBackend,
 } from '@utmka/core'
+
+/**
+ * Идентификатор счётчика — тот же, что у компонента `Metrika`: цели и визиты
+ * обязаны попадать в один счётчик. Нет значения (локальная разработка) —
+ * нет и событий. Тип `window.ym` объявлен там же, в `components/Metrika.tsx`:
+ * счётчиком владеет он, здесь мы только зовём.
+ */
+const COUNTER = process.env.NEXT_PUBLIC_YM_ID
 
 /**
  * Один запрос к роуту. Здесь HTTP-семантика превращается в доменную ошибку —
@@ -285,6 +294,29 @@ export const NavLink: NavLinkType = ({ to, children, ...rest }) => (
     {children}
   </Link>
 )
+
+/**
+ * Отправка целевых действий в Яндекс.Метрику.
+ *
+ * Единственное место в вебе, которое знает про `window.ym` помимо самого
+ * счётчика, — по той же причине, по которой `fetch` живёт только здесь.
+ *
+ * Почему проверка счётчика не нужна отдельной строкой: пока человек не дал
+ * согласия, компонент `Metrika` не рендерит сниппет вовсе, и `window.ym`
+ * попросту не существует — вызов через `?.` тихо не делает ничего. Так
+ * плашка согласия остаётся настоящей и для целей, а не только для визитов.
+ *
+ * ⚠️ Ошибку счётчика глотаем намеренно: аналитика не имеет права уронить
+ * копирование ссылки. Событие потеряется, действие — нет.
+ */
+export const track: Track = (event, params) => {
+  if (typeof window === 'undefined' || !COUNTER) return
+  try {
+    window.ym?.(Number(COUNTER), 'reachGoal', event, params)
+  } catch {
+    /* счётчик не обязан работать */
+  }
+}
 
 export const saveFile: SaveFile = async (name, mime, body) => {
   const blob =

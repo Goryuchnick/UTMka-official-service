@@ -7,7 +7,7 @@
  * Лучший вход для новичка: человек приходит с готовой ссылкой, а не с формой.
  */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   buildUrl,
   normalizeDraft,
@@ -22,6 +22,7 @@ import { IssueList } from './generator/IssueList'
 import { ResultCard } from './generator/ResultCard'
 import { PixelIcon } from './PixelIcon'
 import { RedirectCheck } from './RedirectCheck'
+import { track } from '../shell'
 import { useSetMascotLine } from '../lib/mascot'
 
 const FIELD_LABELS: Record<UtmKey, string> = {
@@ -47,6 +48,18 @@ export function ParseScreen() {
       : `Нашёл ${blocking.length} ${plural(blocking.length)} — ниже написал, что сломается.`
 
   useSetMascotLine(line)
+
+  /* Разбор пересчитывается на каждый введённый символ, поэтому целью он быть
+     не может: одна вставленная ссылка дала бы десятки достижений. Считаем
+     один раз за заход на экран — вопрос-то продуктовый: сколькие вообще
+     пользуются разбором, а не сколько раз они нажали клавишу. */
+  const counted = useRef(false)
+
+  useEffect(() => {
+    if (counted.current || !parsed?.baseUrl) return
+    counted.current = true
+    track('parse_done')
+  }, [parsed])
 
   const fix = useCallback(() => {
     if (!parsed) return

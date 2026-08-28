@@ -1,0 +1,722 @@
+{
+ "collected_at": "2026-08-28T10:58:19+02:00",
+ "site": "https://utmka.alex-pronin.ru",
+ "counter": "111529339",
+ "period": {
+  "from": "2026-05-30",
+  "to": "2026-08-28",
+  "days": 90
+ },
+ "metrika": {
+  "totals": {
+   "visits": 47.0,
+   "users": 31.0,
+   "pageviews": 233.0,
+   "bounce": 17.0212766,
+   "duration": 175.25531915
+  },
+  "by_day": [
+   {
+    "key": "2026-08-12",
+    "values": [
+     12.0,
+     11.0
+    ]
+   },
+   {
+    "key": "2026-08-13",
+    "values": [
+     8.0,
+     7.0
+    ]
+   },
+   {
+    "key": "2026-08-14",
+    "values": [
+     20.0,
+     16.0
+    ]
+   },
+   {
+    "key": "2026-08-15",
+    "values": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "key": "2026-08-16",
+    "values": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "key": "2026-08-17",
+    "values": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "key": "2026-08-19",
+    "values": [
+     2.0,
+     1.0
+    ]
+   },
+   {
+    "key": "2026-08-20",
+    "values": [
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "key": "2026-08-28",
+    "values": [
+     1.0,
+     1.0
+    ]
+   }
+  ],
+  "sources": [
+   {
+    "key": "Cached page traffic",
+    "values": [
+     21.0,
+     20.0,
+     9.52380952
+    ]
+   },
+   {
+    "key": "Link traffic",
+    "values": [
+     14.0,
+     4.0,
+     7.14285714
+    ]
+   },
+   {
+    "key": "Direct traffic",
+    "values": [
+     10.0,
+     8.0,
+     30.0
+    ]
+   }
+  ],
+  "search_engines": [],
+  "phrases": [],
+  "landing_pages": [
+   {
+    "key": "/",
+    "values": [
+     31.0,
+     12.90322581,
+     104.29032258
+    ]
+   },
+   {
+    "key": "/parse",
+    "values": [
+     7.0,
+     0.0,
+     2.42857143
+    ]
+   },
+   {
+    "key": "/help",
+    "values": [
+     2.0,
+     50.0,
+     0.0
+    ]
+   },
+   {
+    "key": "/watch/111529339",
+    "values": [
+     2.0,
+     100.0,
+     0.0
+    ]
+   },
+   {
+    "key": "/yandex-direct",
+    "values": [
+     2.0,
+     0.0,
+     1105.0
+    ]
+   },
+   {
+    "key": "/history",
+    "values": [
+     1.0,
+     0.0,
+     277.0
+    ]
+   },
+   {
+    "key": "/login",
+    "values": [
+     1.0,
+     0.0,
+     2500.0
+    ]
+   },
+   {
+    "key": "/privacy",
+    "values": [
+     1.0,
+     100.0,
+     0.0
+    ]
+   }
+  ],
+  "devices": [
+   {
+    "key": "PC",
+    "values": [
+     40.0
+    ]
+   },
+   {
+    "key": "Smartphones",
+    "values": [
+     7.0
+    ]
+   }
+  ],
+  "goals": [
+   {
+    "key": "link_copied",
+    "id": 603021308,
+    "name": "Скопирована ссылка",
+    "reaches": 0.0
+   },
+   {
+    "key": "batch_done",
+    "id": 603021309,
+    "name": "Собран пакет ссылок",
+    "reaches": 0.0
+   },
+   {
+    "key": "parse_done",
+    "id": 603021310,
+    "name": "Разобрана чужая ссылка",
+    "reaches": 0.0
+   },
+   {
+    "key": "short_made",
+    "id": 603021311,
+    "name": "Сделана короткая ссылка",
+    "reaches": 0.0
+   },
+   {
+    "key": "qr_saved",
+    "id": 603021312,
+    "name": "Выгружен QR-код",
+    "reaches": 0.0
+   },
+   {
+    "key": "template_saved",
+    "id": 603021314,
+    "name": "Сохранён шаблон",
+    "reaches": 0.0
+   },
+   {
+    "key": "assistant_used",
+    "id": 603021315,
+    "name": "Ответил помощник",
+    "reaches": 0.0
+   },
+   {
+    "key": "passphrase_created",
+    "id": 603021316,
+    "name": "Заведена кодовая фраза",
+    "reaches": 0.0
+   },
+   {
+    "key": "desktop_click",
+    "id": 603021317,
+    "name": "Переход к версии для компьютера",
+    "reaches": 0.0
+   }
+  ],
+  "goal_by_page": {
+   "goal": "Скопирована ссылка",
+   "rows": [
+    {
+     "key": "/",
+     "values": [
+      31.0,
+      0.0
+     ]
+    },
+    {
+     "key": "/parse",
+     "values": [
+      7.0,
+      0.0
+     ]
+    },
+    {
+     "key": "/help",
+     "values": [
+      2.0,
+      0.0
+     ]
+    },
+    {
+     "key": "/watch/111529339",
+     "values": [
+      2.0,
+      0.0
+     ]
+    },
+    {
+     "key": "/yandex-direct",
+     "values": [
+      2.0,
+      0.0
+     ]
+    },
+    {
+     "key": "/history",
+     "values": [
+      1.0,
+      0.0
+     ]
+    },
+    {
+     "key": "/login",
+     "values": [
+      1.0,
+      0.0
+     ]
+    },
+    {
+     "key": "/privacy",
+     "values": [
+      1.0,
+      0.0
+     ]
+    }
+   ]
+  }
+ },
+ "webmaster": {
+  "user_id": "587781568",
+  "summary": {
+   "sqi": 0,
+   "excluded_pages_count": 0,
+   "searchable_pages_count": 5,
+   "site_problems": {
+    "RECOMMENDATION": 2,
+    "POSSIBLE_PROBLEM": 1
+   }
+  },
+  "in_search": {
+   "history": [
+    {
+     "date": "2026-08-14T10:00:09.665+03:00",
+     "value": 0
+    },
+    {
+     "date": "2026-08-17T10:00:06.060+03:00",
+     "value": 0
+    },
+    {
+     "date": "2026-08-18T10:00:09.989+03:00",
+     "value": 0
+    },
+    {
+     "date": "2026-08-21T10:00:08.743+03:00",
+     "value": 10
+    },
+    {
+     "date": "2026-08-23T10:00:07.817+03:00",
+     "value": 11
+    },
+    {
+     "date": "2026-08-25T10:00:04.617+03:00",
+     "value": 5
+    },
+    {
+     "date": "2026-08-27T10:00:10.872+03:00",
+     "value": 5
+    }
+   ]
+  },
+  "sitemaps": {
+   "sitemaps": [
+    {
+     "sitemap_id": "8a405133-5322-3749-88e3-7d54e90dfef5",
+     "sitemap_url": "https://utmka.alex-pronin.ru/sitemap.xml",
+     "added_date": "2026-08-12T12:36:51.752+03:00"
+    }
+   ],
+   "count": 1
+  },
+  "queries": {
+   "count": 4,
+   "queries": [
+    {
+     "query_id": "64d0e584957871fb",
+     "query_text": "utm tilda генератор",
+     "indicators": {
+      "TOTAL_SHOWS": 3.0,
+      "TOTAL_CLICKS": 0.0,
+      "AVG_SHOW_POSITION": 3.0,
+      "AVG_CLICK_POSITION": null
+     }
+    },
+    {
+     "query_id": "7f7cfb975ff12119",
+     "query_text": "utm генератор tilda",
+     "indicators": {
+      "TOTAL_SHOWS": 2.0,
+      "TOTAL_CLICKS": 0.0,
+      "AVG_SHOW_POSITION": 5.0,
+      "AVG_CLICK_POSITION": null
+     }
+    },
+    {
+     "query_id": "8e64ebdcf617d308",
+     "query_text": "ap utm",
+     "indicators": {
+      "TOTAL_SHOWS": 1.0,
+      "TOTAL_CLICKS": 0.0,
+      "AVG_SHOW_POSITION": 7.0,
+      "AVG_CLICK_POSITION": null
+     }
+    },
+    {
+     "query_id": "e1200fcc5bf6cd1f",
+     "query_text": "конструктор ютм с помощником",
+     "indicators": {
+      "TOTAL_SHOWS": 1.0,
+      "TOTAL_CLICKS": 1.0,
+      "AVG_SHOW_POSITION": 3.0,
+      "AVG_CLICK_POSITION": 3.0
+     }
+    }
+   ],
+   "date_from": "2026-08-19",
+   "date_to": "2026-08-25"
+  },
+  "diagnostics": {
+   "problems": {
+    "SOFT_404": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": "2026-08-26T23:40:38.010+03:00"
+    },
+    "MAIN_PAGE_ERROR": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DUPLICATE_PAGES": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "THREATS": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "ERROR_IN_ROBOTS_TXT": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_METRIKA_COUNTER_CRAWL_ENABLED": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "PRESENT",
+     "last_state_update": "2026-08-28T11:05:54.166+03:00"
+    },
+    "SLOW_AVG_RESPONSE_TIME": {
+     "severity": "CRITICAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "BIG_FAVICON_ABSENT": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_METRIKA_COUNTER": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_ROBOTS_TXT": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "FAVICON_ERROR": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "INSIGNIFICANT_CGI_PARAMETER": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DOCUMENTS_MISSING_TITLE": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NOT_MOBILE_FRIENDLY": {
+     "severity": "RECOMMENDATION",
+     "state": "UNDEFINED",
+     "last_state_update": null
+    },
+    "MAIN_MIRROR_IS_NOT_HTTPS": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "CONNECT_FAILED": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_SITEMAPS": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "VIDEOHOST_OFFER_FAILED": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_SITEMAP_MODIFICATIONS": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NOT_IN_SPRAV": {
+     "severity": "RECOMMENDATION",
+     "state": "PRESENT",
+     "last_state_update": "2026-08-23T10:24:02.690+03:00"
+    },
+    "DUPLICATE_CONTENT_ATTRS": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "URL_ALERT_4XX": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "FAVICON_PROBLEM": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_REGIONS": {
+     "severity": "RECOMMENDATION",
+     "state": "PRESENT",
+     "last_state_update": "2026-08-23T10:24:02.690+03:00"
+    },
+    "VIDEOHOST_OFFER_NEED_PAPER": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "MAIN_PAGE_REDIRECTS": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_METRIKA_COUNTER_BINDING": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "ERRORS_IN_SITEMAPS": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DOCUMENTS_MISSING_DESCRIPTION": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "URL_ALERT_5XX": {
+     "severity": "CRITICAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "TOO_MANY_DOMAINS_ON_SEARCH": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DNS_ERROR": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DISALLOWED_IN_ROBOTS": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    }
+   }
+  }
+ },
+ "gsc": {
+  "by_day": [
+   {
+    "key": "2026-08-11",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-12",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-13",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-14",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-15",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-16",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-17",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-18",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-19",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-20",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-21",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-22",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-23",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-24",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-25",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   },
+   {
+    "key": "2026-08-26",
+    "clicks": 0,
+    "impressions": 0,
+    "ctr": 0,
+    "position": 0
+   }
+  ],
+  "queries": [],
+  "pages": [],
+  "sitemaps": {
+   "sitemap": [
+    {
+     "path": "https://utmka.alex-pronin.ru/sitemap.xml",
+     "lastSubmitted": "2026-08-14T14:21:04.766Z",
+     "isPending": false,
+     "isSitemapsIndex": false,
+     "type": "sitemap",
+     "lastDownloaded": "2026-08-23T17:35:22.270Z",
+     "warnings": "0",
+     "errors": "0",
+     "contents": [
+      {
+       "type": "web",
+       "submitted": "11",
+       "indexed": "0"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "product": {
+  "available": false,
+  "why": "<urlopen error [Errno 11001] getaddrinfo failed>"
+ }
+}

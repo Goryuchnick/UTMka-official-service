@@ -15,4 +15,4 @@
  * до первого рендера» и падает в рантайме, а алиас проверяется типами на сборке.
  */
 
-export { backend, saveFile, useNav, useNavParams, NavLink } from '#shell'
+export { backend, saveFile, track, useNav, useNavParams, NavLink } from '#shell'

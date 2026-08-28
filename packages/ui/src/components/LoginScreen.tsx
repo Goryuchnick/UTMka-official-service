@@ -19,7 +19,7 @@ import { backendMessage, hasMixedScripts } from '@utmka/core'
 import { PixelIcon } from './PixelIcon'
 import { logout, setAccount, useAccount } from '../lib/account'
 import { useSetMascotLine } from '../lib/mascot'
-import { backend, useNav } from '../shell'
+import { backend, track, useNav } from '../shell'
 
 type Stage = 'idle' | 'busy' | 'fresh'
 
@@ -93,6 +93,7 @@ export function LoginScreen() {
       setFresh(passphrase)
       setAccount('member')
       setStage('fresh')
+      track('passphrase_created')
     } catch (error) {
       setError(backendMessage(error))
       setStage('idle')

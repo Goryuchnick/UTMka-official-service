@@ -15,6 +15,7 @@ import {
   batchTemplateCsv,
   batchToCsv,
   buildBatch,
+  sizeBucket,
   summarizeBatch,
   type BatchRow,
 } from '@utmka/core'
@@ -22,7 +23,7 @@ import {
 import { PixelIcon } from './PixelIcon'
 import { useSetMascotLine } from '../lib/mascot'
 import { clearBatchHandOff, rowsToCsv, useBatchHandOff } from '../lib/assistant-bridge'
-import { saveFile } from '../shell'
+import { saveFile, track } from '../shell'
 import { sayAbout } from '../lib/mascot-lines'
 
 const SAMPLE = `Метка,Источник,Канал,Кампания
@@ -86,6 +87,9 @@ export function BatchScreen() {
     try {
       await navigator.clipboard.writeText(results.map((result) => result.url).join('\n'))
       sayAbout('copy')
+      /* Пакет считается собранным, когда его унесли, а не когда показали:
+         таблица на экране — ещё не результат, буфер и файл — уже да. */
+      track('batch_done', { size: sizeBucket(results.length) })
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -97,6 +101,7 @@ export function BatchScreen() {
     // BOM — иначе Excel открывает кириллицу кракозябрами.
     // Сам файл кладёт оболочка: в окне Tauri это системный диалог.
     await saveFile('utmka-batch.csv', 'text/csv', `﻿${batchToCsv(results)}`)
+    track('batch_done', { size: sizeBucket(results.length) })
   }, [results])
 
   return (

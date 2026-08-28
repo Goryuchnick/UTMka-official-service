@@ -21,6 +21,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { PixelIcon } from '../PixelIcon'
 import { LinkTools } from './LinkTools'
 import { UrlPreview } from './UrlPreview'
+import { track } from '../../shell'
 import { sayAbout } from '../../lib/mascot-lines'
 
 interface ResultCardProps {
@@ -48,6 +49,9 @@ export function ResultCard({ url, tools = true, onApply }: ResultCardProps) {
     try {
       await navigator.clipboard.writeText(url)
       sayAbout('copy')
+      /* Цель считаем ПОСЛЕ буфера: отказ в разрешении — это не достижение,
+         а ровно тот случай, когда человек ушёл ни с чем. */
+      track('link_copied')
       setCopied(true)
     } catch {
       // буфер недоступен (нет разрешения или http) — ссылку можно выделить руками
