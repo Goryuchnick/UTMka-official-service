@@ -225,10 +225,14 @@ def product_block(days):
     headers = {"apikey": key, "Authorization": f"Bearer {key}", "Accept-Profile": "utmka"}
     since = (date.today() - timedelta(days=days)).isoformat()
 
-    def count(table, query=""):
-        """Число строк без выгрузки самих строк: PostgREST отдаёт его заголовком."""
+    def count(table, query="", column="id"):
+        """Число строк без выгрузки самих строк: PostgREST отдаёт его заголовком.
+
+        Колонка выбирается явно: у `users` первичный ключ — `hash`, поля `id`
+        там нет вовсе, и запрос падает на `column users.id does not exist`.
+        """
         request = urllib.request.Request(
-            f"{url}/rest/v1/{table}?select=id{query}",
+            f"{url}/rest/v1/{table}?select={column}{query}",
             headers=dict(headers, **{"Prefer": "count=exact", "Range": "0-0"}),
         )
         try:
@@ -246,8 +250,8 @@ def product_block(days):
     try:
         block = {
             "available": True,
-            "users": count("users"),
-            "users_new": count("users", f"&created_at=gte.{since}"),
+            "users": count("users", column="hash"),
+            "users_new": count("users", f"&created_at=gte.{since}", column="hash"),
             "links": count("links"),
             "links_new": count("links", f"&created_at=gte.{since}"),
             "templates": count("templates"),
