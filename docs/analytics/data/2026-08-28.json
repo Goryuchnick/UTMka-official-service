@@ -1,5 +1,5 @@
 {
- "collected_at": "2026-08-28T11:31:44+02:00",
+ "collected_at": "2026-08-28T11:33:20+02:00",
  "site": "https://utmka.alex-pronin.ru",
  "counter": "111529339",
  "period": {
@@ -9,11 +9,11 @@
  },
  "metrika": {
   "totals": {
-   "visits": 47.0,
-   "users": 31.0,
-   "pageviews": 233.0,
-   "bounce": 17.0212766,
-   "duration": 175.25531915
+   "visits": 49.0,
+   "users": 33.0,
+   "pageviews": 235.0,
+   "bounce": 20.40816327,
+   "duration": 168.20408163
   },
   "by_day": [
    {
@@ -75,8 +75,8 @@
    {
     "key": "2026-08-28",
     "values": [
-     1.0,
-     1.0
+     3.0,
+     3.0
     ]
    }
   ],
@@ -100,9 +100,9 @@
    {
     "key": "Direct traffic",
     "values": [
+     12.0,
      10.0,
-     8.0,
-     30.0
+     41.66666667
     ]
    }
   ],
@@ -131,6 +131,14 @@
      2.0,
      50.0,
      0.0
+    ]
+   },
+   {
+    "key": "/tilda",
+    "values": [
+     2.0,
+     100.0,
+     2.5
     ]
    },
    {
@@ -178,7 +186,7 @@
    {
     "key": "PC",
     "values": [
-     41.0
+     42.0
     ]
    },
    {
@@ -193,7 +201,7 @@
     "key": "link_copied",
     "id": 603021308,
     "name": "Скопирована ссылка",
-    "reaches": 0.0
+    "reaches": 1.0
    },
    {
     "key": "batch_done",
@@ -269,6 +277,13 @@
      ]
     },
     {
+     "key": "/tilda",
+     "values": [
+      2.0,
+      1.0
+     ]
+    },
+    {
      "key": "/watch/111529339",
      "values": [
       2.0,
@@ -298,13 +313,6 @@
     },
     {
      "key": "/privacy",
-     "values": [
-      1.0,
-      0.0
-     ]
-    },
-    {
-     "key": "/tilda",
      "values": [
       1.0,
       0.0
