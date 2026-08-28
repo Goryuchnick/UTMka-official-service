@@ -134,6 +134,25 @@ def metrika_block(token, date1, date2):
             goal["reaches"] = totals_list[index] if index < len(totals_list) else 0
     block["goals"] = goals
 
+    # ── Реклама ───────────────────────────────────────────────────────────────
+    # Разрез по `utm_campaign` заведён заранее, под тест в Директе: без него
+    # результат рекламы пришлось бы собирать в панели руками, а сравнивать
+    # заходы между собой — на глаз. Пустой блок ничего не стоит: пока кампаний
+    # нет, строк ноль, и в отчёте раздела просто не будет.
+    if goals:
+        main = next((g for g in goals if g["key"] == "link_copied"), goals[0])
+        block["ads"] = {
+            "goal": main["name"],
+            "rows": rows(
+                env.metrika_stat(
+                    token,
+                    {"metrics": f"ym:s:visits,ym:s:bounceRate,ym:s:avgVisitDurationSeconds,ym:s:goal{main['id']}reaches",
+                     "dimensions": "ym:s:UTMCampaign", "date1": date1, "date2": date2, "limit": "30",
+                     "filters": "ym:s:UTMCampaign!n"},
+                )
+            ),
+        }
+
     # Цели в разрезе страницы входа — тот самый ответ на «какая посадочная
     # приводит людей, которые доходят до результата», без параметров в событии.
     if goals:

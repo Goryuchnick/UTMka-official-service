@@ -1,5 +1,5 @@
 {
- "collected_at": "2026-08-28T11:33:20+02:00",
+ "collected_at": "2026-08-28T14:10:45+02:00",
  "site": "https://utmka.alex-pronin.ru",
  "counter": "111529339",
  "period": {
@@ -9,11 +9,11 @@
  },
  "metrika": {
   "totals": {
-   "visits": 49.0,
+   "visits": 50.0,
    "users": 33.0,
-   "pageviews": 235.0,
-   "bounce": 20.40816327,
-   "duration": 168.20408163
+   "pageviews": 236.0,
+   "bounce": 20.0,
+   "duration": 165.14
   },
   "by_day": [
    {
@@ -75,7 +75,7 @@
    {
     "key": "2026-08-28",
     "values": [
-     3.0,
+     4.0,
      3.0
     ]
    }
@@ -92,9 +92,9 @@
    {
     "key": "Link traffic",
     "values": [
-     14.0,
+     15.0,
      4.0,
-     7.14285714
+     6.66666667
     ]
    },
    {
@@ -112,9 +112,9 @@
    {
     "key": "/",
     "values": [
-     31.0,
-     12.90322581,
-     104.29032258
+     32.0,
+     12.5,
+     101.5
     ]
    },
    {
@@ -186,7 +186,7 @@
    {
     "key": "PC",
     "values": [
-     42.0
+     43.0
     ]
    },
    {
@@ -252,13 +252,17 @@
     "reaches": 0.0
    }
   ],
+  "ads": {
+   "goal": "Скопирована ссылка",
+   "rows": []
+  },
   "goal_by_page": {
    "goal": "Скопирована ссылка",
    "rows": [
     {
      "key": "/",
      "values": [
-      31.0,
+      32.0,
       0.0
      ]
     },
@@ -423,97 +427,7 @@
   },
   "diagnostics": {
    "problems": {
-    "NO_METRIKA_COUNTER_CRAWL_ENABLED": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "PRESENT",
-     "last_state_update": "2026-08-28T12:05:55.304+03:00"
-    },
-    "NOT_IN_SPRAV": {
-     "severity": "RECOMMENDATION",
-     "state": "PRESENT",
-     "last_state_update": "2026-08-23T10:24:02.690+03:00"
-    },
-    "NO_SITEMAPS": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "SLOW_AVG_RESPONSE_TIME": {
-     "severity": "CRITICAL",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "BIG_FAVICON_ABSENT": {
-     "severity": "RECOMMENDATION",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "MAIN_PAGE_ERROR": {
-     "severity": "FATAL",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "TOO_MANY_DOMAINS_ON_SEARCH": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "NO_METRIKA_COUNTER": {
-     "severity": "RECOMMENDATION",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "DUPLICATE_CONTENT_ATTRS": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "VIDEOHOST_OFFER_NEED_PAPER": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "DUPLICATE_PAGES": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "URL_ALERT_4XX": {
-     "severity": "RECOMMENDATION",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "FAVICON_PROBLEM": {
-     "severity": "RECOMMENDATION",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "DNS_ERROR": {
-     "severity": "FATAL",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "FAVICON_ERROR": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "DISALLOWED_IN_ROBOTS": {
-     "severity": "FATAL",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "NO_REGIONS": {
-     "severity": "RECOMMENDATION",
-     "state": "PRESENT",
-     "last_state_update": "2026-08-23T10:24:02.690+03:00"
-    },
-    "NO_METRIKA_COUNTER_BINDING": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "ERRORS_IN_SITEMAPS": {
+    "VIDEOHOST_OFFER_FAILED": {
      "severity": "POSSIBLE_PROBLEM",
      "state": "ABSENT",
      "last_state_update": null
@@ -523,42 +437,62 @@
      "state": "ABSENT",
      "last_state_update": null
     },
-    "NO_ROBOTS_TXT": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "INSIGNIFICANT_CGI_PARAMETER": {
-     "severity": "RECOMMENDATION",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "MAIN_PAGE_REDIRECTS": {
-     "severity": "POSSIBLE_PROBLEM",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
-    "CONNECT_FAILED": {
-     "severity": "FATAL",
-     "state": "ABSENT",
-     "last_state_update": null
-    },
     "MAIN_MIRROR_IS_NOT_HTTPS": {
      "severity": "POSSIBLE_PROBLEM",
      "state": "ABSENT",
      "last_state_update": null
     },
-    "URL_ALERT_5XX": {
-     "severity": "CRITICAL",
+    "ERRORS_IN_SITEMAPS": {
+     "severity": "POSSIBLE_PROBLEM",
      "state": "ABSENT",
      "last_state_update": null
+    },
+    "URL_ALERT_4XX": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DOCUMENTS_MISSING_TITLE": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DUPLICATE_PAGES": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_METRIKA_COUNTER_CRAWL_ENABLED": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "PRESENT",
+     "last_state_update": "2026-08-28T15:05:49.947+03:00"
     },
     "SOFT_404": {
      "severity": "POSSIBLE_PROBLEM",
      "state": "ABSENT",
      "last_state_update": "2026-08-26T23:40:38.010+03:00"
     },
-    "NO_SITEMAP_MODIFICATIONS": {
+    "NO_METRIKA_COUNTER_BINDING": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_SITEMAPS": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_ROBOTS_TXT": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "BIG_FAVICON_ABSENT": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "TOO_MANY_DOMAINS_ON_SEARCH": {
      "severity": "POSSIBLE_PROBLEM",
      "state": "ABSENT",
      "last_state_update": null
@@ -568,12 +502,42 @@
      "state": "ABSENT",
      "last_state_update": null
     },
+    "INSIGNIFICANT_CGI_PARAMETER": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "VIDEOHOST_OFFER_NEED_PAPER": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DISALLOWED_IN_ROBOTS": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "DUPLICATE_CONTENT_ATTRS": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "MAIN_PAGE_ERROR": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
     "THREATS": {
      "severity": "FATAL",
      "state": "ABSENT",
      "last_state_update": null
     },
-    "DOCUMENTS_MISSING_TITLE": {
+    "FAVICON_ERROR": {
+     "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "MAIN_PAGE_REDIRECTS": {
      "severity": "POSSIBLE_PROBLEM",
      "state": "ABSENT",
      "last_state_update": null
@@ -583,8 +547,48 @@
      "state": "UNDEFINED",
      "last_state_update": null
     },
-    "VIDEOHOST_OFFER_FAILED": {
+    "DNS_ERROR": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "SLOW_AVG_RESPONSE_TIME": {
+     "severity": "CRITICAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_SITEMAP_MODIFICATIONS": {
      "severity": "POSSIBLE_PROBLEM",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NOT_IN_SPRAV": {
+     "severity": "RECOMMENDATION",
+     "state": "PRESENT",
+     "last_state_update": "2026-08-23T10:24:02.690+03:00"
+    },
+    "CONNECT_FAILED": {
+     "severity": "FATAL",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_REGIONS": {
+     "severity": "RECOMMENDATION",
+     "state": "PRESENT",
+     "last_state_update": "2026-08-23T10:24:02.690+03:00"
+    },
+    "FAVICON_PROBLEM": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "NO_METRIKA_COUNTER": {
+     "severity": "RECOMMENDATION",
+     "state": "ABSENT",
+     "last_state_update": null
+    },
+    "URL_ALERT_5XX": {
+     "severity": "CRITICAL",
      "state": "ABSENT",
      "last_state_update": null
     }

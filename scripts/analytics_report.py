@@ -325,6 +325,24 @@ def render(data):
             num(reaches),
         ))
 
+    # Реклама показывается только когда она есть: пустая таблица «кампаний нет»
+    # в отчёте, который читают раз в неделю, — это шум, а не информация.
+    ads = metrika.get("ads") or {}
+    ads_rows = []
+    for row in get_rows(ads, "rows"):
+        # Имена нарочно свои (`ad_*`): переменная `visits` выше держит точки
+        # графика посещаемости, и распаковка в неё стоила бы графика.
+        ad_visits, ad_bounce, ad_time, ad_reaches = (list(row["values"]) + [0, 0, 0, 0])[:4]
+        share = f"{ad_reaches / ad_visits * 100:.0f} %" if ad_visits else "—"
+        ads_rows.append((
+            esc(row["key"]),
+            num(ad_visits),
+            num(ad_bounce, 1) + " %",
+            num(ad_time) + " с",
+            num(ad_reaches),
+            share,
+        ))
+
     phrases_rows = [(esc(row["key"]), num(row["values"][0])) for row in get_rows(metrika, "phrases")]
     devices_rows = [
         (esc(DEVICE_NAMES.get(row["key"], row["key"])), num(row["values"][0]))
@@ -378,6 +396,17 @@ def render(data):
         pages_table=table(["Страница входа", "Визиты", "Отказы", "Время", "Скопировано"], pages_rows),
         phrases_table=table(["Фраза", "Визиты"], phrases_rows, empty="Поискового трафика за период не было."),
         devices_table=table(["Устройство", "Визиты"], devices_rows),
+        ads_section=(
+            '<section><h2 style="margin-top:0">Реклама</h2>'
+            f'<p class="empty">Цель в колонке «дошли» — «{esc(ads.get("goal", ""))}».</p>'
+            + table(
+                ["Кампания (utm_campaign)", "Визиты", "Отказы", "Время", "Дошли", "Доля"],
+                ads_rows,
+            )
+            + "</section>"
+            if ads_rows
+            else ""
+        ),
         product=product_html,
         year=date.today().year,
     )
@@ -542,6 +571,8 @@ TEMPLATE = """<!doctype html>
       </div>
     </div>
   </section>
+
+  {ads_section}
 
   <section>
     <h2 style="margin-top:0">Целевые действия</h2>
