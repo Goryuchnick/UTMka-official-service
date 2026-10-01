@@ -17,3 +17,6 @@ docs
 apps/desktop/dist
 apps/desktop/src-tauri/target
 apps/desktop/src-tauri/gen
+
+# Кадры и ролики из scripts/promo — сотни мегабайт, веб о них не знает.
+scripts/promo/out
