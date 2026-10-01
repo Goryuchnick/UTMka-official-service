@@ -50,7 +50,7 @@ export function DotField() {
     if (!canvas || !ctx) return undefined
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const wide = window.matchMedia('(min-width: 1200px)')
+    const wide = window.matchMedia('(min-width: 1100px)')
 
     let W = 0
     let H = 0

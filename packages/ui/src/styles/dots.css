@@ -214,9 +214,12 @@
     padding: 0 clamp(16px, 2.4vw, 40px) 0 clamp(16px, 6vw, 112px);
   }
 
+  /* Воздух меряем высотой окна: окно десктопа по умолчанию 820 px, и при
+     прежних отступах первый вопрос генератора уезжал на середину экрана, а
+     кнопка «Дальше» — под край. */
   & .screen-scroll {
-    padding: clamp(32px, 7vh, 72px) 4px 96px;
-    gap: clamp(56px, 9vh, 96px);
+    padding: clamp(24px, 4.5vh, 64px) 4px 96px;
+    gap: clamp(32px, 6vh, 80px);
     scrollbar-width: thin;
     scrollbar-color: rgba(var(--dot-ink), 0.2) transparent;
   }
@@ -234,7 +237,9 @@
     max-width: 780px;
   }
 
-  @media (min-width: 1200px) {
+  /* Две колонки — с 1100 px: окно десктопа открывается шириной 1180, и
+     помощник должен стоять в своей колонке уже там, а не под шапкой. */
+  @media (min-width: 1100px) {
     & .screen {
       display: grid;
       grid-template-columns: minmax(0, 1fr) var(--chat-w);
@@ -280,7 +285,7 @@
     gap: 16px;
   }
 
-  @media (min-width: 1200px) {
+  @media (min-width: 1100px) {
     & .topbar {
       position: static;
     }
@@ -318,6 +323,12 @@
     line-height: 36px;
     color: var(--ink);
     text-decoration: none;
+  }
+
+  /* В окне десктопа имя уже стоит в строке заголовка — второй знак в шапке
+     повторил бы его парой сантиметров ниже. */
+  & .dev--framed .topbar__sign {
+    display: none;
   }
 
   & .nav {
@@ -440,7 +451,7 @@
     mask-composite: exclude;
   }
 
-  @media (min-width: 1200px) {
+  @media (min-width: 1100px) {
     & .mascotbar {
       position: relative;
       flex-direction: column;
@@ -500,7 +511,7 @@
     box-shadow: none;
   }
 
-  @media (min-width: 1200px) {
+  @media (min-width: 1100px) {
     & .ask-fab {
       position: relative;
       inset: auto;
@@ -768,12 +779,15 @@
     color: var(--ink3);
   }
 
-  /* Многострочное поле — тетрадь: строки размечены рядами точек. */
-  & .area {
+  /* Многострочное поле — тетрадь: строки размечены рядами точек. Ряд стоит
+     на 6 px ниже базовой линии: в ссылках и таблицах полно подчёркиваний,
+     и на самой базовой линии точки съедали бы их. */
+  & .area,
+  & .result-edit {
     border: 0;
     border-radius: 0;
     padding: 4px 2px;
-    background: radial-gradient(circle, rgba(var(--dot-ink), 0.35) 1.2px, transparent 1.7px) 0 12px / 8px 32px repeat;
+    background: radial-gradient(circle, rgba(var(--dot-ink), 0.35) 1.2px, transparent 1.7px) 0 18px / 8px 32px repeat;
     font-family: var(--f-code);
     font-size: 15px;
     line-height: 32px;
@@ -781,9 +795,11 @@
     box-shadow: none;
   }
 
-  & .area:focus {
+  & .area:focus,
+  & .result-edit:focus-visible {
     outline: none;
-    background: radial-gradient(circle, rgba(var(--acc), 0.9) 1.4px, transparent 1.9px) 0 12px / 8px 32px repeat;
+    box-shadow: none;
+    background: radial-gradient(circle, rgba(var(--acc), 0.9) 1.4px, transparent 1.9px) 0 18px / 8px 32px repeat;
   }
 
   /* ═══════════ КНОПКИ ═══════════ */
@@ -1094,6 +1110,18 @@
   & .lib-add {
     width: auto;
     align-self: flex-start;
+  }
+
+  /* Колонку справа у «Точек» занимает помощник, и третья колонка внутри
+     работы сжимала список шаблонов в полоску шириной в 360 px. Здесь одна
+     колонка: действие «Новый шаблон» и его форма — над списком. */
+  & .lib-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  & .lib-side {
+    position: static;
+    order: -1;
   }
 
   & .param-code {

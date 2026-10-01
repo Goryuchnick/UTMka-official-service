@@ -19,6 +19,9 @@ import { invoke } from '@tauri-apps/api/core'
 /** Ключи, которые имеет смысл помнить между запусками. */
 const KEYS = [
   'utmka.theme',
+  /* Оформление ставит и тему: «Точки» включаются светлыми. Без пары после
+     переустановки вернулась бы светлая тема в чужом оформлении. */
+  'utmka.skin',
   'utmka.mode',
   'utmka.view.history',
   'utmka.view.templates',
@@ -45,11 +48,14 @@ function pushAll(): void {
 }
 
 export function syncSettings(): () => void {
-  // Тема живёт атрибутом на <html> — его и слушаем.
-  const observer = new MutationObserver(() => push('utmka.theme'))
+  // Тема и оформление живут атрибутами на <html> — их и слушаем.
+  const observer = new MutationObserver(() => {
+    push('utmka.theme')
+    push('utmka.skin')
+  })
   observer.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['data-theme'],
+    attributeFilter: ['data-theme', 'data-skin'],
   })
 
   const onMode = () => push('utmka.mode')
