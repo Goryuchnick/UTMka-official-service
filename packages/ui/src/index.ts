@@ -25,7 +25,7 @@ export { ChainMark } from './components/ChainMark'
 
 export type { Nav, NavLink, UseNavParams } from './nav'
 
-export { THEME_BOOTSTRAP, THEME_KEY, useTheme, type Theme } from './lib/theme'
+export { SKIN_KEY, THEME_BOOTSTRAP, THEME_KEY, useSkin, useTheme, type Skin, type Theme } from './lib/theme'
 export { DRAFT_BOOTSTRAP, readBootstrapDraft } from './lib/draft-bootstrap'
 export { useAccount, refreshAccount, setAccount, logout, type AccountState } from './lib/account'
 export { useSetMascotLine, type MascotTone } from './lib/mascot'

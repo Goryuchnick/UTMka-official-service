@@ -42,7 +42,9 @@
       ;(function () {
         try {
           var t = localStorage.getItem('utmka.theme')
+          var s = localStorage.getItem('utmka.skin')
           if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
+          if (s === 'dots') document.documentElement.dataset.skin = s
         } catch (e) {}
       })()
     </script>
