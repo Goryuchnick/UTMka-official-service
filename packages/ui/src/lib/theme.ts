@@ -14,17 +14,32 @@ export type Theme = 'dark' | 'light'
 
 export const THEME_KEY = 'utmka.theme'
 
-/** Скрипт no-FOUC: ставит тему до первой отрисовки. Встраивается в <head>. */
-export const THEME_BOOTSTRAP = `(function(){try{var t=localStorage.getItem('${THEME_KEY}');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}})()`
+/**
+ * Оформление — вторая ось поверх темы. `os` — «ПРОНИН-ОС» (корпус, CRT,
+ * стекло), `dots` — система «Точки» со страниц сайта для бизнеса: светлый
+ * фон, поле точек, шрифты Yantar, рамок и карточек нет. Тема (светлая или
+ * тёмная) у каждого оформления своя, но хранится одним ключом.
+ */
+export type Skin = 'os' | 'dots'
+
+export const SKIN_KEY = 'utmka.skin'
+
+/** Скрипт no-FOUC: ставит тему и оформление до первой отрисовки. Встраивается в <head>. */
+export const THEME_BOOTSTRAP = `(function(){try{var d=document.documentElement,t=localStorage.getItem('${THEME_KEY}'),s=localStorage.getItem('${SKIN_KEY}');if(t==='light'||t==='dark'){d.dataset.theme=t}if(s==='dots'){d.dataset.skin=s}}catch(e){}})()`
 
 function read(): Theme {
   if (typeof document === 'undefined') return 'dark'
   return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
 }
 
+function readSkin(): Skin {
+  if (typeof document === 'undefined') return 'os'
+  return document.documentElement.dataset.skin === 'dots' ? 'dots' : 'os'
+}
+
 function subscribe(onChange: () => void): () => void {
   const observer = new MutationObserver(onChange)
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-skin'] })
   window.addEventListener('storage', onChange)
   return () => {
     observer.disconnect()
@@ -46,4 +61,30 @@ export function useTheme(): { theme: Theme; toggle: () => void } {
   }, [])
 
   return { theme, toggle }
+}
+
+export function useSkin(): { skin: Skin; toggle: () => void } {
+  const skin = useSyncExternalStore(subscribe, readSkin, () => 'os' as Skin)
+
+  const toggle = useCallback(() => {
+    const root = document.documentElement
+    const next: Skin = readSkin() === 'dots' ? 'os' : 'dots'
+    if (next === 'dots') {
+      root.dataset.skin = 'dots'
+      /* «Точки» рождены светлыми: тёмная у них — вариант, а не основа.
+         Без атрибута «ПРОНИН-ОС» тёмная, и переключатель темы решил бы,
+         что светлая уже включена, — поэтому ставим её явно. */
+      root.dataset.theme = 'light'
+    } else {
+      delete root.dataset.skin
+    }
+    try {
+      localStorage.setItem(SKIN_KEY, next)
+      localStorage.setItem(THEME_KEY, root.dataset.theme ?? 'dark')
+    } catch {
+      // приватный режим — оформление не переживёт перезагрузку
+    }
+  }, [])
+
+  return { skin, toggle }
 }

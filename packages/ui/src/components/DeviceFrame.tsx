@@ -15,11 +15,12 @@ import { useState, type ReactNode } from 'react'
 import { PRODUCT_VERSION } from '@utmka/core'
 
 import { Assistant } from './Assistant'
+import { DotField } from './DotField'
 import { OnboardingGate } from './OnboardingGate'
 import { MascotBar } from './Mascot'
 import { PixelIcon, type IconName } from './PixelIcon'
 import { useAccount } from '../lib/account'
-import { useTheme } from '../lib/theme'
+import { useSkin, useTheme } from '../lib/theme'
 import { backend, NavLink, useNav } from '../shell'
 
 interface Section {
@@ -27,7 +28,11 @@ interface Section {
   label: string
   short: string
   icon: IconName
+  /** Цвет подсветки раздела в оформлении «Точки» — как у глав на сайте. */
+  accent: Accent
 }
+
+type Accent = 'teal' | 'green' | 'blue' | 'slate' | 'rasp' | 'orange'
 
 /**
  * Дорога во вторую оболочку.
@@ -51,11 +56,11 @@ const OTHER_SHELL = {
 } as const
 
 export const SECTIONS: readonly Section[] = [
-  { href: '/', label: 'Генератор', short: 'Ссылка', icon: 'link' },
-  { href: '/batch', label: 'Пакетный режим', short: 'Пакет', icon: 'grid' },
-  { href: '/parse', label: 'Разбор', short: 'Разбор', icon: 'search' },
-  { href: '/history', label: 'История', short: 'История', icon: 'clock' },
-  { href: '/templates', label: 'Шаблоны', short: 'Шаблоны', icon: 'star' },
+  { href: '/', label: 'Генератор', short: 'Ссылка', icon: 'link', accent: 'teal' },
+  { href: '/batch', label: 'Пакетный режим', short: 'Пакет', icon: 'grid', accent: 'green' },
+  { href: '/parse', label: 'Разбор', short: 'Разбор', icon: 'search', accent: 'blue' },
+  { href: '/history', label: 'История', short: 'История', icon: 'clock', accent: 'slate' },
+  { href: '/templates', label: 'Шаблоны', short: 'Шаблоны', icon: 'star', accent: 'rasp' },
 ]
 
 interface DeviceFrameProps {
@@ -77,6 +82,7 @@ interface DeviceFrameProps {
 export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
   const { path: pathname } = useNav()
   const { theme, toggle } = useTheme()
+  const { skin, toggle: toggleSkin } = useSkin()
   const { state: account } = useAccount()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -90,13 +96,29 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
   const isCurrent = (href: string): boolean =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
+  /* Вход и помощь — оранжевым: это не инструмент, а служебная страница.
+     Посадочные под площадки — тот же генератор, поэтому бирюза. */
+  const service = pathname.startsWith('/login') || pathname.startsWith('/help')
+  const accent: Accent = service
+    ? 'orange'
+    : (SECTIONS.find((section) => isCurrent(section.href))?.accent ?? 'teal')
+
   return (
-    <div className={`dev${menuOpen ? '' : ' dev--menuclosed'}${titleBar ? ' dev--framed' : ''}`}>
+    <div
+      className={`dev${menuOpen ? '' : ' dev--menuclosed'}${titleBar ? ' dev--framed' : ''}`}
+      data-accent={accent}
+    >
       {titleBar}
+      {skin === 'dots' ? <DotField /> : null}
       <div className="screen">
         <div className="crt" aria-hidden="true" />
 
         <div className="topbar">
+          {/* Знак виден только в «Точках»: в «ПРОНИН-ОС» имя стоит в строке
+              состояния, а шапка целиком отдана разделам. */}
+          <NavLink to="/" className="topbar__sign" aria-label="UTMka — на главную">
+            UTMka
+          </NavLink>
           {/* На мобилке этот блок скрыт — разделы уезжают в нижний док. */}
           <nav className="nav" aria-label="Разделы">
             {SECTIONS.map((section) => (
@@ -114,42 +136,59 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
 
           <span className="spacer" />
 
-          <a
-            href="https://alex-pronin.ru/donate"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="iconbtn iconbtn--heart"
-            title="Поблагодарить автора"
-            aria-label="Поблагодарить автора"
-          >
-            <PixelIcon name="heart" />
-          </a>
-          <NavLink to="/help" className="iconbtn" title="Помощь" aria-label="Помощь">
-            <PixelIcon name="help" />
-          </NavLink>
-          <button
-            type="button"
-            className="iconbtn"
-            onClick={toggle}
-            title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
-            aria-label={theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'}
-          >
-            <PixelIcon name={theme === 'light' ? 'moon' : 'sun'} />
-          </button>
-          {withAuth ? (
-            <NavLink to="/login" className="keybtn">
-              <PixelIcon name="key" />
-              <span className="keybtn__full">{signedIn ? 'Вы вошли' : 'Кодовая фраза'}</span>
-              <span className="keybtn__short">{signedIn ? 'Вход' : 'Фраза'}</span>
+          {/* Служебные кнопки. В «ПРОНИН-ОС» обёртка прозрачна для раскладки,
+              в «Точках» на широком экране она встаёт над колонкой помощника,
+              чтобы шапка над работой осталась одной навигацией. */}
+          <div className="topbar__tools">
+            <a
+              href="https://alex-pronin.ru/donate"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="iconbtn iconbtn--heart"
+              title="Поблагодарить автора"
+              aria-label="Поблагодарить автора"
+            >
+              <PixelIcon name="heart" />
+            </a>
+            <NavLink to="/help" className="iconbtn" title="Помощь" aria-label="Помощь">
+              <PixelIcon name="help" />
             </NavLink>
-          ) : null}
+            <button
+              type="button"
+              className="skinbtn"
+              onClick={toggleSkin}
+              title={skin === 'dots' ? 'Вернуть оформление «ПРОНИН-ОС»' : 'Новое оформление «Точки»'}
+            >
+              {skin === 'dots' ? 'ПРОНИН-ОС' : 'Точки'}
+            </button>
+            <button
+              type="button"
+              className="iconbtn"
+              onClick={toggle}
+              title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+              aria-label={theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'}
+            >
+              <PixelIcon name={theme === 'light' ? 'moon' : 'sun'} />
+            </button>
+            {withAuth ? (
+              <NavLink to="/login" className="keybtn">
+                <PixelIcon name="key" />
+                <span className="keybtn__full">{signedIn ? 'Вы вошли' : 'Кодовая фраза'}</span>
+                <span className="keybtn__short">{signedIn ? 'Вход' : 'Фраза'}</span>
+              </NavLink>
+            ) : null}
+          </div>
         </div>
 
-        <MascotBar />
+        {/* Колонка помощника. В «ПРОНИН-ОС» обёртка прозрачна для раскладки
+            (`display: contents`): планка остаётся под шапкой, кнопка — в углу.
+            В «Точках» на широком экране это своя колонка справа. */}
+        <aside className="aside" aria-label="Помощник">
+          <MascotBar />
+          {backend.assistant ? <Assistant /> : null}
+        </aside>
 
         {children}
-
-        {backend.assistant ? <Assistant /> : null}
         <OnboardingGate />
         {extras}
 
