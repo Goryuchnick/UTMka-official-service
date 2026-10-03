@@ -32,6 +32,8 @@ apps/web/             Next.js-приложение (utmka.alex-pronin.ru) — Ш
 apps/desktop/         Tauri + Vite — ШАГ 7. src-tauri/: SQLite, сеть, импорт 2.2
 legacy/desktop-2.2/   замороженный Python-десктоп
 docs/                 архитектура, брифы, скриншоты 2.2
+scripts/promo/        ролик и снимки кодом: сцена, запись по кадрам, звук,
+                      подмена бэкенда веба и моста Tauri (свой README)
 ```
 
 **Направление зависимостей:** `core ← ui ← оболочки`. Ядро не знает ни React,

@@ -84,7 +84,9 @@ const JSON_LD = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={pixelFont.variable}>
+    // Тему и оформление ставит скрипт в <head> до гидрации — атрибуты на
+    // <html> законно расходятся с серверным HTML.
+    <html lang="ru" className={pixelFont.variable} suppressHydrationWarning>
       <head>
         {/* Тема ставится до первой отрисовки — иначе светлая мигает тёмной. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
