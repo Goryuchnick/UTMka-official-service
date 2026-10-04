@@ -24,9 +24,15 @@ interface SaveBarProps {
   draft: LinkDraft
   url: string
   origin?: 'single' | 'batch' | 'brief' | 'parse'
+  /**
+   * Только одно из двух действий. Так «Точки» ставят шаблон в ряд результата,
+   * а историю — в меню «Ещё». Приглашение гостю показывает только шаблон,
+   * чтобы оно не появилось дважды.
+   */
+  only?: 'history' | 'template'
 }
 
-export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
+export function SaveBar({ draft, url, origin = 'single', only }: SaveBarProps) {
   const { state } = useAccount()
 
   const [saved, setSaved] = useState<Saved>('no')
@@ -71,6 +77,7 @@ export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
   /* Гейт по входу — только там, где вход существует. В десктопе `caps.auth`
      равен false, и приглашение завести фразу не должно появляться вовсе. */
   if (backend.caps.auth && state !== 'member') {
+    if (only === 'history') return null
     return (
       <div className="invite">
         <span>
@@ -152,14 +159,18 @@ export function SaveBar({ draft, url, origin = 'single' }: SaveBarProps) {
 
   return (
     <div className="result-row">
-      <button type="button" className="btn btn--sm" onClick={keep} disabled={saved === 'history'}>
-        <PixelIcon name={saved === 'history' ? 'check' : 'clock'} />
-        {saved === 'history' ? 'В истории' : 'В историю'}
-      </button>
-      <button type="button" className="btn btn--sm" onClick={() => setNaming(true)}>
-        <PixelIcon name={saved === 'template' ? 'check' : 'star'} />
-        {saved === 'template' ? 'Шаблон сохранён' : 'Сохранить шаблон'}
-      </button>
+      {only === 'template' ? null : (
+        <button type="button" className="btn btn--sm" onClick={keep} disabled={saved === 'history'}>
+          <PixelIcon name={saved === 'history' ? 'check' : 'clock'} />
+          {saved === 'history' ? 'В истории' : 'В историю'}
+        </button>
+      )}
+      {only === 'history' ? null : (
+        <button type="button" className="btn btn--sm" onClick={() => setNaming(true)}>
+          <PixelIcon name={saved === 'template' ? 'check' : 'star'} />
+          {saved === 'template' ? 'Шаблон сохранён' : 'Сохранить шаблон'}
+        </button>
+      )}
       {error ? <span className="hint hint--error">{error}</span> : null}
     </div>
   )

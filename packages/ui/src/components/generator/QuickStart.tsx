@@ -19,6 +19,7 @@ import type { LinkDraft, Template } from '@utmka/core'
 import { PixelIcon } from '../PixelIcon'
 import { TemplatePicker } from './TemplatePicker'
 import { useAccount } from '../../lib/account'
+import { useSkin } from '../../lib/theme'
 import { backend } from '../../shell'
 
 const SHOWN = 3
@@ -43,6 +44,7 @@ interface QuickStartProps {
 
 export function QuickStart({ onPick }: QuickStartProps) {
   const { state } = useAccount()
+  const dots = useSkin().skin === 'dots'
   const [items, setItems] = useState<Template[]>([])
   const [picking, setPicking] = useState(false)
 
@@ -69,7 +71,8 @@ export function QuickStart({ onPick }: QuickStartProps) {
 
   return (
     <div className="quick">
-      <span className="field-label">Недавние шаблоны</span>
+      {/* В «Точках» блок — одна строка над вопросом, без заголовка. */}
+      <span className="field-label">{dots ? 'Из шаблона:' : 'Недавние шаблоны'}</span>
       <div className="chips">
         {items.slice(0, SHOWN).map((template) => (
           <button

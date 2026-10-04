@@ -27,6 +27,7 @@ import {
   type UtmKey,
 } from '@utmka/core'
 
+import { More } from './More'
 import { PixelIcon } from './PixelIcon'
 import { DictionaryForm } from './DictionaryForm'
 import { TemplateDetails } from './TemplateDetails'
@@ -36,6 +37,7 @@ import { VaultGate } from './VaultGate'
 import { useAccount } from '../lib/account'
 import { backend, useNav } from '../shell'
 import { useSetMascotLine } from '../lib/mascot'
+import { useSkin } from '../lib/theme'
 import { useViewMode } from '../lib/view'
 import { exportCsv, exportJson } from '../lib/exchange'
 import { sayAbout } from '../lib/mascot-lines'
@@ -100,7 +102,10 @@ async function fetchLibrary(): Promise<Library> {
 export function TemplatesScreen() {
   const nav = useNav()
   const { state } = useAccount()
-  const { view, setView } = useViewMode('templates')
+  const { view: savedView, setView } = useViewMode('templates')
+  /* «Точки»: один вид — список, импорт, образцы и выгрузки — в «Ещё». */
+  const dots = useSkin().skin === 'dots'
+  const view = dots ? 'list' : savedView
 
   const [tab, setTab] = useState<Tab>('templates')
   // null — «ещё не читали»: отдельный флаг загрузки потребовал бы setState
@@ -227,6 +232,60 @@ export function TemplatesScreen() {
     [],
   )
 
+  const fileActions = (
+    <>
+      <button type="button" className="btn btn--sm" onClick={() => fileRef.current?.click()}>
+        <PixelIcon name="save" />
+        Загрузить файл
+      </button>
+      {/* Образец — паритет с 2.2. Импорт понимает и свой формат, и
+          плоский из 2.2, но узнать, какие нужны колонки, до этой
+          кнопки было неоткуда: файл просто не принимался. */}
+      <button
+        type="button"
+        className="btn btn--sm"
+        title="Пример файла: те же колонки, что ждёт загрузка"
+        onClick={() => void exportJson('utmka-templates-пример', templatesSampleJson())}
+      >
+        <PixelIcon name="help" />
+        Пример JSON
+      </button>
+      <button
+        type="button"
+        className="btn btn--sm"
+        title="Пример файла для Excel: те же колонки, что ждёт загрузка"
+        onClick={() => void exportCsv('utmka-templates-пример', templatesSampleCsv())}
+      >
+        <PixelIcon name="help" />
+        Пример CSV
+      </button>
+      <button
+        type="button"
+        className="btn btn--sm"
+        disabled={list.length === 0}
+        onClick={() => {
+          void exportJson('utmka-templates', templatesToJson(list))
+          sayAbout('exported')
+        }}
+      >
+        <PixelIcon name="save" />
+        Выгрузить JSON
+      </button>
+      <button
+        type="button"
+        className="btn btn--sm"
+        disabled={list.length === 0}
+        onClick={() => {
+          void exportCsv('utmka-templates', templatesToCsv(list))
+          sayAbout('exported')
+        }}
+      >
+        <PixelIcon name="save" />
+        Выгрузить CSV
+      </button>
+    </>
+  )
+
   if (state === 'guest') {
     return (
       <div className="screen-scroll">
@@ -265,6 +324,12 @@ export function TemplatesScreen() {
             <PixelIcon name="star" />
           </span>
           <span className="qtitle qtitle--amber">Библиотека</span>
+          {dots && tab === 'templates' ? (
+            <>
+              <span className="spacer" />
+              <More>{fileActions}</More>
+            </>
+          ) : null}
         </div>
 
         <div className="chips" role="group" aria-label="Раздел библиотеки">
@@ -305,73 +370,26 @@ export function TemplatesScreen() {
               </div>
             </div>
 
-            <div className="result-row">
-              <ViewSwitch view={view} onChange={setView} />
-              <span className="result-len">{list.length} из 500</span>
-            </div>
-
-            <div className="result-row">
-              <button type="button" className="btn btn--sm" onClick={() => fileRef.current?.click()}>
-                <PixelIcon name="save" />
-                Загрузить файл
-              </button>
-              {/* Образец — паритет с 2.2. Импорт понимает и свой формат, и
-                  плоский из 2.2, но узнать, какие нужны колонки, до этой
-                  кнопки было неоткуда: файл просто не принимался. */}
-              <button
-                type="button"
-                className="btn btn--sm"
-                title="Пример файла: те же колонки, что ждёт загрузка"
-                onClick={() => void exportJson('utmka-templates-пример', templatesSampleJson())}
-              >
-                <PixelIcon name="help" />
-                Пример JSON
-              </button>
-              <button
-                type="button"
-                className="btn btn--sm"
-                title="Пример файла для Excel: те же колонки, что ждёт загрузка"
-                onClick={() => void exportCsv('utmka-templates-пример', templatesSampleCsv())}
-              >
-                <PixelIcon name="help" />
-                Пример CSV
-              </button>
-              <button
-                type="button"
-                className="btn btn--sm"
-                disabled={list.length === 0}
-                onClick={() => {
-                  void exportJson('utmka-templates', templatesToJson(list))
-                  sayAbout('exported')
-                }}
-              >
-                <PixelIcon name="save" />
-                Выгрузить JSON
-              </button>
-              <button
-                type="button"
-                className="btn btn--sm"
-                disabled={list.length === 0}
-                onClick={() => {
-                  void exportCsv('utmka-templates', templatesToCsv(list))
-                  sayAbout('exported')
-                }}
-              >
-                <PixelIcon name="save" />
-                Выгрузить CSV
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".json,.csv"
-                className="sr-only"
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-                  if (file) void importFile(file)
-                  event.target.value = ''
-                }}
-              />
-            </div>
+            {dots ? null : (
+              <>
+                <div className="result-row">
+                  <ViewSwitch view={view} onChange={setView} />
+                  <span className="result-len">{list.length} из 500</span>
+                </div>
+                <div className="result-row">{fileActions}</div>
+              </>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".json,.csv"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) void importFile(file)
+                event.target.value = ''
+              }}
+            />
           </>
         ) : (
           <p className="hint">

@@ -16,11 +16,13 @@
  * канонический порядок, а чужие параметры остаются на своих местах.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
+import { More } from '../More'
 import { PixelIcon } from '../PixelIcon'
 import { LinkTools } from './LinkTools'
 import { UrlPreview } from './UrlPreview'
+import { useSkin } from '../../lib/theme'
 import { track } from '../../shell'
 import { sayAbout } from '../../lib/mascot-lines'
 
@@ -33,9 +35,14 @@ interface ResultCardProps {
    * разбора показывает исправленную ссылку, не предлагая править её ещё раз.
    */
   onApply?: (url: string) => void
+  /** «Точки»: действие на виду в ряду результата (сохранить шаблон). */
+  extra?: ReactNode
+  /** «Точки»: действия в меню «Ещё» рядом с правкой ссылки (в историю). */
+  more?: ReactNode
 }
 
-export function ResultCard({ url, tools = true, onApply }: ResultCardProps) {
+export function ResultCard({ url, tools = true, onApply, extra, more }: ResultCardProps) {
+  const dots = useSkin().skin === 'dots'
   const [copied, setCopied] = useState(false)
   const [draft, setDraft] = useState<string | null>(null)
 
@@ -100,6 +107,34 @@ export function ResultCard({ url, tools = true, onApply }: ResultCardProps) {
           <button type="button" className="btn btn--sm" onClick={() => setDraft(null)}>
             Отмена
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  /* «Точки»: одна кнопка и ряд тихих действий. QR и короткая ссылка встают в
+     тот же ряд (их обёртки в dots.css прозрачны для раскладки), а то, что
+     нужно реже, — в «Ещё». */
+  if (dots) {
+    return (
+      <div className="result">
+        <UrlPreview url={url} />
+        <div className="result-row">
+          <button type="button" className="btn btn--main" onClick={copy}>
+            {copied ? 'Скопировано' : 'Скопировать ссылку'}
+          </button>
+          {tools ? <LinkTools url={url} /> : null}
+          {extra}
+          {onApply || more ? (
+            <More>
+              {onApply ? (
+                <button type="button" className="btn btn--sm" onClick={() => setDraft(url)}>
+                  Править ссылку
+                </button>
+              ) : null}
+              {more}
+            </More>
+          ) : null}
         </div>
       </div>
     )

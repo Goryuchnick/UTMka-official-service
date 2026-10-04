@@ -37,6 +37,7 @@ import { PixelIcon } from '../PixelIcon'
 import { readBootstrapDraft } from '../../lib/draft-bootstrap'
 import { useSetMascotLine, type MascotTone } from '../../lib/mascot'
 import { useGeneratorMode } from '../../lib/mode'
+import { useSkin } from '../../lib/theme'
 import { IssueList } from './IssueList'
 import { ValueField } from './ValueField'
 import { PresetTiles } from './PresetTiles'
@@ -108,6 +109,10 @@ interface GeneratorScreenProps {
 
 export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
   const { mode: savedMode, setMode } = useGeneratorMode()
+  /* «Точки» оставляют на экране один вопрос и одно действие: переключатель
+     режима с пояснением сжат до тихой ссылки под шагами, действия с готовой
+     ссылкой собраны в один ряд (см. ResultCard). */
+  const dots = useSkin().skin === 'dots'
 
   /* Первый кадр не зависит от адресной строки, и это принципиально.
      `useSearchParams()` выводит компонент из статического рендера: главная
@@ -224,37 +229,39 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
 
   return (
     <div className="screen-scroll">
-      <div className="result-row">
-        <div
-          role="group"
-          aria-label="Режим генератора"
-          style={{ display: 'inline-flex', gap: 6 }}
-        >
-          <button
-            type="button"
-            className="chip"
-            aria-pressed={mode === 'simple'}
-            onClick={() => setMode('simple')}
-            style={mode === 'simple' ? { color: 'var(--hv2-fg)', borderColor: 'var(--hv2-primary)' } : undefined}
+      {dots ? null : (
+        <div className="result-row">
+          <div
+            role="group"
+            aria-label="Режим генератора"
+            style={{ display: 'inline-flex', gap: 6 }}
           >
-            Просто
-          </button>
-          <button
-            type="button"
-            className="chip"
-            aria-pressed={mode === 'pro'}
-            onClick={() => setMode('pro')}
-            style={mode === 'pro' ? { color: 'var(--hv2-fg)', borderColor: 'var(--hv2-primary)' } : undefined}
-          >
-            Эксперт
-          </button>
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={mode === 'simple'}
+              onClick={() => setMode('simple')}
+              style={mode === 'simple' ? { color: 'var(--hv2-fg)', borderColor: 'var(--hv2-primary)' } : undefined}
+            >
+              Просто
+            </button>
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={mode === 'pro'}
+              onClick={() => setMode('pro')}
+              style={mode === 'pro' ? { color: 'var(--hv2-fg)', borderColor: 'var(--hv2-primary)' } : undefined}
+            >
+              Эксперт
+            </button>
+          </div>
+          <span className="hint">
+            {mode === 'simple'
+              ? 'Эксперт — все пять полей сразу, как в приложении для ПК'
+              : 'Просто — четыре вопроса вместо пяти полей'}
+          </span>
         </div>
-        <span className="hint">
-          {mode === 'simple'
-            ? 'Эксперт — все пять полей сразу, как в приложении для ПК'
-            : 'Просто — четыре вопроса вместо пяти полей'}
-        </span>
-      </div>
+      )}
 
       <QuickStart
         onPick={(next) => {
@@ -301,7 +308,33 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
           onApplyUrl={applyUrl}
         />
       )}
+
+      {dots ? (
+        <button
+          type="button"
+          className="tbtn gen-mode"
+          onClick={() => setMode(mode === 'simple' ? 'pro' : 'simple')}
+        >
+          {mode === 'simple' ? 'Все пять полей сразу' : 'По шагам: четыре вопроса'}
+        </button>
+      ) : null}
     </div>
+  )
+}
+
+/**
+ * Готовая ссылка с действиями. В «ПРОНИН-ОС» сохранение — отдельный ряд под
+ * замечаниями, в «Точках» — в ряду результата: шаблон на виду, история в «Ещё».
+ */
+function Result({ draft, url, onApply, dots }: { draft: LinkDraft; url: string; onApply: (url: string) => void; dots: boolean }) {
+  if (!dots) return <ResultCard url={url} onApply={onApply} />
+  return (
+    <ResultCard
+      url={url}
+      onApply={onApply}
+      extra={<SaveBar draft={draft} url={url} only="template" />}
+      more={<SaveBar draft={draft} url={url} only="history" />}
+    />
   )
 }
 
@@ -345,6 +378,7 @@ function SimpleMode({
      подставленного пресетом значения схлопывала блок прямо под курсором:
      условие «показан, потому что заполнен» переставало выполняться ровно тем
      действием, которым человек его и опустошал. */
+  const dots = useSkin().skin === 'dots'
   const [extrasOpen, setExtrasOpen] = useState(false)
   const filledExtras = Boolean((draft.params.content ?? '').trim() || (draft.params.term ?? '').trim())
   const showExtras = extrasOpen || filledExtras
@@ -518,12 +552,12 @@ function SimpleMode({
               {current === 4 && (
                 <>
                   {url ? (
-                    <ResultCard url={url} onApply={onApplyUrl} />
+                    <Result draft={draft} url={url} onApply={onApplyUrl} dots={dots} />
                   ) : (
                     <p className="empty">Заполните адрес — и ссылка появится здесь.</p>
                   )}
                   <IssueList issues={issues} onFix={onTidy} />
-                  {url ? <SaveBar draft={draft} url={url} /> : null}
+                  {url && !dots ? <SaveBar draft={draft} url={url} /> : null}
                 </>
               )}
             </div>
@@ -557,6 +591,7 @@ function ProMode({
   onReset,
   onApplyUrl,
 }: ProModeProps) {
+  const dots = useSkin().skin === 'dots'
   const issues = useMemo(() => validateDraft(draft), [draft])
   const blocking = issues.filter((issue) => issue.level !== 'info')
 
@@ -632,8 +667,8 @@ function ProMode({
       <div className="glass">
         {ready && url ? (
           <>
-            <ResultCard url={url} onApply={onApplyUrl} />
-            <SaveBar draft={draft} url={url} />
+            <Result draft={draft} url={url} onApply={onApplyUrl} dots={dots} />
+            {dots ? null : <SaveBar draft={draft} url={url} />}
           </>
         ) : null}
 

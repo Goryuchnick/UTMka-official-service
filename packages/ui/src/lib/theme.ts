@@ -63,28 +63,65 @@ export function useTheme(): { theme: Theme; toggle: () => void } {
   return { theme, toggle }
 }
 
+/** Событие «оформление выбрано»: выбор того же вида, что уже стоит, атрибут не меняет. */
+const CHOICE_EVENT = 'utmka:skin-choice'
+
+/**
+ * Включить оформление и запомнить выбор. Ключ `SKIN_KEY` в хранилище — это и
+ * есть отметка «человек выбрал»: без него при первом визите показывается окно
+ * выбора (`SkinChooser`). Десктоп переносит ключ в свою базу (`settings-sync`).
+ */
+export function applySkin(next: Skin): void {
+  const root = document.documentElement
+  if (next === 'dots') {
+    root.dataset.skin = 'dots'
+    /* «Точки» рождены светлыми: тёмная у них — вариант, а не основа.
+       Без атрибута «ПРОНИН-ОС» тёмная, и переключатель темы решил бы,
+       что светлая уже включена, — поэтому ставим её явно. */
+    root.dataset.theme = 'light'
+  } else {
+    delete root.dataset.skin
+    /* И наоборот: «Гиковый» — тёмный терминал, каким его показывает окно
+       выбора. Из «Точек» тема пришла бы светлой. */
+    root.dataset.theme = 'dark'
+  }
+  try {
+    localStorage.setItem(SKIN_KEY, next)
+    localStorage.setItem(THEME_KEY, root.dataset.theme ?? 'dark')
+  } catch {
+    // приватный режим — оформление не переживёт перезагрузку
+  }
+  window.dispatchEvent(new Event(CHOICE_EVENT))
+}
+
 export function useSkin(): { skin: Skin; toggle: () => void } {
   const skin = useSyncExternalStore(subscribe, readSkin, () => 'os' as Skin)
 
   const toggle = useCallback(() => {
-    const root = document.documentElement
-    const next: Skin = readSkin() === 'dots' ? 'os' : 'dots'
-    if (next === 'dots') {
-      root.dataset.skin = 'dots'
-      /* «Точки» рождены светлыми: тёмная у них — вариант, а не основа.
-         Без атрибута «ПРОНИН-ОС» тёмная, и переключатель темы решил бы,
-         что светлая уже включена, — поэтому ставим её явно. */
-      root.dataset.theme = 'light'
-    } else {
-      delete root.dataset.skin
-    }
-    try {
-      localStorage.setItem(SKIN_KEY, next)
-      localStorage.setItem(THEME_KEY, root.dataset.theme ?? 'dark')
-    } catch {
-      // приватный режим — оформление не переживёт перезагрузку
-    }
+    applySkin(readSkin() === 'dots' ? 'os' : 'dots')
   }, [])
 
   return { skin, toggle }
+}
+
+function readChosen(): boolean {
+  try {
+    return localStorage.getItem(SKIN_KEY) !== null
+  } catch {
+    return true // без хранилища спрашивать бессмысленно — ответ всё равно не запомнится
+  }
+}
+
+function subscribeChoice(onChange: () => void): () => void {
+  window.addEventListener(CHOICE_EVENT, onChange)
+  window.addEventListener('storage', onChange)
+  return () => {
+    window.removeEventListener(CHOICE_EVENT, onChange)
+    window.removeEventListener('storage', onChange)
+  }
+}
+
+/** Выбрал ли человек оформление. На сервере — «да»: окно выбора рисуется только в браузере. */
+export function useSkinChosen(): boolean {
+  return useSyncExternalStore(subscribeChoice, readChosen, () => true)
 }

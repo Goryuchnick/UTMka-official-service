@@ -10,9 +10,13 @@
  *
  * Анимация — Motion: окно выезжает из кнопки помощника пружиной, карточки
  * ответа проявляются каскадом.
+ *
+ * В оформлении «Точки» на широком экране окна нет: помощник стоит открытым
+ * в колонке справа, как разговор на страницах сайта для бизнеса, — с
+ * примерами запросов, которые подставляются в поле одним нажатием.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react'
 import {
   backendMessage,
@@ -25,7 +29,24 @@ import { PixelIcon } from './PixelIcon'
 import { useAccount } from '../lib/account'
 import { handOffToBatch } from '../lib/assistant-bridge'
 import { useSetMascotLine } from '../lib/mascot'
+import { useSkin } from '../lib/theme'
 import { backend, NavLink, track, useNav } from '../shell'
+
+/** С этой ширины у «Точек» есть колонка справа — та же граница, что в dots.css. */
+const WIDE = '(min-width: 1100px)'
+
+function subscribeWide(onChange: () => void): () => void {
+  const query = window.matchMedia(WIDE)
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+
+/** Примеры брифа: нажатие подставляет текст в поле, запрос уходит кнопкой. */
+const EXAMPLES = [
+  'Осенняя распродажа: ВК, телеграм-канал и рассылка',
+  'Набор на курс: Директ на поиске и ВК Реклама',
+  'Листовки с QR-кодом и пост в телеграме',
+] as const
 
 const PANEL: Variants = {
   hidden: { opacity: 0, y: 24, scale: 0.97 },
@@ -57,6 +78,12 @@ export function Assistant() {
   const [dropped, setDropped] = useState<BriefDropped[]>([])
   const [quota, setQuota] = useState<Quota | null>(null)
   const [copied, setCopied] = useState('')
+  const areaRef = useRef<HTMLTextAreaElement>(null)
+
+  const { skin } = useSkin()
+  const wide = useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE).matches, () => false)
+  const docked = skin === 'dots' && wide
+  const shown = open || docked
 
   // Планка с маскотом — то же лицо, что и у окна: пока модель считает, он
   // думает, а на ответ рассказывает, что из предложенного пережило правила.
@@ -74,7 +101,7 @@ export function Assistant() {
   // Остаток лимита спрашиваем при открытии: показывать его в баре постоянно
   // означало бы дёргать сервер на каждой странице ради числа.
   useEffect(() => {
-    if (!open) return undefined
+    if (!shown) return undefined
 
     let alive = true
     void backend
@@ -88,16 +115,16 @@ export function Assistant() {
     return () => {
       alive = false
     }
-  }, [open])
+  }, [shown])
 
   useEffect(() => {
-    if (!open) return undefined
+    if (!open || docked) return undefined
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open])
+  }, [open, docked])
 
   const ask = useCallback(async () => {
     setBusy(true)
@@ -146,53 +173,73 @@ export function Assistant() {
 
   return (
     <>
-      <button
-        type="button"
-        className="ask-fab"
-        onClick={() => setOpen((was) => !was)}
-        aria-expanded={open}
-        aria-label="Помощник"
-        title="Помощник: бриф → пакет меток"
-      >
-        <PixelIcon name="wand" />
-        <span>Помощник</span>
-      </button>
+      {docked ? null : (
+        <button
+          type="button"
+          className="ask-fab"
+          onClick={() => setOpen((was) => !was)}
+          aria-expanded={open}
+          aria-label="Помощник"
+          title="Помощник: бриф → пакет меток"
+        >
+          <PixelIcon name="wand" />
+          <span>Помощник</span>
+        </button>
+      )}
 
       <AnimatePresence>
-        {open ? (
+        {shown ? (
           <motion.div
-            className="ask"
-            role="dialog"
+            className={docked ? 'ask ask--docked' : 'ask'}
+            role={docked ? 'region' : 'dialog'}
             aria-label="Помощник"
             variants={PANEL}
-            initial={reduced ? false : 'hidden'}
+            initial={reduced || docked ? false : 'hidden'}
             animate="shown"
             exit={reduced ? undefined : 'gone'}
           >
             <div className="ask-head">
-              <span className="qchip qchip--magenta">
-                <PixelIcon name="wand" />
-              </span>
-              <span className="qtitle qtitle--magenta">Бриф — пакет меток</span>
+              {docked ? (
+                <span className="ask-name">
+                  Помощник
+                  <span className="ask-role">соберёт пакет меток по описанию запуска</span>
+                </span>
+              ) : (
+                <>
+                  <span className="qchip qchip--magenta">
+                    <PixelIcon name="wand" />
+                  </span>
+                  <span className="qtitle qtitle--magenta">Бриф — пакет меток</span>
+                </>
+              )}
               <span className="spacer" />
-              {quota?.available && state === 'member' ? (
+              {quota?.available && state === 'member' && !docked ? (
                 <span className="ask-quota">
                   осталось <b>{quota.left}</b> из {quota.limit}
                 </span>
               ) : null}
-              <button type="button" className="iconbtn" onClick={() => setOpen(false)} aria-label="Закрыть">
-                <PixelIcon name="close" />
-              </button>
+              {docked ? null : (
+                <button type="button" className="iconbtn" onClick={() => setOpen(false)} aria-label="Закрыть">
+                  <PixelIcon name="close" />
+                </button>
+              )}
             </div>
 
             {state !== 'member' ? (
               <div className="invite">
-                <span>
-                  <b>Помощнику нужна кодовая фраза.</b> Разбирать бриф умеет только языковая
-                  модель, и каждый её ответ сервис UTMka оплачивает самостоятельно — поэтому
-                  запросы считаются, а считать их можно только на чей-то счёт. Всё остальное в
-                  инструменте работает без входа и ничего не стоит.
-                </span>
+                {docked ? (
+                  <span>
+                    Нужна кодовая фраза: бриф разбирает языковая модель, её ответы платные, и
+                    запросы считаются. Остальной инструмент работает без входа.
+                  </span>
+                ) : (
+                  <span>
+                    <b>Помощнику нужна кодовая фраза.</b> Разбирать бриф умеет только языковая
+                    модель, и каждый её ответ сервис UTMka оплачивает самостоятельно — поэтому
+                    запросы считаются, а считать их можно только на чей-то счёт. Всё остальное в
+                    инструменте работает без входа и ничего не стоит.
+                  </span>
+                )}
                 <NavLink className="btn btn--sm" to="/login">
                   <PixelIcon name="key" />
                   Завести фразу
@@ -200,13 +247,37 @@ export function Assistant() {
               </div>
             ) : (
               <>
+                {docked && links.length === 0 && !busy ? (
+                  <div className="ask-ex" role="group" aria-label="Примеры брифа">
+                    {EXAMPLES.map((example) => (
+                      <button
+                        key={example}
+                        type="button"
+                        className="ask-q"
+                        aria-pressed={brief === example}
+                        onClick={() => {
+                          setBrief(example)
+                          areaRef.current?.focus()
+                        }}
+                      >
+                        {example}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
                 <textarea
+                  ref={areaRef}
                   className="area ym-disable-keys ym-hide-content"
                   value={brief}
                   onChange={(event) => setBrief(event.target.value)}
-                  placeholder="Запускаем осенний набор на Директ, ВК и рассылку по базе. Ведём на страницу с расписанием."
+                  placeholder={
+                    docked
+                      ? 'Или опишите запуск своими словами'
+                      : 'Запускаем осенний набор на Директ, ВК и рассылку по базе. Ведём на страницу с расписанием.'
+                  }
                   aria-label="Бриф запуска"
-                  rows={4}
+                  rows={docked ? 2 : 4}
                 />
 
                 <div className="result-row">
@@ -241,6 +312,8 @@ export function Assistant() {
                             })),
                           )
                           setOpen(false)
+                          // Колонка остаётся на экране: пакет уехал в таблицу — список здесь больше не нужен.
+                          if (docked) setLinks([])
                           nav.go('/batch')
                         }}
                       >
@@ -249,15 +322,22 @@ export function Assistant() {
                       </button>
                     </>
                   ) : null}
+                  {docked && quota?.available && links.length === 0 ? (
+                    <span className="ask-quota">
+                      осталось {quota.left} из {quota.limit}
+                    </span>
+                  ) : null}
                 </div>
 
                 {error ? <p className="hint hint--error">{error}</p> : null}
 
-                <p className="hint">
-                  Что предложит модель, я всё равно прогоняю через правила: чиню регистр и
-                  пробелы, а то, что не чинится, не показываю вовсе. Лимит — потому что ответы
-                  модели платные для автора; кончится — генератор работает как работал.
-                </p>
+                {docked ? null : (
+                  <p className="hint">
+                    Что предложит модель, я всё равно прогоняю через правила: чиню регистр и
+                    пробелы, а то, что не чинится, не показываю вовсе. Лимит — потому что ответы
+                    модели платные для автора; кончится — генератор работает как работал.
+                  </p>
+                )}
               </>
             )}
 

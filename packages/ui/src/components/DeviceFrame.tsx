@@ -17,10 +17,11 @@ import { PRODUCT_VERSION } from '@utmka/core'
 import { Assistant } from './Assistant'
 import { DotField } from './DotField'
 import { OnboardingGate } from './OnboardingGate'
+import { SkinChooser } from './SkinChooser'
 import { MascotBar } from './Mascot'
 import { PixelIcon, type IconName } from './PixelIcon'
 import { useAccount } from '../lib/account'
-import { useSkin, useTheme } from '../lib/theme'
+import { useSkin, useSkinChosen, useTheme } from '../lib/theme'
 import { backend, NavLink, track, useNav } from '../shell'
 
 interface Section {
@@ -83,6 +84,7 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
   const { path: pathname } = useNav()
   const { theme, toggle } = useTheme()
   const { skin, toggle: toggleSkin } = useSkin()
+  const skinChosen = useSkinChosen()
   const { state: account } = useAccount()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -102,6 +104,35 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
   const accent: Accent = service
     ? 'orange'
     : (SECTIONS.find((section) => isCurrent(section.href))?.accent ?? 'teal')
+
+  /* В «Точках» шапка — знак, разделы и кнопка вида. Помощь и тема живут в
+     строке состояния, вход — в ней же («Фраза при вас»); в шапке остаётся
+     лишь приглашение для гостя. Кнопка вида подсвечена в обоих оформлениях:
+     о втором виде человек иначе не узнает. */
+  const dots = skin === 'dots'
+
+  const themeButton = (
+    <button
+      type="button"
+      className="iconbtn"
+      onClick={toggle}
+      title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+      aria-label={theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'}
+    >
+      <PixelIcon name={theme === 'light' ? 'moon' : 'sun'} />
+    </button>
+  )
+
+  const skinButton = (
+    <button
+      type="button"
+      className="skinbtn"
+      onClick={toggleSkin}
+      title={dots ? 'Гиковый вид: ретро-терминал «ПРОНИН-ОС»' : 'Простой вид: светлый, кнопок минимум'}
+    >
+      {dots ? 'Гиковый вид' : 'Простой вид'}
+    </button>
+  )
 
   return (
     <div
@@ -129,7 +160,7 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
                 aria-current={isCurrent(section.href) ? 'page' : undefined}
               >
                 <PixelIcon name={section.icon} />
-                {section.label}
+                {dots ? section.short : section.label}
               </NavLink>
             ))}
           </nav>
@@ -140,37 +171,26 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
               в «Точках» на широком экране она встаёт над колонкой помощника,
               чтобы шапка над работой осталась одной навигацией. */}
           <div className="topbar__tools">
-            <a
-              href="https://alex-pronin.ru/donate"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="iconbtn iconbtn--heart"
-              title="Поблагодарить автора"
-              aria-label="Поблагодарить автора"
-            >
-              <PixelIcon name="heart" />
-            </a>
-            <NavLink to="/help" className="iconbtn" title="Помощь" aria-label="Помощь">
-              <PixelIcon name="help" />
-            </NavLink>
-            <button
-              type="button"
-              className="skinbtn"
-              onClick={toggleSkin}
-              title={skin === 'dots' ? 'Вернуть оформление «ПРОНИН-ОС»' : 'Новое оформление «Точки»'}
-            >
-              {skin === 'dots' ? 'ПРОНИН-ОС' : 'Точки'}
-            </button>
-            <button
-              type="button"
-              className="iconbtn"
-              onClick={toggle}
-              title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
-              aria-label={theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'}
-            >
-              <PixelIcon name={theme === 'light' ? 'moon' : 'sun'} />
-            </button>
-            {withAuth ? (
+            {dots ? null : (
+              <>
+                <a
+                  href="https://alex-pronin.ru/donate"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="iconbtn iconbtn--heart"
+                  title="Поблагодарить автора"
+                  aria-label="Поблагодарить автора"
+                >
+                  <PixelIcon name="heart" />
+                </a>
+                <NavLink to="/help" className="iconbtn" title="Помощь" aria-label="Помощь">
+                  <PixelIcon name="help" />
+                </NavLink>
+              </>
+            )}
+            {skinButton}
+            {dots ? null : themeButton}
+            {withAuth && !(dots && signedIn) ? (
               <NavLink to="/login" className="keybtn">
                 <PixelIcon name="key" />
                 <span className="keybtn__full">{signedIn ? 'Вы вошли' : 'Кодовая фраза'}</span>
@@ -189,7 +209,8 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
         </aside>
 
         {children}
-        <OnboardingGate />
+        {/* Сначала — выбор вида, приглашение в тур — уже в выбранном. */}
+        {skinChosen ? <OnboardingGate /> : <SkinChooser />}
         {extras}
 
         {/* Строка состояния: слева — что с хранилищем, справа — постоянное.
@@ -220,6 +241,11 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
             </NavLink>
           ) : null}
           <span className="spacer" />
+          {dots ? (
+            <NavLink to="/help" className="sb-item">
+              Помощь
+            </NavLink>
+          ) : null}
           {/* Соседняя оболочка: в вебе — портативная версия, в окне — веб. */}
           <a
             className="sb-item"
@@ -244,6 +270,7 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
             <PixelIcon name="donut" size={12} />
             Поблагодарить
           </a>
+          {dots ? themeButton : null}
           <span className="sb-item sb-item--flat">
             <span className="wordmark">
               <b>UTM</b>
