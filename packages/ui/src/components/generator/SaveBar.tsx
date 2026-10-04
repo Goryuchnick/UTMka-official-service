@@ -78,6 +78,20 @@ export function SaveBar({ draft, url, origin = 'single', only }: SaveBarProps) {
      равен false, и приглашение завести фразу не должно появляться вовсе. */
   if (backend.caps.auth && state !== 'member') {
     if (only === 'history') return null
+    /* В «Точках» (там действие одно) — та же кнопка, что у вошедшего, только
+       ведёт она к фразе: абзац-приглашение в ряду действий был самым длинным
+       текстом на экране, а объясняет фразу и так экран входа. */
+    if (only === 'template') {
+      return (
+        <NavLink
+          className="btn btn--sm"
+          to="/login"
+          title="Шаблоны хранятся за кодовой фразой: одно поле, без почты и пароля"
+        >
+          Сохранить шаблон
+        </NavLink>
+      )
+    }
     return (
       <div className="invite">
         <span>

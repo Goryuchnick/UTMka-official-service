@@ -11,12 +11,13 @@
  * Анимация — Motion: окно выезжает из кнопки помощника пружиной, карточки
  * ответа проявляются каскадом.
  *
- * В оформлении «Точки» на широком экране окна нет: помощник стоит открытым
- * в колонке справа, как разговор на страницах сайта для бизнеса, — с
- * примерами запросов, которые подставляются в поле одним нажатием.
+ * В «Простом» виде («Точки») помощник не стоит на экране: его зовут иконкой в
+ * шапке (`DeviceFrame`), и он открывается панелью справа во всю высоту — без
+ * пружин и каскадов, с примерами запросов, которые подставляются в поле одним
+ * нажатием.
  */
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react'
 import {
   backendMessage,
@@ -27,19 +28,12 @@ import {
 
 import { PixelIcon } from './PixelIcon'
 import { useAccount } from '../lib/account'
+import { setAssistantOpen, useAssistantOpen } from '../lib/assistant-open'
 import { handOffToBatch } from '../lib/assistant-bridge'
+import { MASCOT_ANIM } from '../lib/mascot-anim'
 import { useSetMascotLine } from '../lib/mascot'
 import { useSkin } from '../lib/theme'
 import { backend, NavLink, track, useNav } from '../shell'
-
-/** С этой ширины у «Точек» есть колонка справа — та же граница, что в dots.css. */
-const WIDE = '(min-width: 1100px)'
-
-function subscribeWide(onChange: () => void): () => void {
-  const query = window.matchMedia(WIDE)
-  query.addEventListener('change', onChange)
-  return () => query.removeEventListener('change', onChange)
-}
 
 /** Примеры брифа: нажатие подставляет текст в поле, запрос уходит кнопкой. */
 const EXAMPLES = [
@@ -70,7 +64,7 @@ export function Assistant() {
   const { state } = useAccount()
   const reduced = useReducedMotion()
 
-  const [open, setOpen] = useState(false)
+  const open = useAssistantOpen()
   const [brief, setBrief] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -80,10 +74,7 @@ export function Assistant() {
   const [copied, setCopied] = useState('')
   const areaRef = useRef<HTMLTextAreaElement>(null)
 
-  const { skin } = useSkin()
-  const wide = useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE).matches, () => false)
-  const docked = skin === 'dots' && wide
-  const shown = open || docked
+  const dots = useSkin().skin === 'dots'
 
   // Планка с маскотом — то же лицо, что и у окна: пока модель считает, он
   // думает, а на ответ рассказывает, что из предложенного пережило правила.
@@ -101,7 +92,7 @@ export function Assistant() {
   // Остаток лимита спрашиваем при открытии: показывать его в баре постоянно
   // означало бы дёргать сервер на каждой странице ради числа.
   useEffect(() => {
-    if (!shown) return undefined
+    if (!open) return undefined
 
     let alive = true
     void backend
@@ -115,16 +106,16 @@ export function Assistant() {
     return () => {
       alive = false
     }
-  }, [shown])
+  }, [open])
 
   useEffect(() => {
-    if (!open || docked) return undefined
+    if (!open) return undefined
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key === 'Escape') setAssistantOpen(false)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open, docked])
+  }, [open])
 
   const ask = useCallback(async () => {
     setBusy(true)
@@ -173,11 +164,11 @@ export function Assistant() {
 
   return (
     <>
-      {docked ? null : (
+      {dots ? null : (
         <button
           type="button"
           className="ask-fab"
-          onClick={() => setOpen((was) => !was)}
+          onClick={() => setAssistantOpen((was) => !was)}
           aria-expanded={open}
           aria-label="Помощник"
           title="Помощник: бриф → пакет меток"
@@ -188,21 +179,25 @@ export function Assistant() {
       )}
 
       <AnimatePresence>
-        {shown ? (
+        {open ? (
           <motion.div
-            className={docked ? 'ask ask--docked' : 'ask'}
-            role={docked ? 'region' : 'dialog'}
+            className={dots ? 'ask ask--panel' : 'ask'}
+            role="dialog"
             aria-label="Помощник"
             variants={PANEL}
-            initial={reduced || docked ? false : 'hidden'}
+            initial={reduced || dots ? false : 'hidden'}
             animate="shown"
-            exit={reduced ? undefined : 'gone'}
+            exit={reduced || dots ? undefined : 'gone'}
           >
             <div className="ask-head">
-              {docked ? (
+              {dots ? (
                 <span className="ask-name">
+                  <span
+                    className="askbtn__face"
+                    aria-hidden="true"
+                    style={{ backgroundImage: `url(${MASCOT_ANIM.idle.file})` }}
+                  />
                   Помощник
-                  <span className="ask-role">соберёт пакет меток по описанию запуска</span>
                 </span>
               ) : (
                 <>
@@ -213,24 +208,22 @@ export function Assistant() {
                 </>
               )}
               <span className="spacer" />
-              {quota?.available && state === 'member' && !docked ? (
+              {quota?.available && state === 'member' ? (
                 <span className="ask-quota">
                   осталось <b>{quota.left}</b> из {quota.limit}
                 </span>
               ) : null}
-              {docked ? null : (
-                <button type="button" className="iconbtn" onClick={() => setOpen(false)} aria-label="Закрыть">
-                  <PixelIcon name="close" />
-                </button>
-              )}
+              <button type="button" className="iconbtn" onClick={() => setAssistantOpen(false)} aria-label="Закрыть">
+                <PixelIcon name="close" />
+              </button>
             </div>
 
             {state !== 'member' ? (
               <div className="invite">
-                {docked ? (
+                {dots ? (
                   <span>
-                    Нужна кодовая фраза: бриф разбирает языковая модель, её ответы платные, и
-                    запросы считаются. Остальной инструмент работает без входа.
+                    Опишите запуск словами — соберу пакет ссылок. Нужна кодовая фраза: ответы
+                    модели платные.
                   </span>
                 ) : (
                   <span>
@@ -247,7 +240,7 @@ export function Assistant() {
               </div>
             ) : (
               <>
-                {docked && links.length === 0 && !busy ? (
+                {dots && links.length === 0 && !busy ? (
                   <div className="ask-ex" role="group" aria-label="Примеры брифа">
                     {EXAMPLES.map((example) => (
                       <button
@@ -272,12 +265,12 @@ export function Assistant() {
                   value={brief}
                   onChange={(event) => setBrief(event.target.value)}
                   placeholder={
-                    docked
+                    dots
                       ? 'Или опишите запуск своими словами'
                       : 'Запускаем осенний набор на Директ, ВК и рассылку по базе. Ведём на страницу с расписанием.'
                   }
                   aria-label="Бриф запуска"
-                  rows={docked ? 2 : 4}
+                  rows={dots ? 3 : 4}
                 />
 
                 <div className="result-row">
@@ -311,9 +304,7 @@ export function Assistant() {
                               term: link.params.term,
                             })),
                           )
-                          setOpen(false)
-                          // Колонка остаётся на экране: пакет уехал в таблицу — список здесь больше не нужен.
-                          if (docked) setLinks([])
+                          setAssistantOpen(false)
                           nav.go('/batch')
                         }}
                       >
@@ -322,16 +313,11 @@ export function Assistant() {
                       </button>
                     </>
                   ) : null}
-                  {docked && quota?.available && links.length === 0 ? (
-                    <span className="ask-quota">
-                      осталось {quota.left} из {quota.limit}
-                    </span>
-                  ) : null}
                 </div>
 
                 {error ? <p className="hint hint--error">{error}</p> : null}
 
-                {docked ? null : (
+                {dots ? null : (
                   <p className="hint">
                     Что предложит модель, я всё равно прогоняю через правила: чиню регистр и
                     пробелы, а то, что не чинится, не показываю вовсе. Лимит — потому что ответы
@@ -344,7 +330,7 @@ export function Assistant() {
             {links.length > 0 ? (
               <div className="ask-list">
                 {links.map((link) => (
-                  <motion.div className="ask-card" key={link.url} variants={reduced ? undefined : CARD}>
+                  <motion.div className="ask-card" key={link.url} variants={reduced || dots ? undefined : CARD}>
                     <div className="hist-name">
                       {link.platform}
                       {link.fixed > 0 ? <span className="hist-tag">починил {link.fixed}</span> : null}

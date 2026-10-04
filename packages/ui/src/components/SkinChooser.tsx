@@ -52,7 +52,7 @@ export function SkinChooser() {
               <i className="pv-btn" />
             </span>
             <b className="skinpick__name">Простой</b>
-            <span className="skinpick__what">Светлый и спокойный, на экране один вопрос и одна кнопка.</span>
+            <span className="skinpick__what">Светлый, как сайт: по одному вопросу на экране, ничего лишнего.</span>
           </button>
 
           <button

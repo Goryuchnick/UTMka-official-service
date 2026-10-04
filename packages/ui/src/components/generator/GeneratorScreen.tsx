@@ -109,9 +109,9 @@ interface GeneratorScreenProps {
 
 export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
   const { mode: savedMode, setMode } = useGeneratorMode()
-  /* «Точки» оставляют на экране один вопрос и одно действие: переключатель
-     режима с пояснением сжат до тихой ссылки под шагами, действия с готовой
-     ссылкой собраны в один ряд (см. ResultCard). */
+  /* «Точки» («Простой» вид) — всегда шаги, по одному вопросу на экране:
+     переключателя режима там нет, действия с готовой ссылкой собраны в один
+     ряд (см. ResultCard). */
   const dots = useSkin().skin === 'dots'
 
   /* Первый кадр не зависит от адресной строки, и это принципиально.
@@ -173,8 +173,8 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
   }, [])
 
   // `?mode=` перебивает сохранённый выбор — чтобы можно было прислать ссылку
-  // «открой сразу в простом» (ARCHITECTURE §4.2).
-  const mode = forced ?? savedMode
+  // «открой сразу в простом» (ARCHITECTURE §4.2). В «Точках» режим один.
+  const mode = dots ? 'simple' : (forced ?? savedMode)
 
   const issues = useMemo(() => validateDraft(draft), [draft])
   const url = useMemo(() => buildUrl(draft), [draft])
@@ -190,8 +190,20 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
     setDraft((prev) => ({ ...prev, params: { ...prev.params, [key]: value } }))
   }, [])
 
+  /* Вернувшийся на шаг площадки может выбрать другую — и прежние метки площадки
+     уходят вместе с ней. `applyPreset` заполняет только пустое, поэтому сначала
+     снимаем то, что положил прежний пресет, а источник с каналом освобождаем
+     всегда — их смена и есть смысл нажатия. Без этого Директ → ВК Реклама
+     давал `yandex` / `cpc` с подстановками обеих площадок. */
   const pickPreset = useCallback((preset: Preset) => {
-    setDraft((prev) => applyPreset(prev, preset))
+    setDraft((prev) => {
+      const before = matchPreset(prev.params)
+      const params: LinkDraft['params'] = { ...prev.params, source: '', medium: '' }
+      for (const key of UTM_KEYS) {
+        if (before?.params[key] !== undefined && params[key] === before.params[key]) delete params[key]
+      }
+      return applyPreset({ ...prev, params }, preset)
+    })
     setStep(3)
   }, [])
 
@@ -294,6 +306,7 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
           onParam={setParam}
           onPreset={pickPreset}
           onTidy={tidy}
+          onReset={reset}
           onApplyUrl={applyUrl}
         />
       ) : (
@@ -308,32 +321,44 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
           onApplyUrl={applyUrl}
         />
       )}
-
-      {dots ? (
-        <button
-          type="button"
-          className="tbtn gen-mode"
-          onClick={() => setMode(mode === 'simple' ? 'pro' : 'simple')}
-        >
-          {mode === 'simple' ? 'Все пять полей сразу' : 'По шагам: четыре вопроса'}
-        </button>
-      ) : null}
     </div>
   )
 }
 
 /**
  * Готовая ссылка с действиями. В «ПРОНИН-ОС» сохранение — отдельный ряд под
- * замечаниями, в «Точках» — в ряду результата: шаблон на виду, история в «Ещё».
+ * замечаниями, в «Точках» — в ряду результата: шаблон на виду, история и
+ * новая ссылка в «Ещё».
  */
-function Result({ draft, url, onApply, dots }: { draft: LinkDraft; url: string; onApply: (url: string) => void; dots: boolean }) {
+function Result({
+  draft,
+  url,
+  onApply,
+  dots,
+  onReset,
+}: {
+  draft: LinkDraft
+  url: string
+  onApply: (url: string) => void
+  dots: boolean
+  onReset?: () => void
+}) {
   if (!dots) return <ResultCard url={url} onApply={onApply} />
   return (
     <ResultCard
       url={url}
       onApply={onApply}
       extra={<SaveBar draft={draft} url={url} only="template" />}
-      more={<SaveBar draft={draft} url={url} only="history" />}
+      more={
+        <>
+          <SaveBar draft={draft} url={url} only="history" />
+          {onReset ? (
+            <button type="button" className="btn btn--sm" onClick={onReset}>
+              Новая ссылка
+            </button>
+          ) : null}
+        </>
+      }
     />
   )
 }
@@ -352,6 +377,8 @@ interface SimpleModeProps {
   onParam: (key: UtmKey, value: string) => void
   onPreset: (preset: Preset) => void
   onTidy: () => void
+  /** «Точки»: «Новая ссылка» в меню «Ещё» последнего шага. */
+  onReset: () => void
   onApplyUrl: (url: string) => void
 }
 
@@ -367,8 +394,16 @@ function SimpleMode({
   onParam,
   onPreset,
   onTidy,
+  onReset,
   onApplyUrl,
 }: SimpleModeProps) {
+  /* В «Точках» шаги — единственный режим, поэтому площадку вне списка там
+     вводят здесь же, на втором шаге: «Своя площадка» открывает источник и
+     канал. В «ПРОНИН-ОС» для этого есть «Эксперт». */
+  const dots = useSkin().skin === 'dots'
+  const [ownPlatform, setOwnPlatform] = useState(false)
+  const showOwn = ownPlatform || (!activePresetId && Boolean((draft.params.source ?? '').trim()))
+
   /* Содержание и ключевое слово — по желанию, но спрятать их насовсем нельзя:
      пресеты площадок сами кладут туда подстановки ({ad_id} у Директа), и
      невидимое заполненное поле — худший вид сюрприза. Поэтому блок
@@ -378,7 +413,6 @@ function SimpleMode({
      подставленного пресетом значения схлопывала блок прямо под курсором:
      условие «показан, потому что заполнен» переставало выполняться ровно тем
      действием, которым человек его и опустошал. */
-  const dots = useSkin().skin === 'dots'
   const [extrasOpen, setExtrasOpen] = useState(false)
   const filledExtras = Boolean((draft.params.content ?? '').trim() || (draft.params.term ?? '').trim())
   const showExtras = extrasOpen || filledExtras
@@ -389,7 +423,7 @@ function SimpleMode({
   }
   const answers: Record<Step, string> = {
     1: draft.baseUrl.replace(/^https?:\/\//, ''),
-    2: activePresetId ? (draft.params.source ?? '') : '',
+    2: activePresetId || (dots && showOwn) ? (draft.params.source ?? '') : '',
     3: draft.params.campaign ?? '',
     4: '',
   }
@@ -474,7 +508,31 @@ function SimpleMode({
 
               {current === 2 && (
                 <>
-                  <PresetTiles activeId={activePresetId} onPick={onPreset} />
+                  <PresetTiles
+                    activeId={activePresetId}
+                    onPick={(preset) => {
+                      setOwnPlatform(false)
+                      onPreset(preset)
+                    }}
+                  />
+                  {dots ? (
+                    showOwn ? (
+                      <div className="grid2">
+                        {(['source', 'medium'] as const).map((key) => (
+                          <ValueField
+                            key={key}
+                            field={key}
+                            value={draft.params[key] ?? ''}
+                            onChange={(value) => onParam(key, value)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <button type="button" className="tbtn" onClick={() => setOwnPlatform(true)}>
+                        Своя площадка
+                      </button>
+                    )
+                  ) : null}
                   {explain ? <p className="explain">{explain}</p> : null}
                   {/* Плитка сама ведёт дальше, но вернувшемуся на этот шаг
                       идти было нечем: единственным способом уйти вперёд было
@@ -552,7 +610,17 @@ function SimpleMode({
               {current === 4 && (
                 <>
                   {url ? (
-                    <Result draft={draft} url={url} onApply={onApplyUrl} dots={dots} />
+                    <Result
+                      draft={draft}
+                      url={url}
+                      onApply={onApplyUrl}
+                      dots={dots}
+                      onReset={() => {
+                        setOwnPlatform(false)
+                        setExtrasOpen(false)
+                        onReset()
+                      }}
+                    />
                   ) : (
                     <p className="empty">Заполните адрес — и ссылка появится здесь.</p>
                   )}
@@ -591,7 +659,6 @@ function ProMode({
   onReset,
   onApplyUrl,
 }: ProModeProps) {
-  const dots = useSkin().skin === 'dots'
   const issues = useMemo(() => validateDraft(draft), [draft])
   const blocking = issues.filter((issue) => issue.level !== 'info')
 
@@ -667,8 +734,8 @@ function ProMode({
       <div className="glass">
         {ready && url ? (
           <>
-            <Result draft={draft} url={url} onApply={onApplyUrl} dots={dots} />
-            {dots ? null : <SaveBar draft={draft} url={url} />}
+            <Result draft={draft} url={url} onApply={onApplyUrl} dots={false} />
+            <SaveBar draft={draft} url={url} />
           </>
         ) : null}
 

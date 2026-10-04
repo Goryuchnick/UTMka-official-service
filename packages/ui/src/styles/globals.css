@@ -3476,14 +3476,26 @@ html[data-theme='light'] .crt {
   display: block;
 }
 
+/* «Простой»: фон в точках, меню с белым пунктом слева, белый блок с полем и кнопкой. */
 .skinpick__opt--dots .skinpick__preview {
   background: radial-gradient(circle, rgba(21, 20, 15, 0.16) 1px, transparent 1.6px) 0 0 / 10px 10px, #f1f7f7;
 }
 
-.skinpick__opt--dots .pv-line.pv-line--title { top: 28px; width: 56%; height: 12px; border-radius: 6px; background: #15140f; }
-.skinpick__opt--dots .pv-line { top: 52px; width: 72%; height: 7px; border-radius: 4px; background: rgba(21, 20, 15, 0.3); }
-.skinpick__opt--dots .pv-dots { top: 84px; right: 18px; height: 4px; background: radial-gradient(circle, #009399 1.4px, transparent 1.9px) 0 50% / 7px 4px repeat-x; }
-.skinpick__opt--dots .pv-btn { top: 104px; width: 86px; height: 26px; border-radius: 13px; background: #006368; box-shadow: 0 8px 18px -8px rgba(0, 147, 153, 0.9); }
+.skinpick__opt--dots .skinpick__preview::before {
+  content: '';
+  position: absolute;
+  top: 36px;
+  left: 10px;
+  width: 18%;
+  height: 12px;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.skinpick__opt--dots .pv-line.pv-line--title { top: 18px; left: 28%; width: 36%; height: 9px; border-radius: 2px; background: #15140f; }
+.skinpick__opt--dots .pv-line { top: 36px; left: 28%; right: 12px; height: 72px; border-radius: 12px; background: #fff; }
+.skinpick__opt--dots .pv-dots { top: 54px; left: calc(28% + 12px); right: 24px; height: 14px; border: 1px solid rgba(21, 20, 15, 0.15); border-radius: 4px; background: #fff; }
+.skinpick__opt--dots .pv-btn { top: 80px; left: calc(28% + 12px); width: 56px; height: 16px; border-radius: 4px; background: #006368; }
 
 .skinpick__opt--os .skinpick__preview {
   background:
@@ -3520,9 +3532,12 @@ html[data-theme='light'] .crt {
     top: 72px;
   }
 
-  .skinpick__opt--dots .pv-dots,
   .skinpick__opt--os .pv-box {
     display: none;
+  }
+
+  .skinpick__opt--dots .pv-line {
+    height: 60px;
   }
 }
 

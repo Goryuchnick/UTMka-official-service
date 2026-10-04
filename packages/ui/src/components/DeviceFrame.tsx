@@ -15,12 +15,13 @@ import { useState, type ReactNode } from 'react'
 import { PRODUCT_VERSION } from '@utmka/core'
 
 import { Assistant } from './Assistant'
-import { DotField } from './DotField'
 import { OnboardingGate } from './OnboardingGate'
 import { SkinChooser } from './SkinChooser'
 import { MascotBar } from './Mascot'
 import { PixelIcon, type IconName } from './PixelIcon'
 import { useAccount } from '../lib/account'
+import { setAssistantOpen, useAssistantOpen } from '../lib/assistant-open'
+import { MASCOT_ANIM } from '../lib/mascot-anim'
 import { useSkin, useSkinChosen, useTheme } from '../lib/theme'
 import { backend, NavLink, track, useNav } from '../shell'
 
@@ -86,6 +87,7 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
   const { skin, toggle: toggleSkin } = useSkin()
   const skinChosen = useSkinChosen()
   const { state: account } = useAccount()
+  const askOpen = useAssistantOpen()
   const [menuOpen, setMenuOpen] = useState(false)
 
   /* Вход есть как понятие только в вебе. В десктопе `caps.auth === false`, и
@@ -105,10 +107,10 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
     ? 'orange'
     : (SECTIONS.find((section) => isCurrent(section.href))?.accent ?? 'teal')
 
-  /* В «Точках» шапка — знак, разделы и кнопка вида. Помощь и тема живут в
-     строке состояния, вход — в ней же («Фраза при вас»); в шапке остаётся
-     лишь приглашение для гостя. Кнопка вида подсвечена в обоих оформлениях:
-     о втором виде человек иначе не узнает. */
+  /* В «Точках» шапка — знак, иконка помощника, тема и кнопка вида; разделы
+     стоят колонкой слева. Помощь живёт в строке состояния, вход — в ней же
+     («Фраза при вас»); в шапке остаётся лишь приглашение для гостя. Кнопка
+     вида выделена в обоих оформлениях: о втором виде человек иначе не узнает. */
   const dots = skin === 'dots'
 
   const themeButton = (
@@ -140,7 +142,6 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
       data-accent={accent}
     >
       {titleBar}
-      {skin === 'dots' ? <DotField /> : null}
       <div className="screen">
         <div className="crt" aria-hidden="true" />
 
@@ -188,8 +189,27 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
                 </NavLink>
               </>
             )}
+            {/* Помощник в «Простом» виде — только по этой иконке: лицо маскота,
+                а не ещё один пиксельный значок. В «ПРОНИН-ОС» кнопка скрыта
+                стилями — там свой вызов в углу экрана. */}
+            {backend.assistant ? (
+              <button
+                type="button"
+                className="askbtn"
+                onClick={() => setAssistantOpen((was) => !was)}
+                aria-expanded={askOpen}
+                aria-label="Помощник"
+                title="Помощник: опишите запуск — соберу пакет ссылок"
+              >
+                <span
+                  className="askbtn__face"
+                  aria-hidden="true"
+                  style={{ backgroundImage: `url(${MASCOT_ANIM.idle.file})` }}
+                />
+              </button>
+            ) : null}
             {skinButton}
-            {dots ? null : themeButton}
+            {themeButton}
             {withAuth && !(dots && signedIn) ? (
               <NavLink to="/login" className="keybtn">
                 <PixelIcon name="key" />
@@ -270,7 +290,6 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
             <PixelIcon name="donut" size={12} />
             Поблагодарить
           </a>
-          {dots ? themeButton : null}
           <span className="sb-item sb-item--flat">
             <span className="wordmark">
               <b>UTM</b>

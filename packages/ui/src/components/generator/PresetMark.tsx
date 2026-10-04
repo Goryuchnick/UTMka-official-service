@@ -2,9 +2,105 @@
  * PresetMark — знак площадки в круглом медальоне. Пиксельная манера и палитра —
  * из цветного пака сайта (RetroPixelIcon): узнаётся боковым зрением, читать
  * подпись не обязательно.
+ *
+ * У «Простого» вида («Точки») набор свой — плитка цвета площадки с белым
+ * знаком, как значки приложений: цвет говорит, чья площадка, знак — какой
+ * формат. Реклама — мегафон, пост и канал — логотип площадки. Знаки VK и
+ * Telegram — из Simple Icons (CC0, simpleicons.org), остальное нарисовано здесь
+ * в той же сетке 24 px.
  */
 
 import type { ReactElement } from 'react'
+
+import { useSkin } from '../../lib/theme'
+
+/** Мегафон рекламы — общий для рекламных кабинетов. */
+const MEGAPHONE = (
+  <>
+    <path d="M5.5 10.6c0-.6.4-1 1-1h2.2l6.3-3.4v11.6l-6.3-3.4H6.5c-.6 0-1-.4-1-1z" fill="#fff" />
+    <path d="M8.6 14.6l1 3.4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M17.6 9.4a3.6 3.6 0 0 1 0 5.2" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+  </>
+)
+
+const TILES: Record<string, ReactElement> = {
+  'yandex-direct': (
+    <>
+      <rect width="24" height="24" rx="6" fill="#FC3F1D" />
+      <path
+        d="M14.8 5.6v12.8M14.8 5.6h-3.4a3.4 3.4 0 0 0 0 6.8h3.4M11.9 12.4l-3.6 6"
+        stroke="#fff"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </>
+  ),
+  'vk-ads': (
+    <>
+      <rect width="24" height="24" rx="6" fill="#0077FF" />
+      {MEGAPHONE}
+    </>
+  ),
+  'vk-post': (
+    <>
+      <rect width="24" height="24" rx="6" fill="#0077FF" />
+      <path
+        d="M6.79 7.3H4.05c.13 6.24 3.25 9.99 8.72 9.99h.31v-3.57c2.01.2 3.53 1.67 4.14 3.57h2.84c-.78-2.84-2.83-4.41-4.11-5.01 1.28-.74 3.08-2.54 3.51-4.98h-2.58c-.56 1.98-2.22 3.78-3.8 3.95V7.3H10.5v6.92c-1.6-.4-3.62-2.34-3.71-6.92Z"
+        fill="#fff"
+      />
+    </>
+  ),
+  'telegram-channel': (
+    <>
+      <rect width="24" height="24" rx="6" fill="#26A5E4" />
+      <path
+        d="M16.906 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"
+        fill="#fff"
+      />
+    </>
+  ),
+  'telegram-ads': (
+    <>
+      <rect width="24" height="24" rx="6" fill="#26A5E4" />
+      {MEGAPHONE}
+    </>
+  ),
+  email: (
+    <>
+      <rect width="24" height="24" rx="6" fill="#18A058" />
+      <rect x="5.5" y="7.5" width="13" height="9" rx="1.6" stroke="#fff" strokeWidth="1.8" fill="none" />
+      <path d="M6.2 8.4l5.8 4.4 5.8-4.4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </>
+  ),
+  /* Дзен — знак-звезда с вогнутыми сторонами на тёмной плитке. Тёмная плитка в
+     тёмной теме меняется местами с белым знаком (переменные в dots.css). */
+  dzen: (
+    <>
+      <rect width="24" height="24" rx="6" fill="var(--mark-ink, #15140f)" />
+      <path
+        d="M12 5.5c0 3.6 2.9 6.5 6.5 6.5-3.6 0-6.5 2.9-6.5 6.5 0-3.6-2.9-6.5-6.5-6.5 3.6 0 6.5-2.9 6.5-6.5z"
+        fill="var(--mark-paper, #fff)"
+      />
+    </>
+  ),
+  'offline-qr': (
+    <>
+      <rect width="24" height="24" rx="6" fill="var(--mark-ink, #15140f)" />
+      <g fill="none" stroke="var(--mark-paper, #fff)" strokeWidth="1.6">
+        <rect x="5.8" y="5.8" width="4.6" height="4.6" rx="1" />
+        <rect x="13.6" y="5.8" width="4.6" height="4.6" rx="1" />
+        <rect x="5.8" y="13.6" width="4.6" height="4.6" rx="1" />
+      </g>
+      <g fill="var(--mark-paper, #fff)">
+        <rect x="13.4" y="13.4" width="2.2" height="2.2" rx=".5" />
+        <rect x="16.2" y="16.2" width="2.2" height="2.2" rx=".5" />
+        <rect x="16.2" y="13.4" width="2.2" height="2.2" rx=".5" />
+      </g>
+    </>
+  ),
+}
 
 const MARKS: Record<string, ReactElement> = {
   'yandex-direct': (
@@ -89,6 +185,15 @@ const MARKS: Record<string, ReactElement> = {
 }
 
 export function PresetMark({ id }: { id: string }) {
+  const dots = useSkin().skin === 'dots'
+  if (dots) {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        {TILES[id] ?? <rect width="24" height="24" rx="6" fill="currentColor" />}
+      </svg>
+    )
+  }
+
   const mark = MARKS[id]
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">

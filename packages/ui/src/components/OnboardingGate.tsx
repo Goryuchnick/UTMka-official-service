@@ -18,6 +18,7 @@ import { useCallback, useState, useSyncExternalStore } from 'react'
 
 import { PixelIcon } from './PixelIcon'
 import { Onboarding, markOnboardingSeen, shouldShowOnboarding } from './Onboarding'
+import { useSkin } from '../lib/theme'
 
 const NO_CHANGES = () => () => {}
 const NOT_ON_SERVER = () => false
@@ -27,6 +28,9 @@ export function OnboardingGate() {
   /** Плашку убрали в этом сеансе: отметка уже поставлена, но стор её не отдаёт. */
   const [hidden, setHidden] = useState(false)
   const [tour, setTour] = useState(false)
+  /* «Простой» вид объясняет себя сам, плашка в углу там — лишний шум. Тур
+     остаётся на экране помощи. */
+  const dots = useSkin().skin === 'dots'
 
   const dismiss = useCallback(() => {
     markOnboardingSeen()
@@ -45,7 +49,7 @@ export function OnboardingGate() {
     <>
       <Onboarding open={tour} onClose={close} />
 
-      {firstVisit && !hidden && !tour ? (
+      {firstVisit && !hidden && !tour && !dots ? (
         <div className="onb-invite" role="note">
           <span className="onb-invite__mark" aria-hidden="true">
             <PixelIcon name="wand" />

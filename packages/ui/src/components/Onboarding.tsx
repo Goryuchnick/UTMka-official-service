@@ -18,6 +18,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react'
 
 import { PixelIcon, type IconName } from './PixelIcon'
+import { useSkin } from '../lib/theme'
 
 const SEEN_KEY = 'utmka.onboarding.v2'
 
@@ -30,6 +31,8 @@ interface Step {
   targets?: readonly string[]
   /** С какой стороны от цели встать карточке. */
   place?: 'below' | 'above'
+  /** Только для «ПРОНИН-ОС»: в «Простом» виде нет ни режимов, ни планки маскота. */
+  osOnly?: true
 }
 
 const STEPS: readonly Step[] = [
@@ -63,6 +66,7 @@ const STEPS: readonly Step[] = [
     ],
     targets: ['.chips', '.result-row'],
     place: 'below',
+    osOnly: true,
   },
   {
     icon: 'help',
@@ -74,6 +78,7 @@ const STEPS: readonly Step[] = [
     ],
     targets: ['.mascotbar'],
     place: 'below',
+    osOnly: true,
   },
   {
     icon: 'star',
@@ -83,7 +88,7 @@ const STEPS: readonly Step[] = [
       'Что предложит модель, всё равно проходит через правила.',
       'Единственное платное место: ответы модели сервис оплачивает сам, отсюда лимит.',
     ],
-    targets: ['.ask-fab'],
+    targets: ['.ask-fab', '.askbtn'],
     place: 'above',
   },
   {
@@ -144,7 +149,9 @@ export function Onboarding({ open, onClose }: OnboardingProps) {
   const [step, setStep] = useState(0)
   const [spot, setSpot] = useState<Spot | null>(null)
 
-  const current = STEPS[step]
+  const dots = useSkin().skin === 'dots'
+  const steps = dots ? STEPS.filter((item) => !item.osOnly) : STEPS
+  const current = steps[step]
 
   /* Позиция цели пересчитывается на смене шага и при изменении окна: рамка
      устройства резиновая, а на мобилке разделы вообще уезжают в другой угол. */
@@ -181,16 +188,16 @@ export function Onboarding({ open, onClose }: OnboardingProps) {
     if (!open) return undefined
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') finish()
-      if (event.key === 'ArrowRight' && step < STEPS.length - 1) setStep((value) => value + 1)
+      if (event.key === 'ArrowRight' && step < steps.length - 1) setStep((value) => value + 1)
       if (event.key === 'ArrowLeft' && step > 0) setStep((value) => value - 1)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open, finish, step])
+  }, [open, finish, step, steps.length])
 
   if (!open) return null
 
-  const last = step === STEPS.length - 1
+  const last = step === steps.length - 1
 
   /* Вырез в затемнении: тот же приём, что в 2.2 — многоугольник, обходящий
      прямоугольник цели. Без выреза подсветка выглядела бы просто рамкой. */
@@ -261,7 +268,7 @@ export function Onboarding({ open, onClose }: OnboardingProps) {
 
           <div className="onb-foot">
             <div className="onb-dots" aria-hidden="true">
-              {STEPS.map((item, index) => (
+              {steps.map((item, index) => (
                 <i key={item.title} className={index === step ? 'on' : undefined} />
               ))}
             </div>
