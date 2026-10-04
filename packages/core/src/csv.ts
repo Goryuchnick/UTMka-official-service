@@ -32,11 +32,42 @@ export const COLUMN_ALIASES: Record<UtmKey | 'label' | 'baseUrl' | 'name', reado
  * Excel с русской локалью выгружает через точку с запятой, английский — через
  * запятую, и оба файла пользователь считает «обычным CSV». Жёсткая запятая
  * складывала русскую выгрузку в одну колонку.
+ *
+ * Таб проверяем первым: так приходят ячейки, скопированные из Excel и Google
+ * Таблиц в буфер, — а пакетный режим прямо зовёт «вставьте из Excel». Без
+ * этого таблица складывалась в одну колонку, и ссылки уходили без меток.
  */
-export function detectDelimiter(headerLine: string): ';' | ',' {
+export function detectDelimiter(headerLine: string): ';' | ',' | '\t' {
+  if (headerLine.includes('\t')) return '\t'
   const semicolons = (headerLine.match(/;/g) ?? []).length
   const commas = (headerLine.match(/,/g) ?? []).length
   return semicolons >= commas && semicolons > 0 ? ';' : ','
+}
+
+/**
+ * Строки таблицы с учётом кавычек: перенос внутри `"…"` — часть ячейки, а не
+ * новая строка. Excel берёт в кавычки ячейку с переносом и при выгрузке, и при
+ * копировании в буфер.
+ */
+function splitCsvLines(text: string): string[] {
+  const lines: string[] = []
+  let line = ''
+  let quoted = false
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i]
+    if (char === '"') quoted = !quoted
+    if (!quoted && (char === '\n' || char === '\r')) {
+      if (char === '\r' && text[i + 1] === '\n') i += 1
+      lines.push(line)
+      line = ''
+    } else {
+      line += char ?? ''
+    }
+  }
+
+  lines.push(line)
+  return lines
 }
 
 /** Разбор одной строки с учётом кавычек. Паритет с `parseCSVLine` из 2.2. */
@@ -76,10 +107,7 @@ export function parseCsvLine(line: string, delimiter: string = ','): string[] {
 export function parseCsv(text: string): Array<Record<string, string>> {
   // BOM обязателен в наших же выгрузках (иначе Excel съедает кириллицу) —
   // и он же попадёт обратно на импорте первым символом заголовка.
-  const lines = text
-    .replace(/^﻿/, '')
-    .split(/\r?\n/)
-    .filter((line) => line.trim())
+  const lines = splitCsvLines(text.replace(/^﻿/, '')).filter((line) => line.trim())
   if (lines.length < 2) return []
 
   const delimiter = detectDelimiter(lines[0] ?? '')

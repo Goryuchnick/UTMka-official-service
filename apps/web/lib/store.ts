@@ -174,10 +174,24 @@ export async function listHistory(userHash: string, limit = HISTORY_LIMIT): Prom
   return (data as LinkRow[]).map(toHistory)
 }
 
+/**
+ * Дата из импорта файла: только разбираемая и не из будущего. Дата из
+ * будущего навсегда поставила бы запись первой в списке.
+ */
+function importedDate(value: string | undefined): string | null {
+  if (!value) return null
+  const time = Date.parse(value)
+  if (Number.isNaN(time) || time > Date.now() + 60_000) return null
+  return new Date(time).toISOString()
+}
+
 export async function addHistory(
   userHash: string,
   input: Omit<HistoryItem, 'id'>,
 ): Promise<HistoryItem> {
+  // Обычное сохранение даты не несёт — встаёт серверное «сейчас». Импорт файла
+  // несёт дату записи, и без неё вся история схлопнулась бы в день импорта.
+  const createdAt = importedDate(input.createdAt)
   const { data, error } = await supabase()
     .from('links')
     .insert({
@@ -190,6 +204,7 @@ export async function addHistory(
       tag_color: input.tagColor ?? null,
       origin: input.origin,
       batch_id: input.batchId ?? null,
+      ...(createdAt ? { created_at: createdAt } : {}),
     })
     .select('*')
     .single()

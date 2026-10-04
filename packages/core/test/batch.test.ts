@@ -33,6 +33,13 @@ describe('batchFromCsv', () => {
     ])
   })
 
+  it('понимает таблицу, вставленную из Excel через буфер', () => {
+    const rows = batchFromCsv('Метка\tИсточник\tКанал\tКампания\nВК пост\tvk\tsocial\tosen_2026')
+    expect(rows).toEqual([
+      { label: 'ВК пост', params: { source: 'vk', medium: 'social', campaign: 'osen_2026' } },
+    ])
+  })
+
   it('понимает технические заголовки', () => {
     const rows = batchFromCsv('url,utm_source,utm_medium\nhttps://a.ru/,vk,cpc')
     expect(rows[0]?.baseUrl).toBe('https://a.ru/')
@@ -60,6 +67,25 @@ describe('buildBatch', () => {
     expect(results[0]?.url).toBe(
       'https://example.com/?utm_source=vk&utm_medium=social&utm_campaign=autumn',
     )
+  })
+
+  it('с галочкой «Транслитерация» переводит кириллицу и в строках, и в общих значениях', () => {
+    const results = buildBatch([{ params: { source: 'vk', medium: 'social', content: 'пост' } }], {
+      baseUrl: 'https://example.com/',
+      params: { campaign: 'осень' },
+      transliterate: true,
+    })
+    expect(results[0]?.url).toBe(
+      'https://example.com/?utm_source=vk&utm_medium=social&utm_campaign=osen&utm_content=post',
+    )
+    expect(results[0]?.issues.map((i) => i.code)).not.toContain('value-cyrillic')
+  })
+
+  it('без галочки кириллицу не трогает — о ней скажет проверка', () => {
+    const results = buildBatch([{ params: { source: 'vk', medium: 'social', campaign: 'осень' } }], {
+      baseUrl: 'https://example.com/',
+    })
+    expect(results[0]?.issues.map((i) => i.code)).toContain('value-cyrillic')
   })
 
   it('свой адрес строки перебивает общий', () => {

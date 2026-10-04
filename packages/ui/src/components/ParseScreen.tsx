@@ -9,9 +9,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  buildUrl,
-  normalizeDraft,
   parseUrl,
+  repairUrl,
   UTM_KEYS,
   UTM_PARAM_NAMES,
   validateParsed,
@@ -63,9 +62,8 @@ export function ParseScreen() {
 
   const fix = useCallback(() => {
     if (!parsed) return
-    const { draft } = normalizeDraft({ baseUrl: parsed.baseUrl, params: parsed.params })
-    setFixed(buildUrl(draft))
-  }, [parsed])
+    setFixed(repairUrl(raw))
+  }, [parsed, raw])
 
   return (
     <div className="screen-scroll">

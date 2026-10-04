@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { draftFromUrl, hasUtm, lostParams, parseUrl } from '../src/parse'
+import { draftFromUrl, hasUtm, lostParams, parseUrl, repairUrl } from '../src/parse'
 import { buildUrl } from '../src/build'
 
 describe('parseUrl', () => {
@@ -104,5 +104,28 @@ describe('draftFromUrl', () => {
     const draft = draftFromUrl('  не ссылка  ')
     expect(draft.baseUrl).toBe('не ссылка')
     expect(draft.params).toEqual({})
+  })
+})
+
+describe('repairUrl — «Починить» на экране разбора', () => {
+  it('чинит метки и не теряет чужие параметры и якорь', () => {
+    const fixed = repairUrl(
+      'https://example.com/p?yclid=777&utm_source=VK&ref=partner&utm_campaign=Осень#pricing',
+    )
+    expect(fixed).toContain('yclid=777')
+    expect(fixed).toContain('ref=partner')
+    expect(fixed).toContain('utm_source=vk')
+    expect(fixed).toContain('utm_campaign=osen')
+    expect(fixed.endsWith('#pricing')).toBe(true)
+  })
+
+  it('дубль метки сводит к одному значению', () => {
+    const fixed = repairUrl('https://example.com/?utm_source=vk&utm_source=telegram')
+    expect(fixed.match(/utm_source=/g)).toHaveLength(1)
+  })
+
+  it('подстановки VK переживают починку', () => {
+    const fixed = repairUrl('https://example.com/?utm_source=VK&utm_campaign={{ad_plan_id}}')
+    expect(fixed).toContain('utm_campaign={{ad_plan_id}}')
   })
 })

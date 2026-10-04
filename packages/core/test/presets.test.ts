@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { MACRO_GROUPS } from '../src/macros'
 import { allPlaceholders, applyPreset, getPreset, matchPreset, PRESETS } from '../src/presets'
-import { KNOWN_PLACEHOLDERS, validateDraft } from '../src/validate'
+import { fixablePreview, KNOWN_PLACEHOLDERS, validateDraft } from '../src/validate'
+import { normalizeDraft } from '../src/normalize'
 import { buildUrl } from '../src/build'
 
 describe('набор пресетов', () => {
@@ -30,6 +32,39 @@ describe('набор пресетов', () => {
       const blocking = issues.filter((i) => i.level !== 'info')
       expect(blocking, `пресет ${preset.id}`).toEqual([])
     }
+  })
+
+  it('«Привести в порядок» ничего не меняет в чистом пресете', () => {
+    for (const preset of PRESETS) {
+      const { changes } = normalizeDraft({ baseUrl: 'https://example.com/', params: preset.params })
+      expect(changes, `пресет ${preset.id}`).toEqual([])
+      expect(fixablePreview(preset.params), `пресет ${preset.id}`).toEqual([])
+    }
+  })
+
+  it('подстановки пресета совпадают со справочником площадки слово в слово', () => {
+    const all = MACRO_GROUPS.flatMap((group) => group.macros)
+    for (const { token, meaning, presetId } of allPlaceholders()) {
+      expect(
+        all.some((macro) => macro.token === token && macro.meaning === meaning),
+        `${presetId} ${token}`,
+      ).toBe(true)
+    }
+  })
+
+  it('мессенджеры размечаются как messenger — так советует Метрика', () => {
+    expect(getPreset('telegram-channel')?.params).toEqual({ source: 'telegram', medium: 'messenger' })
+    expect(getPreset('max-channel')?.params).toEqual({ source: 'max', medium: 'messenger' })
+  })
+
+  it('Авито Реклама — по шаблону из справки площадки', () => {
+    expect(getPreset('avito-ads')?.params).toEqual({
+      source: 'avito-ads',
+      medium: '{price_model}',
+      campaign: '{campaign_id}',
+      content: '{ad_id}',
+      term: '{adgroup_id}',
+    })
   })
 
   it('различает платный и бесплатный трафик одной площадки', () => {

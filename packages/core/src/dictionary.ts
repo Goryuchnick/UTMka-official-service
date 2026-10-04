@@ -7,6 +7,7 @@
  * предупреждение о новом значении, детектор расщепления и сведение алиасов.
  */
 
+import { PLACEHOLDER_RE } from './macros'
 import { normalizeValue } from './normalize'
 import type { DictEntry, DictKind } from './types'
 
@@ -17,6 +18,7 @@ import type { DictEntry, DictKind } from './types'
 const SYNONYM_GROUPS: readonly (readonly string[])[] = [
   ['vk', 'vkontakte', 'vk_com', 'vkcom'],
   ['telegram', 'tg', 'tme', 't_me', 'telega'],
+  ['max', 'maks'],
   ['facebook', 'fb'],
   ['instagram', 'ig', 'insta'],
   ['yandex', 'ya', 'yandeks'],
@@ -59,6 +61,16 @@ export function levenshtein(a: string, b: string): number {
   return prev[b.length] ?? 0
 }
 
+/** Числа значения по порядку: `osen_2026_v2` → `2026 2`. */
+function digitsOf(value: string): string {
+  return value.replace(/\D+/g, ' ').trim()
+}
+
+/** Подстановки значения как написаны: `{campaign_id}` и `{{campaign_id}}` — разные. */
+function placeholdersOf(value: string): string {
+  return (value.match(PLACEHOLDER_RE) ?? []).join(' ')
+}
+
 /**
  * Считаются ли два значения написаниями одного и того же.
  *
@@ -67,6 +79,10 @@ export function levenshtein(a: string, b: string): number {
  * 2) состоят в одной группе синонимов;
  * 3) отличаются одной-двумя буквами при длине от четырёх — опечатка,
  *    либо одно является приставкой другого (`vk` и `vk_ads`).
+ *
+ * Правило 3 не действует, если различаются числа или подстановки: `osen_2025`
+ * и `osen_2026` — два запуска, а не опечатка, а `{campaign_id}` Директа и
+ * `{{campaign_id}}` VK — разные данные разных площадок.
  */
 export function looksLikeSame(a: string, b: string): boolean {
   const left = normalizeValue(a)
@@ -77,6 +93,9 @@ export function looksLikeSame(a: string, b: string): boolean {
   const leftHead = SYNONYM_OF.get(left)
   const rightHead = SYNONYM_OF.get(right)
   if (leftHead && rightHead && leftHead === rightHead) return true
+
+  if (digitsOf(left) !== digitsOf(right)) return false
+  if (placeholdersOf(left) !== placeholdersOf(right)) return false
 
   const shorter = left.length <= right.length ? left : right
   const longer = left.length <= right.length ? right : left
@@ -127,6 +146,34 @@ export function findSimilar(
     .filter((e) => e.kind === kind && looksLikeSame(e.value, value))
     .sort((a, b) => b.uses - a.uses)
     .slice(0, limit)
+}
+
+/**
+ * Подсказка под полем: как это значение уже писали раньше.
+ *
+ * Сведённый алиас ведёт к своему канону, новое написание — к похожим
+ * знакомым, тоже через канон: иначе подсказка предлагала бы ровно то, от чего
+ * в справочнике уже отказались. Знакомое значение подсказки не требует —
+ * регистр и пробелы у него ловят проверки (`validate.ts`).
+ */
+export function canonHints(
+  entries: readonly DictEntry[],
+  kind: DictKind,
+  value: string,
+  limit = 3,
+): string[] {
+  const target = normalizeValue(value)
+  if (!target) return []
+
+  const own = entries.find((e) => e.kind === kind && normalizeValue(e.value) === target)
+  if (own) return own.canonical ? [own.canonical] : []
+
+  const hints: string[] = []
+  for (const e of findSimilar(entries, kind, value, Infinity)) {
+    const canon = e.canonical ?? e.value
+    if (!hints.includes(canon)) hints.push(canon)
+  }
+  return hints.slice(0, limit)
 }
 
 /** Группа расщепления: несколько написаний одного смысла. */

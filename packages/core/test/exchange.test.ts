@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { detectDelimiter, parseCsv, pickColumn } from '../src/csv'
-import { parseHistory, parseTemplatesCsv, parseTemplatesJson } from '../src/exchange'
+import { detectDelimiter, parseCsv, pickColumn, rowsToCsv } from '../src/csv'
+import {
+  historyToCsv,
+  historyToJson,
+  parseHistory,
+  parseTemplatesCsv,
+  parseTemplatesJson,
+} from '../src/exchange'
 
 describe('CSV — один разбор на весь проект', () => {
   it('понимает и запятую, и точку с запятой', () => {
@@ -10,6 +16,20 @@ describe('CSV — один разбор на весь проект', () => {
        в одну колонку, а импорт шаблонов разделитель определял. */
     expect(detectDelimiter('name;url;utm_source')).toBe(';')
     expect(detectDelimiter('name,url,utm_source')).toBe(',')
+  })
+
+  it('понимает таб — ячейки, скопированные из Excel в буфер', () => {
+    expect(detectDelimiter('Метка\tИсточник\tКанал')).toBe('\t')
+    // Запятая внутри ячейки не перебивает таб.
+    expect(detectDelimiter('Лето, 2026\tИсточник')).toBe('\t')
+  })
+
+  it('перенос строки внутри кавычек остаётся в ячейке', () => {
+    const rows = parseCsv('name;note\r\n"Осень";"две\r\nстроки"\r\nЗима;одна')
+    expect(rows).toEqual([
+      { name: 'Осень', note: 'две\r\nстроки' },
+      { name: 'Зима', note: 'одна' },
+    ])
   })
 
   it('снимает BOM с первого заголовка', () => {
@@ -93,5 +113,31 @@ describe('импорт истории', () => {
 
   it('строка без адреса пропускается', () => {
     expect(parseHistory('url;utm_source\n;vk', true)).toHaveLength(0)
+  })
+
+  it('дата и короткая ссылка переживают выгрузку и загрузку', () => {
+    /* Без даты перенесённая история схлопывалась в день импорта: вся лента
+       вставала на «сегодня», и искать по периоду становилось бессмысленно. */
+    const item = {
+      id: '1',
+      url: 'https://site.ru/a?utm_source=vk',
+      baseUrl: 'https://site.ru/a',
+      params: { source: 'vk' },
+      shortUrl: 'https://clck.ru/abc',
+      origin: 'single' as const,
+      createdAt: '2026-05-27T10:02:40.000Z',
+    }
+
+    const fromJson = parseHistory(JSON.stringify(historyToJson([item])), false)[0]
+    expect(fromJson).toMatchObject({ shortUrl: 'https://clck.ru/abc', createdAt: '2026-05-27T10:02:40.000Z' })
+
+    const csv = rowsToCsv(historyToCsv([item]))
+    const fromCsv = parseHistory(csv, true)[0]
+    expect(fromCsv).toMatchObject({ shortUrl: 'https://clck.ru/abc', createdAt: '2026-05-27T10:02:40.000Z' })
+  })
+
+  it('неразборчивую дату не выдумывает', () => {
+    const rows = parseHistory('url;created_at\nhttps://site.ru/a;вчера', true)
+    expect(rows[0]?.createdAt).toBeUndefined()
   })
 })

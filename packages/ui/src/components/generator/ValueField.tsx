@@ -13,9 +13,11 @@ import { useCallback } from 'react'
 import {
   appendDate,
   appendMacro,
+  canonHints,
   placeholderFor,
   VALUE_HINTS,
   validateValue,
+  type DictEntry,
   type UtmKey,
 } from '@utmka/core'
 
@@ -45,6 +47,15 @@ const WITH_DATE: ReadonlySet<UtmKey> = new Set<UtmKey>(['campaign', 'content', '
  */
 const WITH_MACROS: ReadonlySet<UtmKey> = new Set<UtmKey>(['campaign', 'content', 'term'])
 
+/**
+ * У каких полей подсказка «Раньше писали» из справочника.
+ *
+ * Только площадка и тип трафика: их набор постоянен, и второе написание того
+ * же — разнобой в отчёте. Кампания и уточнения меняются от запуска к запуску
+ * намеренно, и `osen_2026` рядом с `osen_2025` — не опечатка.
+ */
+const WITH_DICT: ReadonlySet<UtmKey> = new Set<UtmKey>(['source', 'medium'])
+
 interface ValueFieldProps {
   field: UtmKey
   value: string
@@ -53,10 +64,13 @@ interface ValueFieldProps {
   bare?: boolean
   /** Площадка из `utm_source`: её подстановки показываются первыми. */
   source?: string
+  /** Справочник значений — для подсказки «Раньше писали». */
+  dict?: readonly DictEntry[]
 }
 
-export function ValueField({ field, value, onChange, bare, source }: ValueFieldProps) {
+export function ValueField({ field, value, onChange, bare, source, dict }: ValueFieldProps) {
   const issues = validateValue(field, value)
+  const known = dict && WITH_DICT.has(field) ? canonHints(dict, field, value) : []
   const state = issues.some((issue) => issue.level === 'error')
     ? 'input--err'
     : issues.length > 0
@@ -101,6 +115,17 @@ export function ValueField({ field, value, onChange, bare, source }: ValueFieldP
         ) : null}
         {WITH_DATE.has(field) ? <DatePopover onPick={pickDate} /> : null}
       </div>
+
+      {known.length > 0 ? (
+        <div className="chips dict-hint">
+          <span className="hint">Раньше писали:</span>
+          {known.map((canon) => (
+            <button key={canon} type="button" className="chip" onClick={() => onChange(canon)}>
+              {canon}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {bare ? null : (
         <span className="hint hint--examples" title="Полный список — в выпадающем списке поля">

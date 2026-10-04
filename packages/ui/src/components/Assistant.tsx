@@ -21,9 +21,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react'
 import {
   backendMessage,
+  UTM_KEYS,
+  UTM_PARAM_NAMES,
   type BriefDropped,
   type BriefLink,
   type BriefQuota as Quota,
+  type UtmParams,
 } from '@utmka/core'
 
 import { PixelIcon } from './PixelIcon'
@@ -53,6 +56,13 @@ const PANEL: Variants = {
   gone: { opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.15 } },
 }
 
+/** Метки без адреса — в том виде, в каком они встанут в ссылку. */
+function paramsLine(params: UtmParams): string {
+  return UTM_KEYS.filter((key) => params[key])
+    .map((key) => `${UTM_PARAM_NAMES[key]}=${params[key]}`)
+    .join('&')
+}
+
 const CARD: Variants = {
   hidden: { opacity: 0, y: 10 },
   shown: { opacity: 1, y: 0, transition: { duration: 0.22 } },
@@ -66,6 +76,7 @@ export function Assistant() {
 
   const open = useAssistantOpen()
   const [brief, setBrief] = useState('')
+  const [address, setAddress] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [links, setLinks] = useState<BriefLink[]>([])
@@ -75,6 +86,8 @@ export function Assistant() {
   const areaRef = useRef<HTMLTextAreaElement>(null)
 
   const dots = useSkin().skin === 'dots'
+  // Адрес один на весь пакет: либо он есть у всех ссылок, либо ни у одной.
+  const withUrls = links.some((link) => link.url)
 
   // Планка с маскотом — то же лицо, что и у окна: пока модель считает, он
   // думает, а на ответ рассказывает, что из предложенного пережило правила.
@@ -123,7 +136,7 @@ export function Assistant() {
     setLinks([])
     setDropped([])
     try {
-      const data = await backend.assistant!.brief(brief)
+      const data = await backend.assistant!.brief(brief, address)
       if (typeof data.left === 'number') {
         setQuota({ available: true, left: data.left, limit: data.limit ?? 0 })
       }
@@ -131,8 +144,9 @@ export function Assistant() {
       setDropped(data.dropped ?? [])
       /* Цель — ответ, а не нажатие: отказ по квоте уходит в `catch` и
          достижением не считается, иначе выборка распухнет на тех, кому
-         помощник как раз не помог. */
-      track('assistant_used')
+         помощник как раз не помог. По той же причине не считаем ответ,
+         где правила выбросили всё. */
+      if ((data.links ?? []).length > 0) track('assistant_used')
     } catch (error) {
       /* Кончившаяся квота приходит тем же путём, что отказ сети, но означает
          другое: инструмент работает дальше, просто без подсказок модели. */
@@ -140,7 +154,7 @@ export function Assistant() {
     } finally {
       setBusy(false)
     }
-  }, [brief])
+  }, [brief, address])
 
   const copy = useCallback(async (url: string) => {
     try {
@@ -273,6 +287,21 @@ export function Assistant() {
                   rows={dots ? 3 : 4}
                 />
 
+                {/* Адрес модель не выдумывает. Без него придут наборы меток, а
+                    адрес допишется в пакете — поэтому поле не обязательное. */}
+                <div className="input">
+                  <input
+                    type="text"
+                    className="ym-disable-keys ym-hide-content"
+                    value={address}
+                    onChange={(event) => setAddress(event.target.value)}
+                    placeholder="Адрес страницы — можно указать потом, в пакете"
+                    aria-label="Адрес страницы"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+
                 <div className="result-row">
                   <button
                     type="button"
@@ -284,10 +313,12 @@ export function Assistant() {
                   </button>
                   {links.length > 0 ? (
                     <>
-                      <button type="button" className="btn btn--sm" onClick={copyAll}>
-                        <PixelIcon name={copied === 'all' ? 'check' : 'copy'} />
-                        {copied === 'all' ? 'Скопировано' : 'Скопировать все'}
-                      </button>
+                      {withUrls ? (
+                        <button type="button" className="btn btn--sm" onClick={copyAll}>
+                          <PixelIcon name={copied === 'all' ? 'check' : 'copy'} />
+                          {copied === 'all' ? 'Скопировано' : 'Скопировать все'}
+                        </button>
+                      ) : null}
                       {/* Пакет — естественное продолжение брифа: там строки
                           можно править и выгружать в CSV, а не только копировать. */}
                       <button
@@ -303,6 +334,7 @@ export function Assistant() {
                               content: link.params.content,
                               term: link.params.term,
                             })),
+                            address.trim(),
                           )
                           setAssistantOpen(false)
                           nav.go('/batch')
@@ -329,20 +361,28 @@ export function Assistant() {
 
             {links.length > 0 ? (
               <div className="ask-list">
-                {links.map((link) => (
-                  <motion.div className="ask-card" key={link.url} variants={reduced || dots ? undefined : CARD}>
+                {links.map((link, index) => (
+                  <motion.div
+                    className="ask-card"
+                    key={`${index}-${link.platform}`}
+                    variants={reduced || dots ? undefined : CARD}
+                  >
                     <div className="hist-name">
                       {link.platform}
                       {link.fixed > 0 ? <span className="hist-tag">починил {link.fixed}</span> : null}
                     </div>
-                    <div className="hist-url">{link.url}</div>
+                    {/* Без адреса это набор меток — показываем метки, а
+                        копировать нечего: адрес допишется в пакете. */}
+                    <div className="hist-url">{link.url || paramsLine(link.params)}</div>
                     {link.issues.length > 0 ? (
                       <div className="issue-text">{link.issues[0].consequence}</div>
                     ) : null}
-                    <button type="button" className="btn btn--sm" onClick={() => copy(link.url)}>
-                      <PixelIcon name={copied === link.url ? 'check' : 'copy'} />
-                      {copied === link.url ? 'Скопировано' : 'Скопировать'}
-                    </button>
+                    {link.url ? (
+                      <button type="button" className="btn btn--sm" onClick={() => copy(link.url)}>
+                        <PixelIcon name={copied === link.url ? 'check' : 'copy'} />
+                        {copied === link.url ? 'Скопировано' : 'Скопировать'}
+                      </button>
+                    ) : null}
                   </motion.div>
                 ))}
               </div>

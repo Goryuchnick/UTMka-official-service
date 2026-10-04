@@ -23,6 +23,7 @@ const KEYS = [
      переустановки вернулась бы светлая тема в чужом оформлении. */
   'utmka.skin',
   'utmka.mode',
+  'utmka.translit',
   'utmka.view.history',
   'utmka.view.templates',
   'utmka.onboarding.v2',
@@ -59,6 +60,7 @@ export function syncSettings(): () => void {
   })
 
   const onMode = () => push('utmka.mode')
+  const onTranslit = () => push('utmka.translit')
   const onView = () => {
     push('utmka.view.history')
     push('utmka.view.templates')
@@ -66,6 +68,7 @@ export function syncSettings(): () => void {
   const onOnboarding = () => push('utmka.onboarding.v2')
 
   window.addEventListener('utmka:mode', onMode)
+  window.addEventListener('utmka:translit', onTranslit)
   window.addEventListener('utmka:view', onView)
   window.addEventListener('utmka:onboarding', onOnboarding)
 
@@ -80,6 +83,7 @@ export function syncSettings(): () => void {
   return () => {
     observer.disconnect()
     window.removeEventListener('utmka:mode', onMode)
+    window.removeEventListener('utmka:translit', onTranslit)
     window.removeEventListener('utmka:view', onView)
     window.removeEventListener('utmka:onboarding', onOnboarding)
     window.removeEventListener('beforeunload', onLeave)

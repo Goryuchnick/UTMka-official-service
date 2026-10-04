@@ -46,6 +46,30 @@ describe('validateValue', () => {
     expect(unknown?.consequence).toContain('буквально')
   })
 
+  it('называет неизвестную подстановку целиком, со всеми скобками', () => {
+    const issues = validateValue('campaign', '{{ad_plan_idd}}')
+    expect(issues.find((i) => i.code === 'placeholder-unknown')?.message).toContain('{{ad_plan_idd}}')
+    expect(codes(validateValue('campaign', '{{campaign.nmae}}'))).toContain('placeholder-unknown')
+  })
+
+  it('не ругается на регистр внутри подстановки сервиса', () => {
+    expect(validateValue('campaign', '{{CampaignId}}')).toEqual([])
+  })
+
+  it('метку, которую площадка ставит сама, не чинит', () => {
+    expect(validateValue('source', 'avito-ads')).toEqual([])
+    expect(validateValue('source', 'Unisender')).toEqual([])
+  })
+
+  it('снятые Директом подстановки старых ссылок не называет неизвестными', () => {
+    expect(validateValue('content', '{adtarget_name}')).toEqual([])
+    expect(validateValue('content', '{addphrases}')).toEqual([])
+  })
+
+  it('знает {yclid} Директа', () => {
+    expect(validateValue('content', '{yclid}')).toEqual([])
+  })
+
   it('замечает разделитель по краям', () => {
     expect(codes(validateValue('campaign', '_autumn'))).toContain('value-trailing-separator')
   })
@@ -70,6 +94,9 @@ describe('validateSemantics — ловушки, которые не ловят �
   it('площадка, положенная в medium', () => {
     const issues = validateSemantics({ source: 'site', medium: 'vk' })
     expect(codes(issues)).toContain('semantic-source-in-medium')
+    expect(codes(validateSemantics({ source: 'telegram', medium: 'max' }))).toContain(
+      'semantic-source-in-medium',
+    )
   })
 
   it('платный поиск без utm_term', () => {
@@ -81,6 +108,40 @@ describe('validateSemantics — ловушки, которые не ловят �
 
   it('на корректной паре молчит', () => {
     expect(validateSemantics({ source: 'vk', medium: 'social', campaign: 'a' })).toEqual([])
+  })
+})
+
+describe('подстановка не той площадки', () => {
+  const syntax = (params: LinkDraft['params']): Issue[] =>
+    validateSemantics(params).filter((i) => i.code === 'placeholder-wrong-syntax')
+
+  it('VK с одинарными скобками Директа', () => {
+    const [found] = syntax({ source: 'vk', medium: 'cpc', campaign: '{campaign_id}' })
+    expect(found?.field).toBe('campaign')
+    expect(found?.consequence).toContain('{{campaign_id}}')
+  })
+
+  it('Директ с двойными скобками VK', () => {
+    expect(syntax({ source: 'yandex', medium: 'cpc', term: '{{keyword}}' })).toHaveLength(1)
+  })
+
+  it('Директ с подстановкой Google', () => {
+    const [found] = syntax({ source: 'yandex', medium: 'cpc', campaign: '{campaignid}' })
+    expect(found?.message).toContain('Google Ads')
+  })
+
+  it('площадка без подстановок', () => {
+    const [found] = syntax({ source: 'telegram', medium: 'cpc', campaign: '{campaign_id}' })
+    expect(found?.consequence).toContain('буквально')
+  })
+
+  it('свои подстановки площадки пропускает', () => {
+    expect(syntax({ source: 'vk', medium: 'cpc', campaign: '{{ad_plan_id}}', content: '{{banner_id}}' })).toEqual([])
+    expect(syntax({ source: 'yandex', medium: 'cpc', term: '{keyword}', content: '{ad_id}' })).toEqual([])
+  })
+
+  it('незнакомую площадку не проверяет', () => {
+    expect(syntax({ source: 'site', medium: 'referral', campaign: '{campaign_id}' })).toEqual([])
   })
 })
 

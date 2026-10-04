@@ -1167,6 +1167,12 @@ html[data-theme='light'] .crt {
   gap: 8px;
 }
 
+/* «Раньше писали: vk» — канон из справочника под полем источника и канала. */
+.dict-hint {
+  align-items: center;
+  margin-top: 6px;
+}
+
 /* Переключатель режима — тоже пиксельным: это развилка, а не служебная метка. */
 .chip {
   font-family: var(--hv2-pixel);
@@ -1473,6 +1479,21 @@ html[data-theme='light'] .crt {
 .issue-fix:hover {
   color: var(--hv2-fg);
   border-color: color-mix(in srgb, var(--hv2-primary) 45%, transparent);
+}
+
+/* Расщепление в справочнике: кнопок «X → канон» несколько, и в одну строку с
+   текстом они на узком экране уходили за край. Текст — своими строками,
+   кнопки переносятся под ним. */
+.issue:has(.issue-fix + .issue-fix) {
+  flex-wrap: wrap;
+}
+
+.issue:has(.issue-fix + .issue-fix) :is(.issue-title, .issue-text) {
+  flex: 1 1 100%;
+}
+
+.issue:has(.issue-fix + .issue-fix) .issue-fix {
+  margin-left: 0;
 }
 
 /* ═══════════ ИСТОРИЯ ═══════════ */

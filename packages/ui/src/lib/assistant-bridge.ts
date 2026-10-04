@@ -23,7 +23,13 @@ export interface BriefRow {
   term?: string
 }
 
-let pending: BriefRow[] | null = null
+/** Что помощник отдаёт пакету: строки и адрес, если его указали в окне. */
+export interface BatchHandOff {
+  rows: BriefRow[]
+  baseUrl: string
+}
+
+let pending: BatchHandOff | null = null
 const listeners = new Set<() => void>()
 
 function emit(): void {
@@ -37,14 +43,17 @@ function subscribe(onChange: () => void): () => void {
   }
 }
 
-/** Помощник: отдать пакет экрану. */
-export function handOffToBatch(rows: BriefRow[]): void {
-  pending = rows.length > 0 ? rows : null
+/**
+ * Помощник: отдать пакет экрану. Адрес едет вместе со строками — набранный
+ * в окне помощника, он не должен теряться по дороге в пакет.
+ */
+export function handOffToBatch(rows: BriefRow[], baseUrl = ''): void {
+  pending = rows.length > 0 ? { rows, baseUrl } : null
   emit()
 }
 
 /** Экран: есть ли что забрать. */
-export function useBatchHandOff(): BriefRow[] | null {
+export function useBatchHandOff(): BatchHandOff | null {
   return useSyncExternalStore(subscribe, () => pending, () => null)
 }
 

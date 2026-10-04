@@ -247,10 +247,10 @@ export const backend: UtmkaBackend = {
   assistant: {
     quota: () => call<BriefQuota>('/api/assistant/brief'),
 
-    brief: (text) =>
+    brief: (text, baseUrl) =>
       call<BriefAnswer>('/api/assistant/brief', {
         method: 'POST',
-        body: JSON.stringify({ brief: text }),
+        body: JSON.stringify({ brief: text, baseUrl: baseUrl ?? '' }),
       }),
   },
 

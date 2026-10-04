@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  canonHints,
   detectSplits,
   findSimilar,
   isKnown,
@@ -43,6 +44,19 @@ describe('looksLikeSame', () => {
 
   it('на пустых значениях отвечает нет', () => {
     expect(looksLikeSame('', 'vk')).toBe(false)
+  })
+
+  it('разные числа — разные запуски, а не опечатка', () => {
+    expect(looksLikeSame('osen_2025', 'osen_2026')).toBe(false)
+    expect(looksLikeSame('post_1', 'post_2')).toBe(false)
+    expect(looksLikeSame('osen', 'osen_2026')).toBe(false)
+    // Опечатка в буквах при тех же числах — по-прежнему одно и то же.
+    expect(looksLikeSame('oseni_2026', 'osen_2026')).toBe(true)
+  })
+
+  it('подстановки разных площадок не сводит', () => {
+    expect(looksLikeSame('{campaign_id}', '{{campaign_id}}')).toBe(false)
+    expect(looksLikeSame('osen_{ad_id}', 'osen_{banner_id}')).toBe(false)
   })
 })
 
@@ -92,6 +106,35 @@ describe('findSimilar — предупреждение «такого вы ра�
   })
 })
 
+describe('canonHints — «раньше писали» под полем', () => {
+  const entries = [entry('yandex', 12), entry('vk', 9), entry('telegram', 4)]
+
+  it('новое написание ведёт к знакомому', () => {
+    expect(canonHints(entries, 'source', 'ya')).toEqual(['yandex'])
+    expect(canonHints(entries, 'source', 'tg')).toEqual(['telegram'])
+  })
+
+  it('сведённый алиас ведёт к канону', () => {
+    const merged = mergeInto([...entries, entry('vkontakte', 2)], 'source', 'vkontakte', 'vk')
+    expect(canonHints(merged, 'source', 'vkontakte')).toEqual(['vk'])
+  })
+
+  it('похожий алиас не подсказывается — только его канон', () => {
+    const merged = mergeInto([...entries, entry('yandeks', 3)], 'source', 'yandeks', 'yandex')
+    expect(canonHints(merged, 'source', 'ya')).toEqual(['yandex'])
+  })
+
+  it('на знакомом и на новом значении молчит', () => {
+    expect(canonHints(entries, 'source', 'VK')).toEqual([])
+    expect(canonHints(entries, 'source', 'avito')).toEqual([])
+    expect(canonHints(entries, 'source', '')).toEqual([])
+  })
+
+  it('смотрит только свой вид метки', () => {
+    expect(canonHints(entries, 'medium', 'ya')).toEqual([])
+  })
+})
+
 describe('detectSplits — детектор расщепления', () => {
   it('собирает три написания одного источника в группу', () => {
     const entries = [entry('telegram', 8), entry('tg', 3), entry('t_me', 1), entry('yandex', 5)]
@@ -115,6 +158,11 @@ describe('detectSplits — детектор расщепления', () => {
   it('сведённые алиасы больше не считает расщеплением', () => {
     const entries = [entry('telegram', 8), entry('tg', 3)]
     expect(detectSplits(mergeInto(entries, 'source', 'tg', 'telegram'))).toEqual([])
+  })
+
+  it('кампании разных лет слить не предлагает', () => {
+    const entries = [entry('osen_2025', 4, 'campaign'), entry('osen_2026', 2, 'campaign')]
+    expect(detectSplits(entries)).toEqual([])
   })
 })
 

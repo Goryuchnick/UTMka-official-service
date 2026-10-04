@@ -21,8 +21,10 @@ import {
 } from '@utmka/core'
 
 import { PixelIcon } from './PixelIcon'
+import { TranslitToggle } from './generator/TranslitToggle'
 import { useSetMascotLine } from '../lib/mascot'
 import { clearBatchHandOff, rowsToCsv, useBatchHandOff } from '../lib/assistant-bridge'
+import { useTranslit } from '../lib/translit'
 import { saveFile, track } from '../shell'
 import { sayAbout } from '../lib/mascot-lines'
 
@@ -40,15 +42,18 @@ export function BatchScreen() {
      копируем в состояние: так не нужен ни setState в эффекте, ни ref в рендере.
      Своё введённое всегда перебивает подставленное. */
   const handOff = useBatchHandOff()
-  const shared = handOff?.[0]?.campaign
+  const briefRows = handOff?.rows ?? null
+  const shared = briefRows?.[0]?.campaign
   const fromBrief = handOff !== null
+  const { translit } = useTranslit()
 
-  const shownTable = table || (handOff ? rowsToCsv(handOff) : '')
+  const shownTable = table || (briefRows ? rowsToCsv(briefRows) : '')
+  const shownBaseUrl = baseUrl || handOff?.baseUrl || ''
   const shownCampaign =
     campaign ||
     // Кампания у запуска одна — выносим её в общее поле, чтобы правилась
     // в одном месте, а не в каждой строке таблицы.
-    (shared && handOff?.every((row) => row.campaign === shared) ? shared : '')
+    (shared && briefRows?.every((row) => row.campaign === shared) ? shared : '')
 
   // Мост одноразовый: уходим с экрана — забываем, иначе таблица подставится
   // и в следующий заход, а человек не поймёт, откуда она взялась.
@@ -61,13 +66,14 @@ export function BatchScreen() {
 
   const results = useMemo(
     () =>
-      rows.length > 0 && baseUrl.trim()
+      rows.length > 0 && shownBaseUrl.trim()
         ? buildBatch(rows, {
-            baseUrl,
+            baseUrl: shownBaseUrl,
             params: shownCampaign.trim() ? { campaign: shownCampaign.trim() } : {},
+            transliterate: translit,
           })
         : [],
-    [rows, baseUrl, shownCampaign],
+    [rows, shownBaseUrl, shownCampaign, translit],
   )
 
   const summary = useMemo(() => summarizeBatch(results), [results])
@@ -122,7 +128,7 @@ export function BatchScreen() {
               <input
                 type="text"
                 className="ym-disable-keys ym-hide-content"
-                value={baseUrl.replace(/^https?:\/\//, '')}
+                value={shownBaseUrl.replace(/^https?:\/\//, '')}
                 onChange={(event) => setBaseUrl(event.target.value)}
                 placeholder="test.ru/page"
                 aria-label="Общий адрес страницы"
@@ -162,6 +168,7 @@ export function BatchScreen() {
             aria-label="Таблица площадок"
             spellCheck={false}
           />
+          <TranslitToggle />
         </div>
 
         <div className="result-row">
@@ -190,8 +197,13 @@ export function BatchScreen() {
               {summary.total} ссылок
             </span>
             <span className="hint" style={{ marginLeft: 'auto' }}>
-              {summary.withErrors > 0 ? `${summary.withErrors} с ошибками · ` : ''}
-              {summary.withWarnings > 0 ? `${summary.withWarnings} с предупреждениями` : 'всё чисто'}
+              {/* Раньше при одних ошибках выходило «3 с ошибками · всё чисто». */}
+              {[
+                summary.withErrors > 0 ? `${summary.withErrors} с ошибками` : '',
+                summary.withWarnings > 0 ? `${summary.withWarnings} с предупреждениями` : '',
+              ]
+                .filter(Boolean)
+                .join(' · ') || 'всё чисто'}
             </span>
           </div>
 

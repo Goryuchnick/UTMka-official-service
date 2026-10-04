@@ -23,9 +23,13 @@ describe('подсказки значений', () => {
   it('источники и каналы совпадают со значениями пресетов', () => {
     const sources = new Set(VALUE_HINTS.source.map((h) => h.value))
     const mediums = new Set(VALUE_HINTS.medium.map((h) => h.value))
+    // Подстановка — не значение для списка: `{price_model}` у Авито подставит площадка.
+    const isMacro = (value: string): boolean => /^\{.+\}$/.test(value)
     for (const preset of PRESETS) {
-      expect(sources.has(preset.params.source ?? ''), preset.id).toBe(true)
-      expect(mediums.has(preset.params.medium ?? ''), preset.id).toBe(true)
+      const source = preset.params.source ?? ''
+      const medium = preset.params.medium ?? ''
+      if (!isMacro(source)) expect(sources.has(source), preset.id).toBe(true)
+      if (!isMacro(medium)) expect(mediums.has(medium), preset.id).toBe(true)
     }
   })
 

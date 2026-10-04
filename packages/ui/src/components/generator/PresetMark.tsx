@@ -67,6 +67,22 @@ const TILES: Record<string, ReactElement> = {
       {MEGAPHONE}
     </>
   ),
+  'avito-ads': (
+    <>
+      <rect width="24" height="24" rx="6" fill="#00AAFF" />
+      {MEGAPHONE}
+    </>
+  ),
+  /* MAX — облачко сообщения: знак канала, как у Telegram, только своим цветом. */
+  'max-channel': (
+    <>
+      <rect width="24" height="24" rx="6" fill="#6D5BFF" />
+      <path
+        d="M6 8.6c0-1.5 1.2-2.6 2.6-2.6h6.8c1.4 0 2.6 1.1 2.6 2.6v4.6c0 1.4-1.2 2.6-2.6 2.6h-4.2L8 18.2v-2.4c-1.2-.2-2-1.2-2-2.4z"
+        fill="#fff"
+      />
+    </>
+  ),
   email: (
     <>
       <rect width="24" height="24" rx="6" fill="#18A058" />
@@ -145,6 +161,22 @@ const MARKS: Record<string, ReactElement> = {
         fill="#0a0a08"
       />
       <circle cx="12.6" cy="3.6" r="2.6" fill="#FFC93C" />
+    </>
+  ),
+  /* Авито — четыре круга фирменных цветов, от большого к малому. */
+  'avito-ads': (
+    <>
+      <circle cx="5.4" cy="10.6" r="3.4" fill="#00AAFF" />
+      <circle cx="11.2" cy="11.2" r="2.6" fill="#97CF26" />
+      <circle cx="10.4" cy="5" r="2" fill="#FF6163" />
+      <circle cx="5" cy="4.6" r="1.6" fill="#A169F7" />
+    </>
+  ),
+  'max-channel': (
+    <>
+      <rect x="1.5" y="2.5" width="13" height="9" rx="3" fill="#7B6CF6" />
+      <path d="M4 11.5v3l3-3z" fill="#7B6CF6" />
+      <rect x="4.5" y="6.2" width="7" height="1.4" rx=".7" fill="#0a0a08" opacity=".55" />
     </>
   ),
   email: (

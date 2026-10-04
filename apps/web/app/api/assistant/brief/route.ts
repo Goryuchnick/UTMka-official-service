@@ -15,6 +15,7 @@
 
 import {
   buildUrl,
+  normalizeBaseUrl,
   normalizeDraft,
   PRESETS,
   validateDraft,
@@ -35,10 +36,10 @@ const MAX_LINKS = 12
 const SYSTEM = `Ты помощник по UTM-меткам. По брифу маркетолога собери набор ссылок для площадок.
 
 Отвечай ТОЛЬКО JSON вида:
-{"links":[{"platform":"Яндекс.Директ","source":"yandex","medium":"cpc","campaign":"osenniy_nabor_2026-09","content":"","term":"{keyword}"}]}
+{"links":[{"platform":"Яндекс.Директ","source":"yandex","medium":"cpc","campaign":"osenniy_nabor_2026_09","content":"","term":"{keyword}"}]}
 
 Правила:
-- source — площадка (yandex, vk, telegram, email), medium — ТИП трафика (cpc, social, email, banner). Не путай.
+- source — площадка (yandex, vk, telegram, email), medium — ТИП трафика (cpc, social, messenger, email, banner). Не путай.
 - значения только латиницей в нижнем регистре, слова через подчёркивание, без пробелов.
 - campaign одинаковый для всех ссылок одного запуска — иначе запуск развалится на части в отчёте.
 - динамические подстановки площадок оставляй в фигурных скобках как есть: {keyword}, {ad_id}.
@@ -57,6 +58,16 @@ interface ModelLink {
 
 function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+/** Разбирается ли адрес страницы: домен с точкой и без пробелов. */
+function addressOk(baseUrl: string): boolean {
+  try {
+    const host = new URL(baseUrl).hostname
+    return host.includes('.') && !/\s/.test(host)
+  } catch {
+    return false
+  }
 }
 
 /** Сколько израсходовано сегодня. День считаем по UTC — так же, как в БД. */
@@ -138,6 +149,15 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Опишите запуск парой фраз — куда ведём и где размещаемся' }, { status: 400 })
   }
 
+  /* Адрес модель не выдумывает: он либо пришёл из окна помощника, либо его
+     нет, и тогда ссылки уходят наборами меток — адрес допишется в пакете.
+     Кривой адрес отклоняем до списания квоты: иначе модель отработала бы за
+     деньги, а правила выбросили бы всё из-за опечатки в домене. */
+  const baseUrl = normalizeBaseUrl(text(body.baseUrl))
+  if (baseUrl && !addressOk(baseUrl)) {
+    return Response.json({ error: 'Адрес страницы не разбирается — проверьте домен' }, { status: 400 })
+  }
+
   /* Квоту занимаем здесь — после проверки запроса, но ДО похода в модель.
      Разбор входа ничего не стоит, а вот вызов модели стоит денег, и именно
      он должен быть за счётчиком. */
@@ -182,9 +202,6 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  // Базовый адрес модель не выдумывает: он либо пришёл из формы, либо его нет.
-  const baseUrl = text(body.baseUrl)
-
   const results = rawLinks.slice(0, MAX_LINKS).map((raw) => {
     const params: Partial<Record<UtmKey, string>> = {}
     for (const key of ['source', 'medium', 'campaign', 'content', 'term'] as const) {
@@ -195,24 +212,40 @@ export async function POST(request: Request): Promise<Response> {
     // Правила — последняя инстанция. Сначала чиним, потом проверяем то, что вышло.
     const draft: LinkDraft = { baseUrl, params }
     const { draft: tidy, changes } = normalizeDraft(draft)
-    const issues = validateDraft(tidy)
+    /* Без адреса замечания к адресу не в счёт: это набор меток для пакета, а
+       не готовая ссылка. Раньше пустой адрес давал ошибку `url-empty`, и в
+       «Выброшено» уходило вообще всё, что предложила модель. */
+    const issues = validateDraft(tidy).filter(
+      (issue) => baseUrl !== '' || (issue.field !== 'baseUrl' && issue.field !== 'url'),
+    )
     const broken = issues.filter((issue) => issue.level === 'error')
+    /* Без источника и канала ссылку в отчёте не опознать, а валидатор о них
+       только предупреждает: на пустой форме это нормально, в ответе модели —
+       брак. Иначе голый адрес без меток показывался бы готовой ссылкой. */
+    const unnamed = !tidy.params.source || !tidy.params.medium
 
     return {
       platform: text(raw.platform) || tidy.params.source || 'Площадка',
       params: tidy.params,
-      url: buildUrl(tidy),
+      url: baseUrl ? buildUrl(tidy) : '',
       fixed: changes.length,
       issues: issues.filter((issue) => issue.level !== 'error'),
-      dropped: broken.length > 0,
-      why: broken[0]?.consequence ?? '',
+      dropped: broken.length > 0 || unnamed,
+      why: unnamed
+        ? 'Модель не назвала площадку или тип трафика — без utm_source и utm_medium переход в отчёте не опознать.'
+        : (broken[0]?.consequence ?? ''),
     }
   })
 
+  const links = results.filter((item) => !item.dropped)
+  // Правила выбросили всё — человек ничего не получил, и платить ему не за что.
+  const refunded = links.length === 0
+  if (refunded) await refund(user.hash)
+
   return Response.json({
-    links: results.filter((item) => !item.dropped),
+    links,
     dropped: results.filter((item) => item.dropped),
-    left: Math.max(0, limit - used),
+    left: Math.max(0, limit - used + (refunded ? 1 : 0)),
     limit,
   })
 }

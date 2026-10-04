@@ -247,6 +247,10 @@ export const LANDINGS: readonly Landing[] = [
             term: 'Агентский кабинет',
             text: 'Если ведёте несколько клиентов, добавьте номер клиента — иначе кампании с одинаковыми названиями сложатся в одну.',
           },
+          {
+            term: 'Где вставить метки',
+            text: 'В группе объявлений, блок «Параметры URL»: выберите «Добавлять UTM-метки вручную» и вставьте строку туда. По умолчанию VK ставит свои метки — utm_source=vk_ads и номер группы в utm_campaign, — и они главнее меток в ссылке объявления.',
+          },
         ],
       },
     ],
@@ -269,8 +273,8 @@ export const LANDINGS: readonly Landing[] = [
       params: [
         ['utm_source', 'vk'],
         ['utm_medium', 'cpc'],
-        ['utm_campaign', '{campaign_name}'],
-        ['utm_content', '{ad_id}'],
+        ['utm_campaign', '{{ad_plan_id}}'],
+        ['utm_content', '{{banner_id}}'],
       ],
     },
   },
@@ -312,7 +316,7 @@ export const LANDINGS: readonly Landing[] = [
           },
           {
             term: 'Одинаковый источник',
-            text: 'Пишите telegram всегда одинаково — не tg и не messenger. Три написания дадут три строки, которые в отчёте не сложатся.',
+            text: 'Пишите источник telegram всегда одинаково — не tg и не t_me. Три написания дадут три строки, которые в отчёте не сложатся. Тип трафика у поста — messenger: так Яндекс Метрика советует размечать мессенджеры.',
           },
         ],
       },
@@ -320,7 +324,7 @@ export const LANDINGS: readonly Landing[] = [
     faq: [
       {
         q: 'Чем разметка канала отличается от Telegram Ads?',
-        a: 'Площадка одна — telegram, разный тип трафика: social у обычного поста и cpc у рекламного кабинета, где за показы платят. Если не разделить, платный трафик смешается с органическим.',
+        a: 'Площадка одна — telegram, разный тип трафика: messenger у поста в канале и cpc у рекламного кабинета, где за показы платят. Если не разделить, платный трафик смешается с органическим.',
       },
       {
         q: 'Почему переходы из Telegram попадают в «прямые заходы»?',
@@ -335,7 +339,7 @@ export const LANDINGS: readonly Landing[] = [
       base: 'school.ru/kursy',
       params: [
         ['utm_source', 'telegram'],
-        ['utm_medium', 'social'],
+        ['utm_medium', 'messenger'],
         ['utm_campaign', 'post_2026-09-12'],
         ['utm_content', 'bio'],
       ],

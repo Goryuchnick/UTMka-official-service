@@ -25,20 +25,25 @@ import {
   hasAnyParam,
   matchPreset,
   normalizeDraft,
+  transliterate,
   UTM_KEYS,
   validateDraft,
   validateValue,
+  type DictEntry,
   type LinkDraft,
   type Preset,
   type UtmKey,
 } from '@utmka/core'
 
 import { PixelIcon } from '../PixelIcon'
+import { backend } from '../../shell'
 import { readBootstrapDraft } from '../../lib/draft-bootstrap'
 import { useSetMascotLine, type MascotTone } from '../../lib/mascot'
 import { useGeneratorMode } from '../../lib/mode'
 import { useSkin } from '../../lib/theme'
+import { useTranslit } from '../../lib/translit'
 import { IssueList } from './IssueList'
+import { TranslitToggle } from './TranslitToggle'
 import { ValueField } from './ValueField'
 import { PresetTiles } from './PresetTiles'
 import { ResultCard } from './ResultCard'
@@ -124,6 +129,22 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
   )
   const [step, setStep] = useState<Step>(1)
   const [forced, setForced] = useState<'simple' | 'pro' | null>(null)
+  const [dict, setDict] = useState<DictEntry[]>([])
+
+  /* Справочник для подсказки «Раньше писали». Без кодовой фразы в вебе его
+     нет вовсе — тогда и подсказок нет, отказ здесь не ошибка. */
+  useEffect(() => {
+    let alive = true
+    backend.dictionary
+      .list()
+      .then((items) => {
+        if (alive) setDict(items)
+      })
+      .catch(() => undefined)
+    return () => {
+      alive = false
+    }
+  }, [])
 
   /* Заготовка из адреса — и уборка адреса за собой.
      Оба пути ведут сюда: при полной загрузке параметры уже сняты синхронным
@@ -186,8 +207,28 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
     setDraft((prev) => ({ ...prev, baseUrl }))
   }, [])
 
-  const setParam = useCallback((key: UtmKey, value: string) => {
-    setDraft((prev) => ({ ...prev, params: { ...prev.params, [key]: value } }))
+  /* Галочка «Транслитерация»: переводим при наборе. Именно `transliterate`, а
+     не `normalizeValue` — та на лету съела бы пробел и `_`, которые человек
+     ещё только печатает. Регистр и пробелы чинит «Привести в порядок». */
+  const { translit } = useTranslit()
+
+  const setParam = useCallback(
+    (key: UtmKey, value: string) => {
+      const next = translit ? transliterate(value) : value
+      setDraft((prev) => ({ ...prev, params: { ...prev.params, [key]: next } }))
+    },
+    [translit],
+  )
+
+  const translitDraft = useCallback(() => {
+    setDraft((prev) => {
+      const params: LinkDraft['params'] = {}
+      for (const key of UTM_KEYS) {
+        const value = prev.params[key]
+        if (value !== undefined) params[key] = transliterate(value)
+      }
+      return { ...prev, params }
+    })
   }, [])
 
   /* Вернувшийся на шаг площадки может выбрать другую — и прежние метки площадки
@@ -306,6 +347,7 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
           onParam={setParam}
           onPreset={pickPreset}
           onTidy={tidy}
+          onTranslit={translitDraft}
           onReset={reset}
           onApplyUrl={applyUrl}
         />
@@ -314,9 +356,11 @@ export function GeneratorScreen({ preset }: GeneratorScreenProps = {}) {
           draft={draft}
           url={url}
           ready={ready}
+          dict={dict}
           onBaseUrl={setBaseUrl}
           onParam={setParam}
           onTidy={tidy}
+          onTranslit={translitDraft}
           onReset={reset}
           onApplyUrl={applyUrl}
         />
@@ -377,6 +421,8 @@ interface SimpleModeProps {
   onParam: (key: UtmKey, value: string) => void
   onPreset: (preset: Preset) => void
   onTidy: () => void
+  /** Включили галочку «Транслитерация» — перевести уже набранное. */
+  onTranslit: () => void
   /** «Точки»: «Новая ссылка» в меню «Ещё» последнего шага. */
   onReset: () => void
   onApplyUrl: (url: string) => void
@@ -394,6 +440,7 @@ function SimpleMode({
   onParam,
   onPreset,
   onTidy,
+  onTranslit,
   onReset,
   onApplyUrl,
 }: SimpleModeProps) {
@@ -562,6 +609,7 @@ function SimpleMode({
                     Латиницей, без пробелов. Номер кампании площадка подставит сама — подстановки
                     лежат в поле под кнопкой с угловыми скобками.
                   </p>
+                  <TranslitToggle onEnable={onTranslit} />
 
                   {showExtras ? (
                     <div className="substep">
@@ -642,9 +690,11 @@ interface ProModeProps {
   draft: LinkDraft
   url: string
   ready: boolean
+  dict: readonly DictEntry[]
   onBaseUrl: (value: string) => void
   onParam: (key: UtmKey, value: string) => void
   onTidy: () => void
+  onTranslit: () => void
   onReset: () => void
   onApplyUrl: (url: string) => void
 }
@@ -653,9 +703,11 @@ function ProMode({
   draft,
   url,
   ready,
+  dict,
   onBaseUrl,
   onParam,
   onTidy,
+  onTranslit,
   onReset,
   onApplyUrl,
 }: ProModeProps) {
@@ -696,6 +748,7 @@ function ProMode({
               field={key}
               value={draft.params[key] ?? ''}
               onChange={(value) => onParam(key, value)}
+              dict={dict}
             />
           ))}
         </div>
@@ -728,6 +781,7 @@ function ProMode({
             <PixelIcon name="trash" />
             Очистить
           </button>
+          <TranslitToggle onEnable={onTranslit} />
         </div>
       </div>
 

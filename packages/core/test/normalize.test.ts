@@ -39,6 +39,29 @@ describe('normalizeValue', () => {
     expect(normalizeValue('ad {Ad_ID} тест')).toBe('ad_{Ad_ID}_test')
   })
 
+  it('сохраняет двойные скобки VK и точку Meta целиком', () => {
+    expect(normalizeValue('{{ad_plan_id}}')).toBe('{{ad_plan_id}}')
+    expect(normalizeValue('{{campaign.name}}')).toBe('{{campaign.name}}')
+    expect(normalizeValue('Осень {{banner_id}}')).toBe('osen_{{banner_id}}')
+    expect(normalizeValue('{{CampaignId}}')).toBe('{{CampaignId}}')
+  })
+
+  it('связки подстановок из справок площадок переживает', () => {
+    // Директ разрешает | и . между подстановками; черту не выкидываем, а меняем на _.
+    expect(normalizeValue('{position_type}|{position}')).toBe('{position_type}_{position}')
+    expect(normalizeValue('{position_type}.{position}')).toBe('{position_type}_{position}')
+    // Пример ручной разметки из справки VK.
+    expect(normalizeValue('{{geo}}_{{gender}}_{{age}}')).toBe('{{geo}}_{{gender}}_{{age}}')
+  })
+
+  it('метки, которые площадка ставит сама, оставляет как есть', () => {
+    expect(normalizeValue('avito-ads')).toBe('avito-ads')
+    expect(normalizeValue('yandex.promopages')).toBe('yandex.promopages')
+    expect(normalizeValue('Unisender')).toBe('Unisender')
+    // Похожее, но не точное написание чинится как обычно.
+    expect(normalizeValue('Avito-Ads')).toBe('avito_ads')
+  })
+
   it('идемпотентна', () => {
     const once = normalizeValue('Осенний Набор 2026!')
     expect(normalizeValue(once)).toBe(once)

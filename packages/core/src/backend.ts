@@ -92,6 +92,7 @@ export interface AccountPort {
 export interface BriefLink {
   platform: string
   params: UtmParams
+  /** Пусто, если адрес страницы не указали: тогда это набор меток для пакета. */
   url: string
   /** Сколько значений пришлось починить нормализацией. */
   fixed: number
@@ -120,7 +121,11 @@ export interface BriefAnswer {
 /** Помощник на LLM. В десктопе не реализуется — там `assistant === null`. */
 export interface AssistantPort {
   quota(): Promise<BriefQuota>
-  brief(text: string): Promise<BriefAnswer>
+  /**
+   * `baseUrl` — адрес страницы, куда ведём. Без него ссылки приходят наборами
+   * меток, а адрес дописывается в пакете: модель его не выдумывает.
+   */
+  brief(text: string, baseUrl?: string): Promise<BriefAnswer>
 }
 
 /**

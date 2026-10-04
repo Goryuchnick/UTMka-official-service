@@ -6,8 +6,8 @@
  * какие дублируются, что осталось от чужой разметки (`yclid`, `gclid`).
  */
 
-import { safeDecode } from './build'
-import { normalizeBaseUrl } from './normalize'
+import { buildUrl, safeDecode } from './build'
+import { normalizeBaseUrl, normalizeDraft } from './normalize'
 import type { LinkDraft, UtmKey, UtmParams } from './types'
 import { UTM_KEY_BY_PARAM } from './types'
 
@@ -131,6 +131,16 @@ export function draftFromUrl(raw: string): LinkDraft {
     baseUrl: `${parsed.baseUrl}${tail ? `?${tail}` : ''}${parsed.hash}`,
     params: parsed.params,
   }
+}
+
+/**
+ * «Починить» чужую ссылку с экрана разбора: метки — по правилам нормализации,
+ * всё остальное — как было. Собирать ссылку из `parsed.baseUrl` нельзя: там
+ * только путь, и чужие параметры (`yclid`, `ref`) вместе с `#якорем` молча
+ * пропадали — «исправленная» ссылка вела уже не туда и теряла клик Директа.
+ */
+export function repairUrl(raw: string): string {
+  return buildUrl(normalizeDraft(draftFromUrl(raw)).draft)
 }
 
 /** Есть ли в ссылке хоть какая-то UTM-разметка. */

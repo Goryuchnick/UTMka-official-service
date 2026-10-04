@@ -88,6 +88,16 @@ export interface ImportedLink {
   baseUrl: string
   params: Record<string, string>
   origin: 'single' | 'batch' | 'brief' | 'parse'
+  shortUrl?: string
+  /** Дата из файла. Без неё перенесённая история схлопнулась бы в день импорта. */
+  createdAt?: string
+}
+
+/** Дата из файла, если она разбирается; иначе запись встанет на «сейчас». */
+function dateFrom(value: unknown): string | undefined {
+  if (typeof value !== 'string' || !value.trim()) return undefined
+  const time = Date.parse(value.trim())
+  return Number.isNaN(time) ? undefined : new Date(time).toISOString()
 }
 
 /** Значения UTM из произвольного объекта: и `source`, и `utm_source`. */
@@ -183,13 +193,18 @@ export function parseHistory(text: string, csv: boolean): ImportedLink[] {
     const url = String(row.url ?? row.baseUrl ?? row.base_url ?? '').trim()
     if (!url) return
 
-    result.push({
+    const link: ImportedLink = {
       url,
       baseUrl: String(row.baseUrl ?? row.base_url ?? url).trim(),
       params: paramsFrom(source),
       // Откуда ссылка взялась в прошлой жизни, файл знать не обязан.
       origin: 'single',
-    })
+    }
+    const shortUrl = String(row.shortUrl ?? row.short_url ?? '').trim()
+    if (shortUrl) link.shortUrl = shortUrl
+    const createdAt = dateFrom(row.createdAt ?? row.created_at)
+    if (createdAt) link.createdAt = createdAt
+    result.push(link)
   }
 
   const result: ImportedLink[] = []

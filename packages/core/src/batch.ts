@@ -9,6 +9,7 @@
 
 import { buildUrl } from './build'
 import { COLUMN_ALIASES, parseCsv, pickColumn, toCsv } from './csv'
+import { transliterate } from './normalize'
 import { validateDraft } from './validate'
 import type { BatchResult, BatchRow, Issue, LinkDraft, UtmParams } from './types'
 import { UTM_KEYS, UTM_PARAM_NAMES } from './types'
@@ -38,6 +39,12 @@ export interface BatchDefaults {
   baseUrl: string
   /** Значения, подставляемые в пустые поля каждой строки. */
   params?: UtmParams
+  /**
+   * Галочка «Транслитерация»: кириллица в значениях сразу становится
+   * латиницей. Таблицы из Excel чаще всего приходят по-русски, и без этого
+   * в каждой строке висело бы замечание «Кириллица».
+   */
+  transliterate?: boolean
 }
 
 /**
@@ -53,6 +60,12 @@ export function buildBatch(
     for (const key of UTM_KEYS) {
       const value = (row.params[key] ?? '').trim()
       if (value) params[key] = value
+    }
+    if (defaults.transliterate) {
+      for (const key of UTM_KEYS) {
+        const value = params[key]
+        if (value) params[key] = transliterate(value)
+      }
     }
 
     const draft: LinkDraft = {

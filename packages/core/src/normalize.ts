@@ -5,6 +5,7 @@
  * молча. Поэтому все функции возвращают и результат, и список изменений.
  */
 
+import { isPlatformLiteral, PLACEHOLDER_RE } from './macros'
 import type { IssueField, LinkDraft, NormalizationChange, UtmKey, UtmParams } from './types'
 import { UTM_KEYS } from './types'
 
@@ -42,12 +43,11 @@ export function transliterate(value: string): string {
 }
 
 /**
- * Плейсхолдеры площадок (`{keyword}`, `{campaign_id}`) — не мусор, а часть
- * значения. Нормализация обязана оставить их нетронутыми, включая регистр
- * и фигурные скобки: Яндекс.Директ подставит значение только в точное
- * написание токена.
+ * Плейсхолдеры площадок (`{keyword}`, `{{ad_plan_id}}`, `{{campaign.name}}`) —
+ * не мусор, а часть значения. Нормализация обязана оставить их нетронутыми,
+ * включая регистр и обе пары скобок: площадка подставит значение только в
+ * точное написание токена. Регулярка общая — `PLACEHOLDER_RE` из `macros.ts`.
  */
-const PLACEHOLDER_RE = /\{[a-z_0-9]+\}/gi
 
 /** Заменить плейсхолдеры на защитные маркеры и вернуть их обратно после правок. */
 function protectPlaceholders(value: string): { masked: string; restore: (s: string) => string } {
@@ -67,9 +67,12 @@ function protectPlaceholders(value: string): { masked: string; restore: (s: stri
  * нижний регистр → транслит кириллицы → пробелы и разделители в `_` →
  * выброс спецсимволов → схлопывание и обрезка `_`.
  *
- * Плейсхолдеры площадок сохраняются как есть.
+ * Плейсхолдеры площадок сохраняются как есть. Метки, которые площадка ставит
+ * сама (`avito-ads`, `yandex.promopages`), не трогаются вовсе: переписанная
+ * ручная ссылка разошлась бы в отчёте с автоматической.
  */
 export function normalizeValue(raw: string): string {
+  if (isPlatformLiteral(raw)) return raw.trim()
   const { masked, restore } = protectPlaceholders(raw.trim())
 
   const normalized = masked
@@ -77,8 +80,10 @@ export function normalizeValue(raw: string): string {
     .split('')
     .map((char) => TRANSLIT[char] ?? char)
     .join('')
-    // пробелы, плюсы, точки-разделители и дефисы → подчёркивание
-    .replace(/[\s+.\-–—]+/g, '_')
+    // пробелы, плюсы, точки, черты и дефисы → подчёркивание. Черта и точка
+    // разделяют подстановки в официальном примере Директа
+    // (`{position_type}|{position}`) — выкинуть их значит склеить два числа.
+    .replace(/[\s+.|\-–—]+/g, '_')
     // всё, что не латиница, цифры и `_`, — выкидываем: `&`, `?`, `#`, `%`
     // рвут разбор параметров
     .replace(/[^a-z0-9_]/g, '')

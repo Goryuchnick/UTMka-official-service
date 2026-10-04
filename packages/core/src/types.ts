@@ -58,6 +58,7 @@ export type IssueCode =
   | 'semantic-source-in-medium'
   | 'semantic-search-without-term'
   | 'placeholder-unknown'
+  | 'placeholder-wrong-syntax'
 
 /**
  * Замечание. `message` — короткая строка под полем; `consequence` — то, что

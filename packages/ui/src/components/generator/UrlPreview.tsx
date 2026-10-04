@@ -7,15 +7,16 @@
  */
 
 import { Fragment } from 'react'
+import { PLACEHOLDER_RE } from '@utmka/core'
 
 interface UrlPreviewProps {
   url: string
 }
 
 /* Синтаксис подстановок у площадок разный: Директ и Google — одинарные скобки,
-   VK и Meta — двойные, у Meta вдобавок точка внутри ({{campaign.name}}). Ловим
-   все три написания, иначе двойные скобки подсвечивались бы наполовину. */
-const PLACEHOLDER = /\{\{[a-z_0-9.]+\}\}|\{[a-z_0-9]+\}/gi
+   VK и Meta — двойные, у Meta вдобавок точка внутри ({{campaign.name}}).
+   Регулярка общая с ядром — подсветка видит ровно то, что бережёт нормализация. */
+const PLACEHOLDER = PLACEHOLDER_RE
 
 /** Значение параметра: подстановки — бирюзой, остальное — амбером. */
 function renderValue(value: string, keyPrefix: string) {

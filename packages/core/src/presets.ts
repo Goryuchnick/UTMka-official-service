@@ -8,8 +8,22 @@
  * на этом путается большинство (ASSISTANT-SPEC §2.6).
  */
 
-import type { LinkDraft, Preset, UtmParams } from './types'
+import { MACRO_GROUPS } from './macros'
+import type { LinkDraft, Preset, PresetPlaceholder, UtmParams } from './types'
 import { UTM_KEYS } from './types'
+
+/**
+ * Подстановки пресета берутся из справочника площадки, а не переписываются
+ * рядом: две копии разошлись бы на первой же сверке со справкой.
+ */
+function fromGroup(groupId: string, tokens: readonly string[]): PresetPlaceholder[] {
+  const group = MACRO_GROUPS.find((item) => item.id === groupId)
+  return tokens.map((token) => {
+    const macro = group?.macros.find((item) => item.token === token)
+    if (!macro) throw new Error(`Подстановки ${token} нет в группе ${groupId}`)
+    return { token: macro.token, meaning: macro.meaning }
+  })
+}
 
 export const PRESETS: readonly Preset[] = [
   {
@@ -19,16 +33,16 @@ export const PRESETS: readonly Preset[] = [
     params: { source: 'yandex', medium: 'cpc', term: '{keyword}', content: '{ad_id}' },
     explain:
       'Площадка — yandex, тип трафика — cpc (оплата за клик). Директ сам подставит фразу и номер объявления, если оставить подстановки в фигурных скобках.',
-    placeholders: [
-      { token: '{keyword}', meaning: 'фраза, по которой показалось объявление' },
-      { token: '{ad_id}', meaning: 'номер объявления' },
-      { token: '{campaign_id}', meaning: 'номер кампании' },
-      { token: '{source_type}', meaning: 'тип площадки: search или context' },
-      { token: '{device_type}', meaning: 'устройство: desktop, mobile, tablet' },
-      { token: '{region_name}', meaning: 'регион показа' },
-    ],
+    placeholders: fromGroup('yandex-direct', [
+      '{keyword}',
+      '{ad_id}',
+      '{campaign_id}',
+      '{source_type}',
+      '{device_type}',
+      '{region_name}',
+    ]),
     caveat:
-      'Подстановки работают только в ссылке самого объявления. Если скопировать её в отображаемую ссылку или в текст поста, в отчёт приедет литерал {keyword}.',
+      'Подстановки срабатывают в ссылках, которые проходят через Директ: ссылка объявления, быстрые ссылки, кнопка. В ЕПК метки можно задать один раз в блоке «Параметры URL» — он перекрывает такие же метки в ссылке объявления. Скопируете ссылку в пост — в отчёт приедет литерал {keyword}.',
   },
   {
     /* ⚠️ Скобки двойные, и это не опечатка. Старый кабинет `vk.com/ads` читал
@@ -41,16 +55,16 @@ export const PRESETS: readonly Preset[] = [
     hint: 'Таргет в кабинете VK Ads',
     params: { source: 'vk', medium: 'cpc', campaign: '{{ad_plan_id}}', content: '{{banner_id}}' },
     explain:
-      'vk — площадка, cpc — платный трафик. Для обычного поста в сообществе тип другой: social, а не cpc. Подстановки VK Рекламы пишутся двойными скобками.',
-    placeholders: [
-      { token: '{{ad_plan_id}}', meaning: 'номер кампании — верхний уровень' },
-      { token: '{{campaign_id}}', meaning: 'номер ГРУППЫ объявлений, не кампании' },
-      { token: '{{banner_id}}', meaning: 'номер объявления' },
-      { token: '{{ad_plan_name}}', meaning: 'название кампании' },
-      { token: '{{campaign_name}}', meaning: 'название группы объявлений' },
-    ],
+      'vk — площадка, cpc — платный трафик. Для обычного поста в сообществе тип другой: social, а не cpc. Сама VK по умолчанию пишет в источник vk_ads — мы ставим vk, чтобы реклама и посты сходились в одном источнике, а различал их тип трафика. Подстановки VK Рекламы пишутся двойными скобками.',
+    placeholders: fromGroup('vk-ads', [
+      '{{ad_plan_id}}',
+      '{{campaign_id}}',
+      '{{banner_id}}',
+      '{{ad_plan_name}}',
+      '{{campaign_name}}',
+    ]),
     caveat:
-      'Ловушка кабинета: {{campaign_id}} — это номер ГРУППЫ объявлений, а не кампании. Номер кампании даёт {{ad_plan_id}} — иначе в отчёте сведётся не тот уровень.',
+      'По умолчанию VK сама добавляет свои метки, и они главнее меток в ссылке объявления. Чтобы сработали эти, на шаге «Группы объявлений» в «Параметрах URL» выберите «Добавлять UTM-метки вручную» и вставьте строку туда. Ловушка кабинета: {{campaign_id}} — это номер ГРУППЫ объявлений, а номер кампании даёт {{ad_plan_id}}.',
   },
   {
     id: 'vk-post',
@@ -61,12 +75,29 @@ export const PRESETS: readonly Preset[] = [
       'Тот же vk в источнике, но тип трафика social — это бесплатный пост, а не реклама. Если поставить cpc, в отчёте пост смешается с таргетом и посчитать эффективность рекламы будет нечем.',
   },
   {
+    id: 'avito-ads',
+    title: 'Авито Реклама',
+    hint: 'Реклама в кабинете Авито',
+    params: {
+      source: 'avito-ads',
+      medium: '{price_model}',
+      campaign: '{campaign_id}',
+      content: '{ad_id}',
+      term: '{adgroup_id}',
+    },
+    explain:
+      'Так размечать советует сама Авито: источник avito-ads, а тип трафика площадка подставит по модели оплаты — cpc или cpm. Подстановки пишутся строчными буквами в одинарных скобках.',
+    placeholders: fromGroup('avito-ads', ['{price_model}', '{campaign_id}', '{adgroup_id}', '{ad_id}']),
+    caveat:
+      'Ссылку с тремя и больше редиректами модерация отклонит — ведите прямо на страницу. Справка Авито советует ещё utm_referrer=avito-ads: его можно дописать к адресу вручную.',
+  },
+  {
     id: 'telegram-channel',
     title: 'Telegram-канал',
     hint: 'Пост в своём или закупленном канале',
-    params: { source: 'telegram', medium: 'social' },
+    params: { source: 'telegram', medium: 'messenger' },
     explain:
-      'Пишите источник одинаково всегда: telegram, а не tg и не messenger. Три написания — три строки в отчёте, которые не сложатся.',
+      'Источник — telegram, всегда одним написанием: не tg и не t_me. Три написания — три строки в отчёте, которые не сложатся. Тип трафика — messenger: так Яндекс Метрика советует размечать переходы из мессенджеров.',
   },
   {
     id: 'telegram-ads',
@@ -76,6 +107,16 @@ export const PRESETS: readonly Preset[] = [
     explain: 'Площадка та же, тип трафика — cpc: за показы платят.',
     caveat:
       'Динамических подстановок у Telegram Ads нет — кампанию и креатив придётся размечать вручную, своими словами.',
+  },
+  {
+    id: 'max-channel',
+    title: 'MAX-канал',
+    hint: 'Пост в своём или закупленном канале MAX',
+    params: { source: 'max', medium: 'messenger' },
+    explain:
+      'Источник — max, тип трафика — messenger: так Яндекс Метрика советует размечать мессенджеры, а сам MAX она пока не распознаёт. С меткой переход не потеряется среди прочих.',
+    caveat:
+      'Рекламу в MAX продают через Директ — для неё берите пресет Директа: его подстановки работают и там.',
   },
   {
     id: 'email',
@@ -93,7 +134,9 @@ export const PRESETS: readonly Preset[] = [
     hint: 'Статья или канал в Дзене',
     params: { source: 'dzen', medium: 'social' },
     explain:
-      'Дзен — площадка, тип трафика social. Если это промо-статья с оплатой за показы, ставьте cpc.',
+      'Дзен — площадка, тип трафика social: это ваш канал и статьи без оплаты за показы.',
+    caveat:
+      'Платное продвижение статей теперь идёт через Яндекс ПромоСтраницы, и они размечают ссылки сами (utm_source=yandex.promopages). Метки, вписанные руками до подключения публикации к кампании, площадка заменит своими.',
   },
   {
     id: 'offline-qr',

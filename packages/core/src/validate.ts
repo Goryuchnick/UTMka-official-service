@@ -8,7 +8,15 @@
  */
 
 import { buildUrl } from './build'
-import { macroTokenNames } from './macros'
+import {
+  isPlatformLiteral,
+  MACRO_GROUPS,
+  macrosForSource,
+  macroTokenNames,
+  PLACEHOLDER_RE,
+  placeholderName,
+  type MacroGroup,
+} from './macros'
 import { hasCyrillic, needsNormalization } from './normalize'
 import type { ParsedLink } from './parse'
 import type { Issue, LinkDraft, UtmKey, UtmParams } from './types'
@@ -30,7 +38,7 @@ const FREE_MEDIUMS = new Set(['organic', 'none', '(none)', 'not_set', 'referral'
 const PLATFORM_LIKE = new Set([
   'vk', 'vkontakte', 'telegram', 'tg', 'facebook', 'fb', 'instagram', 'ig',
   'yandex', 'google', 'dzen', 'zen', 'ok', 'odnoklassniki', 'youtube',
-  'whatsapp', 'viber', 'avito', 'tiktok',
+  'whatsapp', 'viber', 'avito', 'tiktok', 'max',
 ])
 
 /** Источники, у которых есть платный поиск: там `utm_term` осмыслен. */
@@ -38,11 +46,11 @@ const SEARCH_SOURCES = new Set(['yandex', 'google', 'yandex_direct', 'google_ads
 
 /**
  * Подстановки, доставшиеся от старых кабинетов. Сам справочник их больше не
- * предлагает — VK свернул `vk.com/ads` в VK Рекламу с другим синтаксисом, —
- * но ссылки, собранные в 2.2, живут в истории у людей, и ругаться на них
- * задним числом незачем.
+ * предлагает — VK свернул `vk.com/ads` в VK Рекламу с другим синтаксисом, а
+ * Директ снял `{adtarget_name}` и `{addphrases}`, — но ссылки, собранные
+ * раньше, живут в истории у людей, и ругаться на них задним числом незачем.
  */
-const LEGACY_PLACEHOLDERS = ['client_id', 'ad_name', 'platform', 'campaign']
+const LEGACY_PLACEHOLDERS = ['client_id', 'ad_name', 'platform', 'campaign', 'adtarget_name', 'addphrases']
 
 /**
  * Плейсхолдеры, которые реально подставляются площадками.
@@ -52,8 +60,6 @@ const LEGACY_PLACEHOLDERS = ['client_id', 'ad_name', 'platform', 'campaign']
  * «неизвестная подстановка». Один источник — один ответ.
  */
 export const KNOWN_PLACEHOLDERS = new Set([...macroTokenNames(), ...LEGACY_PLACEHOLDERS])
-
-const PLACEHOLDER_RE = /\{([a-z_0-9]+)\}/gi
 
 function issue(
   code: Issue['code'],
@@ -70,11 +76,17 @@ function issue(
 export function validateValue(field: UtmKey, rawValue: string): Issue[] {
   const value = rawValue ?? ''
   if (!value.trim()) return []
+  // Написание метки, которую площадка ставит сама, выбирала площадка: подогнать
+  // его под наши правила — значит развести ручные и автоматические переходы.
+  if (isPlatformLiteral(value)) return []
 
   const issues: Issue[] = []
   const param = UTM_PARAM_NAMES[field]
+  // Подстановки площадка пишет сама и в своём регистре (`{{CampaignId}}`
+  // у Unisender): «Чинить» их не трогает, значит и ругаться на них нечего.
+  const withoutPlaceholders = value.replace(PLACEHOLDER_RE, '')
 
-  if (/[A-ZА-ЯЁ]/.test(value)) {
+  if (/[A-ZА-ЯЁ]/.test(withoutPlaceholders)) {
     issues.push(
       issue(
         'value-uppercase',
@@ -113,7 +125,6 @@ export function validateValue(field: UtmKey, rawValue: string): Issue[] {
     )
   }
 
-  const withoutPlaceholders = value.replace(PLACEHOLDER_RE, '')
   if (/[&?#=%"'<>\\]/.test(withoutPlaceholders)) {
     issues.push(
       issue(
@@ -153,21 +164,73 @@ export function validateValue(field: UtmKey, rawValue: string): Issue[] {
   }
 
   for (const match of value.matchAll(PLACEHOLDER_RE)) {
-    const token = (match[1] ?? '').toLowerCase()
-    if (!KNOWN_PLACEHOLDERS.has(token)) {
+    const token = match[0]
+    if (!KNOWN_PLACEHOLDERS.has(placeholderName(token))) {
       issues.push(
         issue(
           'placeholder-unknown',
           'warning',
           field,
-          `Неизвестная подстановка {${token}}`,
-          `Площадка не знает токен {${token}} и подставит его буквально — в отчёте вы увидите текст «{${token}}» вместо данных.`,
+          `Неизвестная подстановка ${token}`,
+          `Площадка не знает токен ${token} и подставит его буквально — в отчёте вы увидите текст «${token}» вместо данных.`,
         ),
       )
     }
   }
 
   return issues
+}
+
+/**
+ * Подходит ли подстановка площадке из `utm_source`. Токен может быть известен
+ * справочнику и всё равно не сработать: `{campaign_id}` — это Директ, а VK
+ * понимает только `{{…}}`; `{campaignid}` — это Google. Ссылка при этом
+ * открывается, и ошибка всплывает только в отчёте, литералом в скобках.
+ *
+ * Незнакомые никому токены здесь не трогаем — про них уже сказал
+ * `placeholder-unknown`, второе замечание о том же только шумит.
+ */
+function placeholderSyntaxIssue(group: MacroGroup, field: UtmKey, token: string): Issue | null {
+  const lower = token.toLowerCase()
+  const name = placeholderName(token)
+
+  if (group.macros.some((macro) => macro.token.toLowerCase() === lower)) return null
+
+  if (group.macros.length === 0) {
+    return issue(
+      'placeholder-wrong-syntax',
+      'warning',
+      field,
+      `У площадки ${group.title} подстановок нет`,
+      `${group.title} ничего не подставляет: ${token} приедет в отчёт буквально, текстом в скобках вместо данных.`,
+    )
+  }
+
+  const sameName = group.macros.find((macro) => placeholderName(macro.token) === name)
+  if (sameName) {
+    return issue(
+      'placeholder-wrong-syntax',
+      'warning',
+      field,
+      `Не те скобки для площадки ${group.title}`,
+      `${group.title} понимает ${sameName.token}, а ${token} не узнает и вставит как есть — в отчёте будет текст «${token}» вместо данных.`,
+    )
+  }
+
+  const owner = MACRO_GROUPS.find(
+    (other) => other !== group && other.macros.some((macro) => macro.token.toLowerCase() === lower),
+  )
+  if (owner) {
+    return issue(
+      'placeholder-wrong-syntax',
+      'warning',
+      field,
+      `Подстановка другой площадки — ${owner.title}`,
+      `${token} — подстановка площадки ${owner.title}. ${group.title} её не знает и вставит как есть — в отчёте будет текст «${token}» вместо данных.`,
+    )
+  }
+
+  return null
 }
 
 /** Семантические ловушки: метка есть, а данные врут. */
@@ -211,6 +274,16 @@ export function validateSemantics(params: UtmParams): Issue[] {
         'На поисковой рекламе без utm_term вы не увидите, по каким запросам шли показы. Для Директа сюда ставят {keyword} — площадка подставит фразу сама.',
       ),
     )
+  }
+
+  const group = macrosForSource(source)
+  if (group) {
+    for (const key of UTM_KEYS) {
+      for (const match of (params[key] ?? '').matchAll(PLACEHOLDER_RE)) {
+        const found = placeholderSyntaxIssue(group, key, match[0])
+        if (found) issues.push(found)
+      }
+    }
   }
 
   return issues

@@ -573,7 +573,7 @@ interface DictionaryViewProps {
 
 function DictionaryView({ dict, splits, onMerge }: DictionaryViewProps) {
   if (dict.length === 0) {
-    return <EmptyNote text="Справочник наполнится сам, как только вы соберёте первую ссылку." />
+    return <EmptyNote text="Справочник наполнится сам, как только вы сохраните первую ссылку." />
   }
 
   return (
