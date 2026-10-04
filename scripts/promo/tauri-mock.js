@@ -30,8 +30,8 @@ async function installBridge(ctx, { theme = 'dark', skin = null } = {}) {
       }
       localStorage.setItem('utmka.onboarding.v2', '1')
       localStorage.setItem('utmka.theme', theme)
-      if (skin) localStorage.setItem('utmka.skin', skin)
-      else localStorage.removeItem('utmka.skin')
+      // ключ есть всегда — иначе снимки закрыло бы окно выбора вида
+      localStorage.setItem('utmka.skin', skin || 'os')
     },
     [{ H, T, D }, theme, skin],
   )

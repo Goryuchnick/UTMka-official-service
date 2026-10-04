@@ -314,7 +314,16 @@ async function main() {
   window.__done = true;
 }
 window.__start = main;
-window.__load = (src1, src2, src3) => { $('#f1').src = src1; $('#f2').src = src2; $('#f3').src = src3; };
+window.__load = (src1 = '/', src2 = '/', src3 = '/') => { $('#f1').src = src1; $('#f2').src = src2; $('#f3').src = src3; };
+/* Второе окно — «Точки» тёмные, третье — «ПРОНИН-ОС» тёмная. */
+window.__prep = () => {
+  const d2 = $('#f2').contentDocument.documentElement;
+  d2.dataset.theme = 'dark';
+  d2.dataset.skin = 'dots';
+  const d3 = $('#f3').contentDocument.documentElement;
+  d3.dataset.theme = 'dark';
+  delete d3.dataset.skin;
+};
 </script>
 </body>
 </html>

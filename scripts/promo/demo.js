@@ -47,7 +47,7 @@ async function mock(ctx, opts = {}) {
 async function prep(ctx, theme, skin) {
   await ctx.addInitScript(([t, s]) => {
     localStorage.setItem('utmka.consent.v1', 'denied'); localStorage.setItem('utmka.onboarding.v2', '1');
-    localStorage.setItem('utmka.theme', t); if (s) localStorage.setItem('utmka.skin', s); else localStorage.removeItem('utmka.skin');
+    localStorage.setItem('utmka.theme', t); localStorage.setItem('utmka.skin', s || 'os'); // пустой — «ПРОНИН-ОС»; ключ есть — окно выбора вида не всплывает
   }, [theme, skin]);
   // Плашка дев-сервера Next в кадре не нужна. На момент init-скрипта <head> ещё нет.
   await ctx.addInitScript(() => {

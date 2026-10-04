@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>UTMka — ролик по фичам</title>
+<!--
+  Рекламный ролик «по фичам»: каждая возможность — отдельная сцена, в кадре не
+  весь интерфейс, а вырезанный из настоящего приложения кусок, который
+  поворачивается в 3D. Формат — ?fmt=h (1920×1080) или ?fmt=v (1080×1920, низ
+  360 px свободен под текст рекламного кабинета).
+
+  Устройство: каждая карточка — свой фрейм с приложением (1440×900), из
+  которого показывается прямоугольник `crop`. Позы и вырезки анимирует свой
+  твинер на виртуальном времени (shim.js), поэтому кадры детерминированы.
+  Нажатия и набор — события внутри фрейма: React получает настоящие click и
+  input. Курсор нарисован сценой и ставится в проекцию элемента с учётом 3D.
+
+  Ритм — 100 ударов в минуту: сцены начинаются с такта, нажатия встают на
+  восьмые, звук (ad-audio.py) играет на той же сетке.
+-->
+<style>
+  @font-face { font-family: "Yantar"; font-weight: 300 700; src: url("/__stage/Yantar-var.woff2") format("woff2"); }
+  @font-face { font-family: "Yantar Text"; font-weight: 400; src: url("/__stage/YantarText-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Yantar Text"; font-weight: 700; src: url("/__stage/YantarText-Bold.woff2") format("woff2"); }
+  :root { --ink: #15140f; --ink2: #525048; --ink3: #6e6c64; --accent: #009399; --accent-ink: #006368; --acc: 0,147,153; --bg: #f1f7f7;
+    --ease: cubic-bezier(.2,.7,.2,1); --spring: cubic-bezier(.3,1.35,.5,1); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Yantar Text", sans-serif;
+    transition: background-color .9s var(--ease); }
+  body.h { width: 1920px; height: 1080px; }
+  body.v { width: 1080px; height: 1920px; }
+  #field { position: absolute; left: 0; top: 0; }
+
+  /* карточки: вырезка из приложения */
+  .card { position: absolute; z-index: 5; visibility: hidden; }
+  .tilt { position: absolute; inset: 0; overflow: hidden; border-radius: 30px; background: #fdfefe; transform-origin: 50% 50%;
+    box-shadow: 0 60px 110px -48px rgba(21,20,15,.42), 0 18px 40px -26px rgba(21,20,15,.22), 0 0 0 1px rgba(21,20,15,.05); }
+  /* Увеличение вырезки — zoom фрейма, а не transform: scale. Так приложение рисуется сразу
+     в нужном размере; растянутый трансформом растр на повороте давал мыльный текст. */
+  .tilt .pan { position: absolute; left: 0; top: 0; }
+  .tilt iframe { display: block; border: 0; background: transparent; }
+  /* края вырезки растворяются: срезанные строки соседних блоков не торчат */
+  .tilt::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(#fdfefe, rgba(253,254,254,0) 26px, rgba(253,254,254,0) calc(100% - 26px), #fdfefe); }
+
+  /* подпись сцены */
+  #head { position: absolute; z-index: 20; pointer-events: none; }
+  body.h #head { left: 140px; width: 560px; top: 0; height: 1080px; }
+  body.v #head { left: 90px; right: 90px; top: 210px; height: 400px; }
+  .hb { position: absolute; left: 0; right: 0; }
+  body.h .hb { top: 50%; transform: translateY(-50%); }
+  body.v .hb { bottom: 0; }
+  .hk { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; font-family: "Yantar", monospace; font-variation-settings: "ELSH" 2;
+    font-weight: 700; font-size: 24px; line-height: 36px; color: var(--accent-ink); opacity: 0; transform: translateX(-24px);
+    transition: opacity .45s var(--ease), transform .7s var(--ease), color .6s; }
+  body.v .hk { font-size: 32px; line-height: 48px; margin-bottom: 26px; }
+  .hk::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 7px rgba(var(--acc), .18); }
+  .ht { font-size: 68px; line-height: 82px; letter-spacing: -.024em; font-weight: 400; }
+  body.v .ht { font-size: 82px; line-height: 96px; }
+  .ht em { font-style: normal; color: var(--accent-ink); transition: color .6s; }
+  .wd { display: inline-block; opacity: 0; transform-origin: 50% 85%; transform: perspective(700px) rotateX(-86deg) translateY(.32em);
+    transition: transform .8s var(--spring), opacity .4s var(--ease); }
+  .hb.on .hk { opacity: 1; transform: none; }
+  .hb.on .wd { opacity: 1; transform: none; }
+  .hb.out .hk { opacity: 0; transform: translateY(-18px); transition-duration: .3s, .5s; }
+  .hb.out .wd { opacity: 0; transform: perspective(700px) rotateX(78deg) translateY(-.22em); transition: transform .5s var(--ease), opacity .3s var(--ease); }
+
+  /* заставка и финал */
+  .center { position: absolute; inset: 0; z-index: 25; display: grid; place-items: center; text-align: center; pointer-events: none; }
+  .logo { font-family: "Yantar", monospace; font-weight: 700; display: flex; justify-content: center; perspective: 900px; }
+  body.h .logo { font-size: 256px; line-height: 360px; }
+  body.v .logo { font-size: 216px; line-height: 300px; }
+  .logo span { display: inline-block; opacity: 0; color: var(--ink); font-variation-settings: "ELSH" 0; font-weight: 300;
+    transform: rotateY(-95deg) translateZ(40px); transform-origin: 50% 50% -60px;
+    transition: opacity .4s var(--ease), transform .9s var(--spring), font-variation-settings 1.1s var(--ease), font-weight 1.1s var(--ease); }
+  .logo.on span { opacity: 1; transform: none; font-variation-settings: "ELSH" 2; font-weight: 700; }
+  .logo .ka { color: var(--accent); }
+  .logo.out span { opacity: 0; transform: rotateY(90deg) translateZ(40px); transition-duration: .35s, .6s; }
+  .sub { color: var(--ink2); opacity: 0; transform: translateY(16px); transition: opacity .6s var(--ease), transform .8s var(--ease); }
+  body.h .sub { margin-top: -36px; font-size: 48px; line-height: 64px; }
+  body.v .sub { margin-top: -24px; font-size: 52px; line-height: 68px; }
+  .sub.on { opacity: 1; transform: none; }
+  .sub b { color: var(--accent-ink); font-weight: 700; }
+  .sub.out { opacity: 0; transform: translateY(-16px); }
+  .big { font-weight: 400; letter-spacing: -.024em; }
+  body.h .big { font-size: 100px; line-height: 120px; max-width: 1500px; }
+  body.v .big { font-size: 96px; line-height: 112px; max-width: 900px; }
+  .big em { font-style: normal; color: var(--accent-ink); }
+  #claim.on .wd { opacity: 1; transform: none; }
+  #claim.out .wd { opacity: 0; transform: perspective(700px) rotateX(78deg) translateY(-.22em); transition: transform .5s var(--ease), opacity .3s var(--ease); }
+
+  /* курсор и касание */
+  #cursor { pointer-events: none; position: absolute; left: 0; top: 0; width: 40px; height: 40px; opacity: 0; transition: opacity .3s; z-index: 50;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.25)); }
+  #cursor.on { opacity: 1; }
+  .ring { pointer-events: none; position: absolute; z-index: 49; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%;
+    border: 3px solid var(--accent); animation: hit .6s var(--ease) forwards; }
+  @keyframes hit { 0% { opacity: .95; transform: scale(.25); } 100% { opacity: 0; transform: scale(1.35); } }
+</style>
+</head>
+<body>
+<canvas id="field"></canvas>
+
+<div id="cards">
+  <div class="card" id="c-gen"><div class="tilt"><div class="pan"><iframe></iframe></div></div></div>
+  <div class="card" id="c-tpl"><div class="tilt"><div class="pan"><iframe></iframe></div></div></div>
+  <div class="card" id="c-batch"><div class="tilt"><div class="pan"><iframe></iframe></div></div></div>
+  <div class="card" id="c-ask"><div class="tilt"><div class="pan"><iframe></iframe></div></div></div>
+</div>
+
+<div id="head"></div>
+
+<div class="center" id="intro">
+  <div>
+    <div class="logo" id="logo"><span>U</span><span>T</span><span>M</span><span class="ka">k</span><span class="ka">a</span></div>
+    <div class="sub" id="sub">конструктор UTM-меток</div>
+  </div>
+</div>
+<div class="center" id="claim"><div class="big" id="big"></div></div>
+<div class="center" id="outro">
+  <div>
+    <div class="logo" id="logo2"><span>U</span><span>T</span><span>M</span><span class="ka">k</span><span class="ka">a</span></div>
+    <div class="sub" id="url">Бесплатно, без регистрации<br><b>utmka.alex-pronin.ru</b></div>
+  </div>
+</div>
+
+<svg id="cursor" viewBox="0 0 34 34"><path d="M5 3 L5 27 L11 21.5 L15.5 31 L19.5 29.2 L15.2 20 L23 20 Z" fill="#15140f" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const V = new URLSearchParams(location.search).get('fmt') === 'v';
+document.body.classList.add(V ? 'v' : 'h');
+const SW = V ? 1080 : 1920, SH = V ? 1920 : 1080;
+window.__cmds = [];
+window.__cursor = { x: SW * .7, y: SH + 120 };
+window.__done = false;
+
+/* ── раскладка формата ── */
+const L = V
+  ? { cx: 540, cy: 1075, maxW: 960, maxH: 820, persp: 2100, rest: { rx: 8, ry: -6 }, enter: { tx: 0, ty: 420, ry: -18, rx: 42 } }
+  : { cx: 1310, cy: 560, maxW: 1060, maxH: 800, persp: 1900, rest: { rx: 6, ry: -13 }, enter: { tx: 420, ty: 0, ry: -58, rx: 12 } };
+/** Фрейм с приложением. 16:9 — 1140×1200: чуть шире порога двух колонок «Точек» (1100) — колонка
+    работы узкая, вырезка крупнее. Ровно на пороге нельзя: при дробном zoom ширина внутри фрейма
+    округляется вниз, медиазапрос мигает, и раскладка прыгала посреди наезда. В высоту помещаются
+    готовая ссылка с QR и ответ помощника. 9:16 — мобильная раскладка 430×932: узкая колонка даёт
+    увеличение вдвое, и текст читается на телефоне. */
+const FW = V ? 430 : 1140, FH = V ? 932 : 1200;
+/** Во сколько раз смелее увеличивать в вертикальном формате. */
+const KX = V ? 1.55 : 1;
+
+/* ── ритм: 100 ударов в минуту, такт — 2,4 с ── */
+const BEAT = 600, BAR = 2400;
+let T0 = 0;
+const now = () => performance.now() - T0;
+const at = (ms) => wait(Math.max(0, ms - now()));
+/** Дождаться ближайшей доли: div=2 — восьмая. */
+async function onBeat(div = 2) { const step = BEAT / div, t = now(); await wait(Math.ceil((t + 1) / step) * step - t); }
+const sfx = (name, extra = {}) => window.__cmds.push({ type: 'sfx', name, t: Math.round(now()), ...extra });
+
+/* ── твинер на виртуальном времени ── */
+const E = {
+  lin: (k) => k,
+  out: (k) => 1 - Math.pow(1 - k, 3),
+  inOut: (k) => (k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2),
+  in: (k) => k * k * k,
+  /** затухающая пружина: перелёт на 3–4 % и мягкая посадка */
+  spring: (k) => 1 - Math.exp(-6.2 * k) * Math.cos(7.4 * k) * (1 - k),
+};
+const tweens = [];
+function tween(o, to, ms, ease = E.out) {
+  // новая анимация ключа отменяет прежнюю — иначе две тянули бы одно свойство
+  for (const tw of tweens) if (tw.o === o) for (const key in to) delete tw.to[key];
+  if (ms <= 0) { Object.assign(o, to); return Promise.resolve(); }
+  return new Promise((res) => {
+    const from = {};
+    for (const key in to) from[key] = o[key];
+    tweens.push({ o, from, to, t0: performance.now(), ms, ease, res });
+  });
+}
+function stepTweens(t) {
+  for (let i = tweens.length - 1; i >= 0; i--) {
+    const tw = tweens[i], k = Math.min(1, (t - tw.t0) / tw.ms), e = tw.ease(k);
+    for (const key in tw.to) tw.o[key] = tw.from[key] + (tw.to[key] - tw.from[key]) * e;
+    if (k >= 1) { tweens.splice(i, 1); tw.res(); }
+  }
+}
+
+/* ── поле точек сцены: свет за курсором, круги от касаний ── */
+const cv = $('#field'), cx = cv.getContext('2d');
+const DPR = window.devicePixelRatio || 1;
+cv.width = SW * DPR; cv.height = SH * DPR; cv.style.width = SW + 'px'; cv.style.height = SH + 'px';
+cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+const lamp = { x: SW / 2, y: SH / 2, k: 0 };
+const field = { k: 1 };
+const ripples = [];
+function drawField(t) {
+  cx.clearRect(0, 0, SW, SH);
+  const acc = getComputedStyle(document.documentElement).getPropertyValue('--acc').trim();
+  lamp.x += (window.__cursor.x - lamp.x) * .14; lamp.y += (window.__cursor.y - lamp.y) * .14;
+  while (ripples.length && t - ripples[0].t > 2400) ripples.shift();
+  const ox = SW / 2, oy = SH / 2;
+  for (let y = 10; y < SH; y += 20) for (let x = 10; x < SW; x += 20) {
+    const dx = x - ox, dy = y - oy, d = Math.sqrt(dx * dx + dy * dy);
+    const wave = .5 + .5 * Math.sin(d / 46 - t / 520);
+    let b = field.k * .32 * wave * wave * wave * Math.exp(-d / 900);
+    const lx = (x - lamp.x) / 130, ly = (y - lamp.y) / 130, ld = lx * lx + ly * ly;
+    if (ld < 4) b += .5 * lamp.k * Math.exp(-ld * 1.6);
+    for (const r of ripples) {
+      const tt = t - r.t, rd = Math.hypot(x - r.x, y - r.y), q = (rd - tt * .55) / 28;
+      b += .55 * Math.exp(-q * q) * Math.exp(-tt / 700);
+    }
+    if (b < .05) { cx.fillStyle = 'rgba(21,20,15,.13)'; cx.fillRect(x - .9, y - .9, 1.8, 1.8); }
+    else { cx.fillStyle = `rgba(${acc},${(.22 + .68 * Math.min(1, b)).toFixed(3)})`; cx.beginPath(); cx.arc(x, y, .9 + 3.5 * Math.pow(Math.min(1, b), .8), 0, 6.283); cx.fill(); }
+  }
+}
+
+/* ── цвет раздела ── */
+const ACC = {
+  teal: ['#009399', '#006368', '0,147,153', '#f1f7f7'],
+  green: ['#009956', '#006836', '0,153,86', '#f2f7f4'],
+  rasp: ['#cd3462', '#981b44', '205,52,98', '#faf4f5'],
+  blue: ['#3672e9', '#1c50b5', '54,114,233', '#f3f6fa'],
+};
+function accent(name) { const a = ACC[name], s = document.documentElement.style; s.setProperty('--accent', a[0]); s.setProperty('--accent-ink', a[1]); s.setProperty('--acc', a[2]); s.setProperty('--bg', a[3]); }
+
+/* ── карточки ── */
+const SRC = { gen: '/', tpl: '/templates', batch: '/batch', ask: '/parse' };
+const C = {};
+let seed = 1;
+for (const id of Object.keys(SRC)) {
+  const el = $('#c-' + id), tilt = el.firstElementChild, pan = tilt.firstElementChild, frame = pan.firstElementChild;
+  frame.style.width = FW + 'px'; frame.style.height = FH + 'px';
+  C[id] = { id, el, tilt, pan, frame, cx: L.cx, cy: L.cy, x: 0, y: 0, w: 800, h: 500, k: 1, rx: 0, ry: 0, rz: 0, tx: 0, ty: 0, tz: 0, s: 1, o: 0, drift: 0, seed: seed++ * 1.37, z: 5 };
+}
+const doc = (c) => c.frame.contentDocument;
+function drawCard(c, t) {
+  const W = c.w * c.k, H = c.h * c.k, st = c.el.style;
+  st.left = (c.cx - W / 2) + 'px'; st.top = (c.cy - H / 2) + 'px'; st.width = W + 'px'; st.height = H + 'px';
+  st.visibility = c.o < .003 ? 'hidden' : 'visible'; st.zIndex = c.z;
+  const rx = c.rx + c.drift * 2.2 * Math.sin(t / 1700 + c.seed), ry = c.ry + c.drift * 3.4 * Math.sin(t / 2300 + c.seed * 1.7);
+  c.tilt.style.transform = `perspective(${L.persp}px) translate3d(${c.tx}px,${c.ty}px,${c.tz}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${c.rz}deg) scale(${c.s})`;
+  c.tilt.style.opacity = c.o;
+  c.pan.style.transform = `translate(${-c.x * c.k}px, ${-c.y * c.k}px)`;
+  c.frame.style.zoom = c.k;
+}
+
+/** Точка приложения (координаты фрейма) → точка сцены, с учётом поворота карточки. */
+function project(c, px, py) {
+  const W = c.w * c.k, H = c.h * c.k;
+  const m = new DOMMatrix(getComputedStyle(c.tilt).transform);
+  const p = m.transformPoint(new DOMPoint((px - c.x) * c.k - W / 2, (py - c.y) * c.k - H / 2, 0, 1));
+  return { x: c.cx + p.x / p.w, y: c.cy + p.y / p.w };
+}
+
+function q(c, sel) { return typeof sel === 'string' ? doc(c).querySelector(sel) : sel; }
+function findText(c, sel, text) { return [...doc(c).querySelectorAll(sel)].find((e) => e.textContent.trim().startsWith(text)); }
+/** Прямоугольник, охватывающий элементы (координаты фрейма). */
+function box(c, ...sels) {
+  let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+  for (const s of sels) {
+    const e = q(c, s); if (!e) { console.warn('нет', s); continue; }
+    const rc = e.getBoundingClientRect();
+    l = Math.min(l, rc.left); t = Math.min(t, rc.top); r = Math.max(r, rc.right); b = Math.max(b, rc.bottom);
+  }
+  return { x: l, y: t, w: r - l, h: b - t };
+}
+/** Навести вырезку на прямоугольник: с полями, увеличение — сколько влезает в кадр. */
+function cropTo(c, rc, { pad = 40, ms = 800, kmax = 1.6, ease = E.inOut, maxH = L.maxH, maxW = L.maxW } = {}) {
+  const x = Math.max(0, rc.x - pad), y = Math.max(0, rc.y - pad);
+  const w = Math.min(FW - x, rc.w + pad * 2), h = Math.min(FH - y, rc.h + pad * 2);
+  const k = Math.min(kmax * KX, maxW / w, maxH / h);
+  return tween(c, { x, y, w, h, k }, ms, ease);
+}
+/** Прокрутить экран приложения так, чтобы элемент встал на высоту top. */
+async function scrollApp(c, sel, top = 120, ms = 500) {
+  const e = q(c, sel); if (!e) return;
+  let sc = e.parentElement;
+  while (sc && !(sc.scrollHeight > sc.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement;
+  if (!sc) return;
+  const d = e.getBoundingClientRect().top - top;
+  const p = { v: sc.scrollTop };
+  const to = p.v + d;
+  const start = performance.now();
+  await new Promise((res) => { const st = () => { const k = Math.min(1, (performance.now() - start) / ms); sc.scrollTop = p.v + (to - p.v) * E.inOut(k); k < 1 ? requestAnimationFrame(st) : res(); }; st(); });
+}
+
+/* ── курсор, касание, набор ── */
+const cur = { x: window.__cursor.x, y: window.__cursor.y };
+async function moveTo(x, y, ms = 520) { await tween(cur, { x, y }, ms, E.inOut); }
+function showCursor(on = true) { $('#cursor').classList.toggle('on', on); tween(lamp, { k: on ? 1 : 0 }, 500); }
+function ring(x, y) {
+  const r = document.createElement('div'); r.className = 'ring'; r.style.left = x + 'px'; r.style.top = y + 'px';
+  document.body.appendChild(r); setTimeout(() => r.remove(), 700);
+  ripples.push({ x, y, t: performance.now() });
+}
+async function tapOn(c, sel, { fx = .5, fy = .5, ms = 520, beat = true } = {}) {
+  const e = q(c, sel); if (!e) { console.warn('нет', sel); return; }
+  const at = () => { const r = e.getBoundingClientRect(); return project(c, r.left + r.width * fx, r.top + r.height * fy); };
+  let p = at(); await moveTo(p.x, p.y, ms);
+  p = at(); if (Math.hypot(p.x - cur.x, p.y - cur.y) > 2) await moveTo(p.x, p.y, 140);
+  if (beat) await onBeat(2);
+  ring(cur.x, cur.y); sfx('tap');
+  if (e.focus && /INPUT|TEXTAREA/.test(e.tagName)) e.focus({ preventScroll: true }); else e.click();
+  await wait(120);
+}
+function setValue(e, v) {
+  const w = e.ownerDocument.defaultView;
+  const proto = e.tagName === 'TEXTAREA' ? w.HTMLTextAreaElement.prototype : w.HTMLInputElement.prototype;
+  Object.getOwnPropertyDescriptor(proto, 'value').set.call(e, v);
+  e.dispatchEvent(new w.Event('input', { bubbles: true }));
+}
+/** Набор по знаку. watch — селектор того, что появляется по ходу набора (замечания): каждое новое звучит. */
+async function typeIn(c, sel, text, per = 45, watch = '') {
+  const e = q(c, sel); if (!e) { console.warn('нет', sel); return; }
+  e.focus({ preventScroll: true });
+  let seen = watch ? doc(c).querySelectorAll(watch).length : 0;
+  for (const ch of text) {
+    setValue(e, e.value + ch); sfx('key');
+    await wait(per);
+    if (watch) { const n = doc(c).querySelectorAll(watch).length; if (n > seen) { sfx('pop', { i: n - 1 }); seen = n; } }
+  }
+}
+/** Появление строк по одной — со звуком, который поднимается по ступеням. */
+async function cascade(c, sel, gap = 150, from = 0) {
+  const rows = [...doc(c).querySelectorAll(sel)];
+  for (const r of rows) r.setAttribute('data-pre', '');
+  for (let i = 0; i < rows.length; i++) { await wait(i ? gap : 60); rows[i].removeAttribute('data-pre'); sfx('pop', { i: i + from }); }
+}
+
+/* ── подписи ── */
+function words(html) {
+  const out = []; let i = 0;
+  for (const part of html.split(/(<em>.*?<\/em>)/)) {
+    if (!part) continue;
+    const em = part.startsWith('<em>'), text = em ? part.slice(4, -5) : part;
+    for (const w of text.split(' ')) if (w) out.push(`<span class="wd" style="transition-delay:${i++ * 55}ms">${em ? `<em>${w}</em>` : w}</span>`);
+  }
+  return out.join(' ');
+}
+function headline(kicker, html) {
+  const box = $('#head');
+  for (const old of box.children) {
+    old.classList.remove('on'); old.classList.add('out');
+    old.querySelectorAll('.wd').forEach((w, i) => (w.style.transitionDelay = i * 25 + 'ms'));
+    setTimeout(() => old.remove(), 900);
+  }
+  if (!html) return;
+  const el = document.createElement('div'); el.className = 'hb';
+  el.innerHTML = (kicker ? `<div class="hk">${kicker}</div>` : '') + `<div class="ht">${words(html)}</div>`;
+  box.appendChild(el); el.getBoundingClientRect();
+  setTimeout(() => el.classList.add('on'), 140);
+  sfx('head');
+}
+
+/* ── входы и выходы карточек ── */
+function enter(c, ms = 1300) {
+  const e = L.enter;
+  Object.assign(c, { o: 0, tx: e.tx, ty: e.ty, ry: e.ry, rx: e.rx, tz: -700, s: .94, drift: 0 });
+  sfx('enter');
+  tween(c, { o: 1 }, 450);
+  tween(c, { drift: 1 }, 2000, E.lin);
+  return tween(c, { tx: 0, ty: 0, tz: 0, ry: L.rest.ry, rx: L.rest.rx, s: 1 }, ms, E.spring);
+}
+function leave(c, ms = 900) {
+  sfx('exit');
+  tween(c, { o: 0 }, ms * .8, E.in);
+  return tween(c, V ? { ty: -380, rx: -46, tz: -500 } : { tx: -520, ry: 64, tz: -500 }, ms, E.in);
+}
+/** Поворот на месте — карточка «оглядывается» на другую сторону. */
+const turn = (c, ry, rx = L.rest.rx, ms = 1100) => tween(c, { ry, rx }, ms, E.spring);
+
+/* ── главный цикл кадра ── */
+function frame(t) {
+  stepTweens(t);
+  window.__cursor.x = cur.x; window.__cursor.y = cur.y;
+  $('#cursor').style.transform = `translate(${cur.x - 6}px, ${cur.y - 4}px)`;
+  for (const c of Object.values(C)) drawCard(c, t);
+  drawField(t);
+  requestAnimationFrame(frame);
+}
+
+/* ── сценарий ── */
+/** Начала сцен (мс от старта). Такт — 2,4 с; сцены встают на такт или полутакт. */
+const S = { hook: BAR, gen: 2 * BAR, check: 4 * BAR, result: 6 * BAR, tpl: 8 * BAR, batch: 10 * BAR, ask: 12.5 * BAR, fan: 15 * BAR, logo: 16 * BAR, end: 17.5 * BAR };
+/** Отметка в журнале: где сценарий отстаёт от таймлайна. */
+const mark = (name, plan) => { if (now() > plan + 30) console.warn(`сцена «${name}» опоздала на ${Math.round(now() - plan)} мс`); sfx('scene', { scene: name }); };
+
+async function main() {
+  T0 = performance.now();
+  requestAnimationFrame(frame);
+
+  // Знак
+  await at(200);
+  [...$('#logo').children].forEach((s, i) => (s.style.transitionDelay = i * 90 + 'ms'));
+  $('#logo').classList.add('on'); sfx('logo');
+  await at(1100); $('#sub').classList.add('on');
+
+  // Обещание
+  await at(S.hook - 350);
+  $('#logo').classList.add('out'); $('#sub').classList.add('out');
+  await at(S.hook);
+  mark('hook', S.hook);
+  $('#big').innerHTML = words('Ссылки с метками, <em>которые</em> <em>не</em> <em>ломают</em> <em>отчёт</em>');
+  $('#big').getBoundingClientRect(); setTimeout(() => $('#claim').classList.add('on'), 20); sfx('head');
+  await at(S.gen - 420);
+  $('#claim').classList.remove('on'); $('#claim').classList.add('out'); tween(field, { k: .35 }, 900);
+
+  // Генератор: адрес и площадка
+  const g = C.gen, now4 = '.step[data-state="now"]';
+  await at(S.gen);
+  mark('gen', S.gen);
+  accent('teal');
+  headline('Генератор', 'Четыре вопроса — <em>и ссылка готова</em>');
+  cropTo(g, box(g, now4), { pad: 44, ms: 0, kmax: 1.5 });
+  await wait(200);
+  enter(g);
+  await at(S.gen + 900);
+  showCursor();
+  await tapOn(g, 'input[aria-label="Адрес страницы"]', { fx: .25, ms: 560 });
+  await typeIn(g, 'input[aria-label="Адрес страницы"]', 'shop.example.ru/autumn', 30);
+  await tapOn(g, now4 + ' .btn--main', { ms: 420 });
+  await wait(30);
+  cropTo(g, box(g, now4), { pad: 44, ms: 600, kmax: 1.5 });
+  await wait(560);
+  await tapOn(g, findText(g, '.tile', 'Пост во'), { fx: .3, fy: .35, ms: 460 });
+
+  // Проверка: замечания появляются по ходу набора
+  await at(S.check);
+  mark('check', S.check);
+  headline('Проверка', 'Сразу видно, <em>что сломает отчёт</em>');
+  cropTo(g, box(g, now4 + ' .qhead', now4 + ' .input', now4 + ' .btn--main'), { pad: 44, ms: 700, kmax: 1.5 });
+  turn(g, -L.rest.ry * .9);
+  await at(S.check + 600);
+  await tapOn(g, now4 + ' .input input', { fx: .2, ms: 460 });
+  await typeIn(g, now4 + ' .input input', 'Осенняя распродажа', 36, now4 + ' .issue');
+  await wait(40);
+  {
+    const issues = [...doc(g).querySelectorAll(now4 + ' .issue')];
+    cropTo(g, box(g, now4 + ' .qhead', ...(issues.length ? [issues[0], issues[issues.length - 1]] : [now4 + ' .input'])), { pad: 44, ms: 650, kmax: 1.5 });
+  }
+  // ключевой кадр — список замечаний, держим его
+  await at(S.check + 2350);
+  await tapOn(g, findText(g, now4 + ' .issue-fix', 'Чинить') || now4 + ' .issue-fix', { ms: 420 });
+  sfx('done');
+  await wait(60);
+  cropTo(g, box(g, now4 + ' .qhead', now4 + ' .input', [...doc(g).querySelectorAll(now4 + ' .btn--main')].pop()), { pad: 44, ms: 550, kmax: 1.5 });
+  await wait(450);
+  await tapOn(g, [...doc(g).querySelectorAll(now4 + ' .btn--main')].pop(), { ms: 420 });
+
+  // Готовая ссылка: копирование, короткая, QR
+  await at(S.result);
+  mark('result', S.result);
+  headline('Готовая ссылка', 'Короткая ссылка и QR — <em>в одно нажатие</em>');
+  cropTo(g, box(g, now4 + ' .qhead', now4 + ' .result'), { pad: 36, ms: 650, kmax: 1.45 });
+  turn(g, L.rest.ry);
+  await at(S.result + 600);
+  await tapOn(g, findText(g, '.result .btn--main', 'Скопировать'), { ms: 480 });
+  sfx('done');
+  await at(S.result + 1400);
+  await tapOn(g, findText(g, '.linktools button', 'Короткая'), { ms: 420 });
+  for (let i = 0; i < 40 && !q(g, '.shortbox'); i++) await wait(30);
+  await cascade(g, '.shortbox', 0, 2);
+  cropTo(g, box(g, now4 + ' .qhead', now4 + ' .result'), { pad: 36, ms: 550, kmax: 1.45 });
+  await at(S.result + 2200);
+  await tapOn(g, findText(g, '.linktools button', 'QR'), { ms: 420 });
+  await wait(30);
+  for (const r of doc(g).querySelectorAll('.qrbox')) r.setAttribute('data-pre', '');
+  if (V) {
+    // в мобильной раскладке код ниже края фрейма: подкатываем его под липкую шапку и
+    // показываем крупно один код — короткую ссылку зритель видел шагом раньше
+    await scrollApp(g, '.qrbox', 200, 350);
+    cropTo(g, box(g, '.qrbox'), { pad: 30, ms: 600, kmax: 1.3 });
+  } else cropTo(g, box(g, now4 + ' .qhead', now4 + ' .result'), { pad: 36, ms: 600, kmax: 1.3 });
+  await cascade(g, '.qrbox', 0, 4);
+  showCursor(false);
+  moveTo(cur.x + (V ? 140 : 260), cur.y + 200, 900);
+
+  // Шаблоны
+  const tp = C.tpl;
+  await at(S.tpl - 450);
+  leave(g);
+  await at(S.tpl);
+  mark('tpl', S.tpl);
+  accent('rasp');
+  headline('Шаблоны', 'Одинаковые метки <em>во всех запусках</em>');
+  { const rows = doc(tp).querySelectorAll('.hist-row'); cropTo(tp, box(tp, rows[0], rows[rows.length - 1]), { pad: 26, ms: 0, kmax: 1.6 }); }
+  for (const r of doc(tp).querySelectorAll('.hist-row')) r.setAttribute('data-pre', '');
+  enter(tp);
+  await wait(450);
+  await cascade(tp, '.hist-row', 190);
+  await at(S.tpl + 2000);
+  showCursor();
+  {
+    // курсор ложится на строку — по наведению проявляются её кнопки
+    const row = doc(tp).querySelectorAll('.hist-row')[1], r = row.getBoundingClientRect(), p = project(tp, r.left + r.width * .6, r.top + r.height * .55);
+    await moveTo(p.x, p.y, 650);
+  }
+  turn(tp, -L.rest.ry * .8, L.rest.rx, 1700);
+  await at(S.batch - 700);
+  showCursor(false);
+
+  // Пакет
+  const bt = C.batch;
+  await at(S.batch - 450);
+  leave(tp);
+  await at(S.batch);
+  mark('batch', S.batch);
+  accent('green');
+  headline('Пакетный режим', 'Сотня ссылок за раз — <em>из таблицы</em>');
+  const form = doc(bt).querySelector('.screen-scroll .glass'), addr = form.querySelector('.field');
+  cropTo(bt, box(bt, form), { pad: 36, ms: 0, kmax: 1.3 });
+  enter(bt);
+  await at(S.batch + 800);
+  // ближе: общий адрес
+  cropTo(bt, box(bt, addr), { pad: 24, ms: 600, kmax: 1.6 });
+  showCursor();
+  await tapOn(bt, addr.querySelector('input'), { fx: .3, ms: 520 });
+  await typeIn(bt, addr.querySelector('input'), 'shop.example.ru/autumn', 26);
+  // таблица площадок
+  const sample = findText(bt, '.btn', 'Вставить пример');
+  cropTo(bt, box(bt, form.querySelector('.area'), sample), { pad: 36, ms: 600, kmax: 1.5 });
+  await wait(300);
+  await tapOn(bt, sample, { ms: 420 });
+  await wait(40);
+  for (const r of doc(bt).querySelectorAll('.batch-row')) r.setAttribute('data-pre', '');
+  await wait(350);
+  const results = () => doc(bt).querySelectorAll('.screen-scroll > .glass')[1];
+  if (results().getBoundingClientRect().bottom > FH - 10) await scrollApp(bt, results(), 24, 450);
+  cropTo(bt, box(bt, results()), { pad: 36, ms: 650, kmax: 1.4 });
+  turn(bt, -L.rest.ry * .9);
+  await wait(260);
+  await cascade(bt, '.batch-row', 210);
+  await at(S.batch + 4150);
+  await tapOn(bt, findText(bt, '.btn--main', 'Скопировать все'), { ms: 460 });
+  sfx('done');
+  showCursor(false);
+
+  // Помощник
+  const ak = C.ask;
+  await at(S.ask - 450);
+  leave(bt);
+  await at(S.ask);
+  mark('ask', S.ask);
+  accent('blue');
+  headline('Помощник', 'Или просто <em>опишите запуск</em>');
+  // в 16:9 помощник — колонка справа, в 9:16 (мобильная раскладка) — окно из кнопки
+  const P = V ? '.ask' : '.ask--docked';
+  if (V) { q(ak, '.ask-fab').click(); await wait(450); cropTo(ak, box(ak, P), { pad: 24, ms: 0, kmax: 1.6 }); }
+  else cropTo(ak, box(ak, '.mascotbar', '.ask-ex'), { pad: 30, ms: 0, kmax: 1.7 });
+  enter(ak);
+  await at(S.ask + 1000);
+  // ближе к полю: набор и кнопка
+  cropTo(ak, box(ak, P + ' .ask-head', P + ' .result-row'), { pad: 30, ms: 650, kmax: 1.7 });
+  await wait(300);
+  showCursor();
+  await tapOn(ak, P + ' textarea', { fx: .3, ms: 520 });
+  await typeIn(ak, P + ' textarea', 'Осень: ВК, телеграм и рассылка', 30);
+  await tapOn(ak, P + ' .btn--main', { ms: 420 });
+  showCursor(false);
+  moveTo(cur.x + 220, cur.y + 260, 900);
+  for (let i = 0; i < 60 && !q(ak, '.ask-card'); i++) await wait(40);
+  for (const r of doc(ak).querySelectorAll('.ask-card')) r.setAttribute('data-pre', '');
+  await wait(30);
+  // ответ: маскот и первые ссылки пакета (в окне телефона — сам список)
+  {
+    const cards = doc(ak).querySelectorAll('.ask-card'), second = cards[Math.min(1, cards.length - 1)];
+    if (V) {
+      const panel = q(ak, P), list = q(ak, '.ask-list'), from = panel.scrollTop, to = list.offsetTop - 16, t0 = performance.now();
+      await new Promise((res) => { const st = () => { const k = Math.min(1, (performance.now() - t0) / 450); panel.scrollTop = from + (to - from) * E.inOut(k); k < 1 ? requestAnimationFrame(st) : res(); }; st(); });
+      cropTo(ak, box(ak, cards[0], second), { pad: 24, ms: 650, kmax: 1.7 });
+    } else cropTo(ak, box(ak, '.mascotbar', second), { pad: 30, ms: 750, kmax: 1.7 });
+  }
+  turn(ak, -L.rest.ry * .9, L.rest.rx, 1500);
+  await wait(380);
+  await cascade(ak, '.ask-card', 200);
+  sfx('done');
+
+  // Всё вместе: веер карточек
+  await at(S.fan);
+  mark('fan', S.fan);
+  headline('', '');
+  // лесенка: каждая следующая карточка дальше и ниже, все повёрнуты к зрителю боком
+  const fan = V
+    ? [[g, 330, 680], [tp, 450, 880], [bt, 570, 1080], [ak, 690, 1280]]
+    : [[g, 520, 330], [tp, 820, 470], [bt, 1120, 610], [ak, 1420, 750]];
+  const fw = V ? 620 : 600, fh = V ? 380 : 360;
+  fan.forEach(([c, x, y], i) => {
+    const k = Math.min(fw / c.w, fh / c.h);
+    c.z = 10 - i;
+    const pose = V ? { ry: -24, rx: 16, rz: -4 } : { ry: -34, rx: 12, rz: -3 };
+    if (c !== ak) Object.assign(c, { o: 0, cx: x, cy: y + 260, tx: 0, ty: 0, tz: -500, ry: pose.ry - 30, rx: pose.rx, rz: pose.rz, s: 1, k, drift: 1 });
+    setTimeout(() => {
+      sfx('pop', { i: 3 + i });
+      tween(c, { o: 1 }, 420);
+      tween(c, { cx: x, cy: y, k, tx: 0, ty: 0, tz: -i * 90, ry: pose.ry, rx: pose.rx, rz: pose.rz, s: 1 }, 1200, E.spring);
+    }, i * 150);
+  });
+
+  // Знак и адрес
+  await at(S.logo - 450);
+  for (const [c] of fan) tween(c, { o: 0, tz: -650, ty: 140 }, 650, E.in);
+  tween(field, { k: 1 }, 900);
+  await at(S.logo);
+  mark('logo', S.logo);
+  accent('teal');
+  [...$('#logo2').children].forEach((s, i) => (s.style.transitionDelay = i * 80 + 'ms'));
+  $('#logo2').classList.add('on'); sfx('logo', { end: 1 });
+  await at(S.logo + 700); $('#url').classList.add('on');
+  await at(S.end);
+  window.__done = true;
+}
+
+/* ── вход для record.js ── */
+window.__start = main;
+window.__load = () => { for (const [id, src] of Object.entries(SRC)) C[id].frame.src = src; };
+/** Стиль внутри фреймов: без поля точек, фон карточки, без полос прокрутки; появление строк. */
+const FRAME_CSS = `
+  .dotfield { display: none !important; }
+  html, body { background: #fdfefe !important; }
+  :root[data-skin='dots'] .dev, :root[data-skin='dots'] .dev[data-accent] { --bg: #fdfefe !important; }
+  * { scrollbar-width: none !important; }
+  ::-webkit-scrollbar { width: 0 !important; height: 0 !important; }
+  .cookiebar, .onb-invite, nextjs-portal, .mdock-wrap, .mdock-fab { display: none !important; }
+  .ask-fab { opacity: 0 !important; }
+  .lp-doc, .lp-seam, .statusbar, .gen-mode { visibility: hidden !important; }
+  .hist-row, .batch-row, .ask-card, .qrbox, .shortbox, .issue { transition: opacity .35s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.3,1.4,.5,1) !important; }
+  [data-pre] { opacity: 0 !important; transform: translateY(18px) scale(.97) !important; }
+`;
+window.__prep = () => {
+  for (const c of Object.values(C)) {
+    const st = doc(c).createElement('style'); st.textContent = FRAME_CSS; doc(c).head.appendChild(st);
+  }
+};
+</script>
+</body>
+</html>
