@@ -4,7 +4,12 @@
    Включается атрибутом `data-skin="dots"` на <html>; разметка экранов та
    же, что у «ПРОНИН-ОС», меняется этот слой и несколько веток `useSkin()`.
    Редакция 2026-10-04 (вторая за день): облик сайта на устройстве
-   Справкомата.
+   Справкомата. Третья, того же вечера: Dots — вторая система владельца
+   рядом с «гиковой», и приложение подтянуто к роликам (scripts/promo):
+   знак «UTM·ka» в два тона, подпись с точкой над заголовком, вопрос шага
+   крупно на фоне, белый блок с мягкой тенью, как парящая карточка в кадре,
+   обведённые кнопки, готовая ссылка по метке в строке, круги от нажатия,
+   QR из точек, справочник — линиями метро.
 
    С сайта (страницы для бизнеса):
    - фон окна — оттенок раздела, у каждого раздела свой цвет (`data-accent`
@@ -124,6 +129,11 @@
   --warn: #8a5300;
   --warn-soft: rgba(196, 128, 0, 0.12);
   --pop: 0 12px 32px rgba(21, 20, 15, 0.14), 0 0 0 1px rgba(21, 20, 15, 0.06);
+  /* Тень парящей карточки из роликов, уменьшенная под экран. */
+  --lift: 0 30px 60px -36px rgba(21, 20, 15, 0.32), 0 10px 24px -18px rgba(21, 20, 15, 0.14), 0 0 0 1px rgba(21, 20, 15, 0.04);
+  /* «ka» в знаке — бирюза продукта, не цвет раздела: знак один на все экраны. */
+  --brand: #009399;
+  --brand-ink: #006368;
 
   --f-dot: 'Yantar', ui-monospace, 'Cascadia Mono', Consolas, monospace;
   --f-text: 'Yantar Text', 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -160,6 +170,9 @@
   --warn: #e7b155;
   --warn-soft: rgba(231, 177, 85, 0.12);
   --pop: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(235, 233, 226, 0.08);
+  --lift: 0 30px 60px -30px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(235, 233, 226, 0.07);
+  --brand: #19b8be;
+  --brand-ink: #5fd3d7;
   --bg: #0e1112;
   /* Тёмные значки площадок (Дзен, QR) на тёмном блоке пропали бы —
      плитка и знак меняются местами. */
@@ -288,16 +301,22 @@
     -webkit-backdrop-filter: none;
   }
 
+  /* Знак — как в финале роликов: точечный Yantar, «UTM» чернилами, «ka»
+     бирюзой. Кегль такой, чтобы точки читались точками, а не пикселями. */
   & .topbar__sign {
     display: inline-flex;
     align-items: center;
     font-family: var(--f-dot);
     font-variation-settings: 'ELSH' 2;
     font-weight: 700;
-    font-size: 24px;
-    line-height: 36px;
+    font-size: 30px;
+    line-height: 40px;
     color: var(--ink);
     text-decoration: none;
+  }
+
+  & .topbar__sign span {
+    color: var(--brand);
   }
 
   /* В окне десктопа имя уже стоит в строке заголовка. */
@@ -539,22 +558,37 @@
     min-height: 0;
   }
 
-  /* Заголовок страницы — точечным, на фоне, как глава на сайте. */
+  /* Заголовок страницы — подписью с точкой, как «• Генератор» над сценой в
+     роликах. Крупно говорит вопрос шага; H1 остаётся в разметке для поиска. */
   & .lp-head {
     gap: 4px;
-    padding: 4px 8px 0;
+    padding: 8px 8px 0;
   }
 
   & .lp-h1,
   & .lp-app .lp-h1 {
+    display: flex;
+    align-items: center;
+    gap: 14px;
     margin: 0;
     font-family: var(--f-dot);
     font-variation-settings: 'ELSH' 2;
     font-weight: 700;
-    font-size: 24px;
-    line-height: 36px;
+    font-size: 16px;
+    line-height: 24px;
     letter-spacing: 0;
-    color: var(--ink);
+    color: var(--accent-ink);
+  }
+
+  & .lp-h1::before {
+    content: '';
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-left: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 5px rgba(var(--acc), 0.18);
   }
 
   /* ═══════════ БЛОКИ — белые плашки на фоне ═══════════ */
@@ -565,9 +599,9 @@
     padding: var(--block-pad);
     gap: 20px;
     border: 0;
-    border-radius: 24px;
+    border-radius: 28px;
     background: var(--block);
-    box-shadow: none;
+    box-shadow: var(--lift);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
@@ -579,6 +613,7 @@
     padding: 0;
     border-radius: 0;
     background: none;
+    box-shadow: none;
   }
 
   /* Приглашение внутри блока — тонированная врезка цветом раздела. */
@@ -587,6 +622,7 @@
     padding: 16px 20px;
     border-radius: 16px;
     background: rgba(var(--acc), 0.07);
+    box-shadow: none;
   }
 
   & .invite {
@@ -602,6 +638,34 @@
   /* Заголовок блока держится кеглем; кружки с иконками не нужны. */
   & .qchip {
     display: none;
+  }
+
+  /* Заголовок экрана — крупно на фоне над первым блоком, как вопрос шага в
+     генераторе и подпись сцены в роликах. Разметка экранов общая с
+     «ПРОНИН-ОС», поэтому шапка блока выносится наверх позиционированием:
+     блок опускается на высоту заголовка, шапка встаёт в освободившееся
+     место. Кнопки шапки («Ещё») уезжают вместе с ней вправо. */
+  & .screen-scroll > .glass:first-child,
+  & .lib-main > .glass:first-child {
+    position: relative;
+    margin-top: 72px;
+  }
+
+  & .screen-scroll > .glass:first-child > .qhead,
+  & .lib-main > .glass:first-child > .qhead {
+    position: absolute;
+    left: 8px;
+    right: 0;
+    bottom: calc(100% + 16px);
+    align-items: center;
+  }
+
+  & .screen-scroll > .glass:first-child > .qhead .qtitle,
+  & .lib-main > .glass:first-child > .qhead .qtitle {
+    font-size: 40px;
+    font-weight: 400;
+    line-height: 48px;
+    letter-spacing: -0.024em;
   }
 
   & .qhead {
@@ -749,8 +813,9 @@
   }
 
   /* ═══════════ КНОПКИ — Button размера l ═══════════
-     Обычная — серая заливка без рамки, главная — заливка цветом раздела
-     точечным шрифтом и мягкий свет под ней, как у кнопок сайта. */
+     Обычная — обведённая (view outlined у Gravity), как в карточках роликов;
+     главная — заливка цветом раздела точечным шрифтом и мягкий свет под ней,
+     как у кнопок сайта. */
 
   & .btn {
     height: 36px;
@@ -758,15 +823,15 @@
     gap: 8px;
     border: 0;
     border-radius: 8px;
-    background: var(--generic);
+    background: var(--block);
+    box-shadow: inset 0 0 0 1px var(--line);
     color: var(--ink);
     font-family: var(--f-text);
     font-size: 14px;
     font-weight: 400;
     letter-spacing: 0;
-    box-shadow: none;
     transform: scale(1);
-    transition: background-color 0.15s linear, transform 0.1s ease-out;
+    transition: background-color 0.15s linear, box-shadow 0.15s linear, transform 0.1s ease-out;
   }
 
   & .btn svg {
@@ -774,8 +839,8 @@
   }
 
   & .btn:hover:not(:disabled) {
-    background: var(--generic-hover);
-    box-shadow: none;
+    background: var(--generic);
+    box-shadow: inset 0 0 0 1px var(--line-hover);
     transform: scale(1);
   }
 
@@ -809,25 +874,36 @@
 
   & .btn:disabled {
     opacity: 0.45;
+  }
+
+  & .btn--main:disabled {
     box-shadow: none;
   }
 
-  /* Текстовая кнопка: «Своя площадка», «Из шаблона». */
+  /* Текстовая кнопка: «Своя площадка», «Из шаблона». Как вторичные кнопки
+     сайта: пунктир из точек под словом и стрелка, которая по наведению
+     уходит вправо. */
   & .tbtn {
     align-self: flex-start;
     width: auto;
-    padding: 0;
+    padding: 0 0 5px;
     border: 0;
-    background: none;
+    background: radial-gradient(circle at 1.5px 1.5px, var(--accent) 1.2px, transparent 1.6px) 0 100% / 6px 3px repeat-x;
     color: var(--accent-ink);
-    font: 400 14px/20px var(--f-text);
+    font: 400 15px/22px var(--f-text);
     text-align: left;
     cursor: pointer;
   }
 
-  & .tbtn:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  & .tbtn::after {
+    content: '→';
+    display: inline-block;
+    margin-left: 8px;
+    transition: transform 0.2s ease-out;
+  }
+
+  & .tbtn:hover::after {
+    transform: translateX(4px);
   }
 
   & .result-row {
@@ -889,12 +965,14 @@
     height: 32px;
     border-radius: 6px;
     background: none;
+    box-shadow: none;
     font-size: 14px;
     white-space: nowrap;
   }
 
   & .more__menu .btn:hover:not(:disabled) {
     background: var(--generic);
+    box-shadow: none;
   }
 
   /* ═══════════ ЧИПЫ — Label ═══════════ */
@@ -992,9 +1070,10 @@
   }
 
   /* ═══════════ ГЕНЕРАТОР: по одному вопросу ═══════════
-     Пройденные шаги — ярлыки с ответом над блоком (как крошки в Справкомате):
-     нажатие возвращает к шагу. Будущих шагов нет; номер текущего — точечным
-     над вопросом. Пояснения к полям не показываются, ошибки остаются. */
+     Как сцена ролика: вопрос крупно на фоне, под ним белая карточка с тем,
+     что нажимают. Пройденные шаги — ярлыки с ответом над вопросом (нажатие
+     возвращает к шагу), будущих шагов нет, номер текущего — справа от
+     вопроса. Пояснения к полям не показываются, ошибки остаются. */
 
   & .steps {
     flex-direction: row;
@@ -1015,10 +1094,11 @@
     width: auto;
     height: 32px;
     gap: 8px;
-    padding: 0 12px;
+    padding: 0 14px 0 12px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 999px;
     background: var(--block);
+    box-shadow: 0 0 0 1px var(--line);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     color: var(--ink);
@@ -1027,7 +1107,7 @@
   }
 
   & .step-done:hover {
-    box-shadow: inset 0 0 0 1px var(--line-hover);
+    box-shadow: 0 0 0 1px var(--line-hover);
   }
 
   & .step-done .qchip--done {
@@ -1063,42 +1143,51 @@
     color: var(--ink);
   }
 
+  & .step[data-state='now'] {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
   & .step[data-state='now'] > .glass {
     gap: 24px;
   }
 
-  & .step[data-state='now'] .qhead {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  /* Вопрос — как подпись сцены в роликах: наборный, крупно, одно слово цветом
+     раздела. */
+  & .step-q {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 12px 8px 0;
   }
 
-  & .step[data-state='now'] .qhead > .qchip {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 6px;
-    width: auto;
-    height: auto;
-    border: 0;
-    background: none;
+  & .step-q__title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-family: var(--f-text);
+    font-size: 40px;
+    font-weight: 400;
+    line-height: 48px;
+    letter-spacing: -0.024em;
+    color: var(--ink);
+  }
+
+  & .step-q__title em {
+    font-style: normal;
     color: var(--accent-ink);
+  }
+
+  & .step-q__num {
+    order: 2;
+    flex: none;
     font-family: var(--f-dot);
     font-variation-settings: 'ELSH' 2;
     font-weight: 700;
     font-size: 16px;
     line-height: 24px;
-  }
-
-  & .step[data-state='now'] .qhead > .qchip::after {
-    content: '/ 4';
     color: var(--ink3);
-  }
-
-  & .step[data-state='now'] .qtitle {
-    font-size: 28px;
-    font-weight: 400;
-    line-height: 36px;
-    letter-spacing: -0.012em;
   }
 
   & .step .hint:not(.hint--error),
@@ -1110,24 +1199,27 @@
 
   /* Поле и главная кнопка шага — размера xl: на экране один вопрос. */
   & .step[data-state='now'] .input {
-    height: 44px;
-    border-radius: 10px;
+    height: 48px;
+    border-radius: 12px;
     font-size: 15px;
   }
 
   & .step[data-state='now'] .btn--main {
-    height: 44px;
-    padding: 0 28px;
-    border-radius: 10px;
+    height: 48px;
+    padding: 0 32px;
+    border-radius: 12px;
   }
 
-  /* «+ Содержание и ключевое слово» — тихая ссылка, а не вторая кнопка. */
+  /* «+ Содержание и ключевое слово» — тихая ссылка с пунктиром из точек, как
+     «Своя площадка», а не вторая кнопка. */
   & .step[data-state='now'] .glass > .result-row > .btn--sm {
     height: auto;
-    padding: 0;
-    background: none;
+    padding: 0 0 5px;
+    border-radius: 0;
+    background: radial-gradient(circle at 1.5px 1.5px, var(--accent) 1.2px, transparent 1.6px) 0 100% / 6px 3px repeat-x;
+    box-shadow: none;
     color: var(--accent-ink);
-    font-size: 14px;
+    font-size: 15px;
   }
 
   & .step[data-state='now'] .glass > .result-row > .btn--sm::before {
@@ -1135,9 +1227,8 @@
   }
 
   & .step[data-state='now'] .glass > .result-row > .btn--sm:hover:not(:disabled) {
-    background: none;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    background: radial-gradient(circle at 1.5px 1.5px, var(--accent) 1.2px, transparent 1.6px) 0 100% / 6px 3px repeat-x;
+    box-shadow: none;
   }
 
   & .substep {
@@ -1168,13 +1259,23 @@
     gap: 20px;
   }
 
+  /* Ссылка — как в ролике F1: моноширинный Yantar, каждая метка с новой
+     строки, служебное приглушено, значения — цветом раздела. Подложки нет:
+     ссылка и есть содержимое блока. */
   & .result-url {
-    padding: 16px 20px;
-    border-radius: 16px;
-    background: var(--generic);
-    font-size: 15px;
-    line-height: 1.6;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-family: var(--f-dot);
+    font-variation-settings: 'ELSH' 0;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 28px;
     color: var(--ink);
+  }
+
+  & .result-url .pair {
+    display: block;
   }
 
   & .result-url .k {
@@ -1187,13 +1288,20 @@
     font-weight: 700;
   }
 
+  /* QR и короткая ссылка — врезкой оттенка раздела: белая плитка кода на
+     ней читается листом, как листовка в ролике. */
   & .shortbox,
   & .qrbox {
     padding: 16px;
     border: 0;
-    border-radius: 16px;
-    background: var(--generic);
+    border-radius: 20px;
+    background: rgba(var(--acc), 0.06);
     box-shadow: none;
+  }
+
+  & .qrbox {
+    align-items: flex-start;
+    gap: 20px;
   }
 
   & .shortbox {
@@ -1210,8 +1318,11 @@
     color: var(--accent-ink);
   }
 
-  & .qrbox canvas {
-    border-radius: 8px;
+  & .qrbox canvas,
+  & .qrbox .dotqr {
+    display: block;
+    flex: none;
+    border-radius: 12px;
   }
 
   /* ═══════════ ЗАМЕЧАНИЯ — Alert ═══════════ */
@@ -1285,6 +1396,67 @@
     color: var(--danger);
   }
 
+  /* ═══════════ СПРАВОЧНИК: написания сходятся линиями, как в роликах ═══════════ */
+
+  /* Значения — ярлыками: это облако, а не строки списка. Через `.dict` —
+     иначе общий сброс строк списков ниже снимает подложку. */
+  & .dict .dict-item {
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--generic);
+  }
+
+  & .metro {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 2px;
+    overflow-x: auto;
+  }
+
+  & .metro__from {
+    display: grid;
+    justify-items: end;
+    font-family: var(--f-dot);
+    font-variation-settings: 'ELSH' 0;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 32px;
+    white-space: nowrap;
+  }
+
+  & .metro__lines {
+    flex: none;
+    overflow: visible;
+  }
+
+  & .metro__lines path {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  & .metro__lines circle {
+    fill: var(--block);
+    stroke-width: 3;
+  }
+
+  & .metro__lines .metro__canon {
+    stroke: var(--ink);
+    stroke-width: 3.5;
+  }
+
+  & .metro__to {
+    font-family: var(--f-dot);
+    font-variation-settings: 'ELSH' 0;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 32px;
+    color: var(--brand-ink);
+    white-space: nowrap;
+  }
+
   /* ═══════════ СПИСКИ: история, шаблоны, пакет ═══════════ */
 
   & .hist-row,
@@ -1302,7 +1474,6 @@
   & .hist-row + .hist-row,
   & .htable-row + .htable-row,
   & .batch-row + .batch-row,
-  & .dict-item + .dict-item,
   & .hop + .hop {
     border-top: 1px solid var(--line);
   }
@@ -1536,9 +1707,12 @@
     font-family: var(--f-dot);
   }
 
-  & .wordmark b,
-  & .wordmark i {
+  & .wordmark b {
     color: inherit;
+  }
+
+  & .wordmark i {
+    color: var(--brand);
   }
 
   /* ═══════════ ВСПЛЫВАЮЩЕЕ ═══════════ */
@@ -1571,6 +1745,32 @@
     -webkit-backdrop-filter: none;
   }
 
+  /* Плашка Метрики — парящей карточкой по центру, а не полосой во всю ширину.
+     Экран под ней заметно темнеет: до ответа инструмент не работает, и это
+     должно быть видно, а не выглядеть зависшей страницей (владелец 04.10). */
+  & .cookiebar-back {
+    background: rgba(14, 17, 18, 0.45);
+  }
+
+  &[data-theme='dark'] .cookiebar-back {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  & .cookiebar {
+    left: 16px;
+    right: 16px;
+    bottom: 56px;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 16px 16px 16px 20px;
+    border-radius: 20px;
+    box-shadow: var(--lift), 0 24px 48px -24px rgba(21, 20, 15, 0.28);
+  }
+
+  & .cookiebar__mark {
+    color: var(--accent);
+  }
+
   /* ═══════════ ПЛАНШЕТ И ТЕЛЕФОН ═══════════ */
 
   @media (max-width: 1199px) {
@@ -1601,22 +1801,52 @@
     & .result,
     & .invite,
     & .ask.ask--panel {
-      border-radius: 20px;
+      border-radius: 22px;
+    }
+
+    & .topbar__sign {
+      font-size: 24px;
     }
 
     & .tiles {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    & .step[data-state='now'] .qtitle {
-      font-size: 24px;
-      line-height: 32px;
+    & .step-q__title {
+      font-size: 30px;
+      line-height: 36px;
+    }
+
+    & .step-q__num {
+      font-size: 14px;
+    }
+
+    & .screen-scroll > .glass:first-child,
+    & .lib-main > .glass:first-child {
+      margin-top: 60px;
+    }
+
+    & .screen-scroll > .glass:first-child > .qhead .qtitle,
+    & .lib-main > .glass:first-child > .qhead .qtitle {
+      font-size: 30px;
+      line-height: 36px;
     }
 
     & .lp-h1,
     & .lp-app .lp-h1 {
-      font-size: 16px;
+      font-size: 14px;
+      line-height: 20px;
+    }
+
+    & .result-url {
+      font-size: 15px;
       line-height: 24px;
+    }
+
+    & .cookiebar {
+      left: 10px;
+      right: 10px;
+      bottom: 92px;
     }
 
     /* Подвал одной строкой: версия для ПК и номер версии на телефоне ни к
@@ -1672,4 +1902,25 @@
       background: rgba(var(--acc), 0.08);
     }
   }
+}
+
+/* ═══════════ КРУГИ ОТ НАЖАТИЯ — как касания в роликах ═══════════
+   Кольцо рождает `lib/tap-rings.ts` в <body>, вне `.dev`, где анимации
+   погашены. Цвет — раздела, его скрипт берёт у нажатой кнопки. */
+
+:root[data-skin='dots'] .tap-ring {
+  position: fixed;
+  z-index: 1000;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border: 3px solid #009399;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: tap-ring 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes tap-ring {
+  0% { opacity: 0.95; transform: scale(0.25); }
+  100% { opacity: 0; transform: scale(1.35); }
 }

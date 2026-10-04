@@ -475,11 +475,13 @@ function SimpleMode({
     4: '',
   }
 
-  const titles: Record<Step, string> = {
-    1: 'Куда ведёт ссылка?',
-    2: 'Откуда пойдут люди?',
-    3: 'Как назовём кампанию?',
-    4: 'Ссылка готова',
+  /* Вопрос тремя частями: в «Простом» среднее слово выделено цветом раздела,
+     как в заголовках роликов, в «ПРОНИН-ОС» вопрос идёт одной строкой. */
+  const titles: Record<Step, [string, string, string]> = {
+    1: ['Куда ведёт ', 'ссылка', '?'],
+    2: ['Откуда пойдут ', 'люди', '?'],
+    3: ['Как назовём ', 'кампанию', '?'],
+    4: ['Ссылка ', 'готова', ''],
   }
 
   const shortTitles: Record<Step, string> = {
@@ -518,11 +520,27 @@ function SimpleMode({
 
         return (
           <div key={current} className="step" data-state="now">
-            <div className="glass">
-              <div className="qhead">
-                <span className={chipTone[current]}>{current}</span>
-                <span className={`qtitle ${current === 2 ? 'qtitle--magenta' : current === 3 ? 'qtitle--teal' : 'qtitle--amber'}`}>{titles[current]}</span>
+            {/* В «Простом» вопрос стоит на фоне над блоком, как подпись сцены в
+                роликах: в белом блоке остаётся только то, что нажимают. */}
+            {dots ? (
+              <div className="step-q">
+                <span className="step-q__num" aria-label={`Шаг ${current} из 4`}>
+                  {current} / 4
+                </span>
+                <h2 className="step-q__title">
+                  {titles[current][0]}
+                  <em>{titles[current][1]}</em>
+                  {titles[current][2]}
+                </h2>
               </div>
+            ) : null}
+            <div className="glass">
+              {dots ? null : (
+                <div className="qhead">
+                  <span className={chipTone[current]}>{current}</span>
+                  <span className={`qtitle ${current === 2 ? 'qtitle--magenta' : current === 3 ? 'qtitle--teal' : 'qtitle--amber'}`}>{titles[current].join('')}</span>
+                </div>
+              )}
 
               {current === 1 && (
                 <>

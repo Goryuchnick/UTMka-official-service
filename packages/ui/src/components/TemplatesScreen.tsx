@@ -30,6 +30,7 @@ import {
 import { More } from './More'
 import { PixelIcon } from './PixelIcon'
 import { DictionaryForm } from './DictionaryForm'
+import { SplitLines } from './SplitLines'
 import { TemplateDetails } from './TemplateDetails'
 import { TemplateForm } from './TemplateForm'
 import { EmptyNote, ViewSwitch } from './ViewSwitch'
@@ -572,6 +573,7 @@ interface DictionaryViewProps {
 }
 
 function DictionaryView({ dict, splits, onMerge }: DictionaryViewProps) {
+  const dots = useSkin().skin === 'dots'
   if (dict.length === 0) {
     return <EmptyNote text="Справочник наполнится сам, как только вы сохраните первую ссылку." />
   }
@@ -590,9 +592,16 @@ function DictionaryView({ dict, splits, onMerge }: DictionaryViewProps) {
           </p>
           {splits.map((split) => (
             <div className="issue issue--info" key={`${split.kind}-${split.suggested}`}>
-              <div className="issue-title">
-                {KIND_LABEL[split.kind]}: {split.variants.map((entry) => entry.value).join(' · ')}
-              </div>
+              {dots ? (
+                <>
+                  <div className="issue-title">{KIND_LABEL[split.kind]}</div>
+                  <SplitLines variants={split.variants} suggested={split.suggested} />
+                </>
+              ) : (
+                <div className="issue-title">
+                  {KIND_LABEL[split.kind]}: {split.variants.map((entry) => entry.value).join(' · ')}
+                </div>
+              )}
               <div className="issue-text">
                 Всего {split.totalUses} использований. Канон — самое частое написание,
                 <b> {split.suggested}</b>.

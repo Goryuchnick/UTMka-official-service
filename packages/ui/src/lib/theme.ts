@@ -24,8 +24,15 @@ export type Skin = 'os' | 'dots'
 
 export const SKIN_KEY = 'utmka.skin'
 
-/** Скрипт no-FOUC: ставит тему и оформление до первой отрисовки. Встраивается в <head>. */
-export const THEME_BOOTSTRAP = `(function(){try{var d=document.documentElement,t=localStorage.getItem('${THEME_KEY}'),s=localStorage.getItem('${SKIN_KEY}');if(t==='light'||t==='dark'){d.dataset.theme=t}if(s==='dots'){d.dataset.skin=s}}catch(e){}})()`
+/**
+ * Скрипт no-FOUC: ставит тему и оформление до первой отрисовки. Встраивается в <head>.
+ *
+ * Пришедший по рекламе (`utm_source`, `yclid` Директа) или по ссылке
+ * `?view=simple` попадает сразу в «Простой» — светлый, тот, что в роликах, —
+ * без окна выбора: выбор за него сделала реклама, и он запоминается так же,
+ * как нажатие в окне. Уже выбравшего вид адрес не переубеждает.
+ */
+export const THEME_BOOTSTRAP = `(function(){try{var d=document.documentElement,t=localStorage.getItem('${THEME_KEY}'),s=localStorage.getItem('${SKIN_KEY}');if(s===null&&/[?&](utm_source|yclid)=|[?&]view=simple(&|$)/.test(location.search)){s='dots';t='light';localStorage.setItem('${SKIN_KEY}',s);localStorage.setItem('${THEME_KEY}',t)}if(t==='light'||t==='dark'){d.dataset.theme=t}if(s==='dots'){d.dataset.skin=s}}catch(e){}})()`
 
 function read(): Theme {
   if (typeof document === 'undefined') return 'dark'

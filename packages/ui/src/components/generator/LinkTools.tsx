@@ -21,11 +21,16 @@ import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react'
 import { backendMessage } from '@utmka/core'
 
 import { PixelIcon } from '../PixelIcon'
+import { DotQr } from './DotQr'
+import { useSkin } from '../../lib/theme'
 import { backend, saveFile, track } from '../../shell'
 import { sayAbout } from '../../lib/mascot-lines'
 
 /** Сторона кода на экране: столько нужно, чтобы навести телефон. */
 const SCREEN_SIZE = 168
+
+/** В «Простом» код из точек крупнее: на 168 px точки сливаются в растр. */
+const DOT_SIZE = 208
 
 /**
  * Сторона выгружаемого кода в пикселях.
@@ -44,6 +49,7 @@ interface LinkToolsProps {
 }
 
 export function LinkTools({ url }: LinkToolsProps) {
+  const dots = useSkin().skin === 'dots'
   const [qrOpen, setQrOpen] = useState(false)
   /* Короткая ссылка помнит, для какой ссылки её выдали. Иначе после правки
      результата под новой ссылкой оставалась бы висеть старая короткая — она
@@ -128,7 +134,11 @@ export function LinkTools({ url }: LinkToolsProps) {
 
       {qrOpen ? (
         <div className="qrbox">
-          <QRCodeCanvas value={url} size={SCREEN_SIZE} level="M" marginSize={2} />
+          {dots ? (
+            <DotQr url={url} size={DOT_SIZE} />
+          ) : (
+            <QRCodeCanvas value={url} size={SCREEN_SIZE} level="M" marginSize={2} />
+          )}
 
           {/* Копии под выгрузку: крупные, с полной тихой зоной. На экране их
               нет, но именно они уезжают в файл. */}

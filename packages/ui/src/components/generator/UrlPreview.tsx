@@ -6,7 +6,6 @@
  * в `%7Bkeyword%7D` — именно эта ошибка стоит потерянной семантики за период.
  */
 
-import { Fragment } from 'react'
 import { PLACEHOLDER_RE } from '@utmka/core'
 
 interface UrlPreviewProps {
@@ -46,20 +45,22 @@ export function UrlPreview({ url }: UrlPreviewProps) {
   const query = url.slice(cut + 1)
   const pairs = query.split('&')
 
+  /* Каждая пара — в своей обёртке вместе с разделителем: в «ПРОНИН-ОС» она
+     строчная и ничего не меняет, в «Простом» ставит метку на свою строку,
+     как ссылка в роликах. */
   return (
     <div className="result-url">
       {base}
-      <span className="k">?</span>
       {pairs.map((pair, index) => {
         const eq = pair.indexOf('=')
         const name = eq === -1 ? pair : pair.slice(0, eq)
         const value = eq === -1 ? '' : pair.slice(eq + 1)
         return (
-          <Fragment key={`${name}-${index}`}>
-            {index > 0 && <span className="k">&amp;</span>}
+          <span className="pair" key={`${name}-${index}`}>
+            <span className="k">{index > 0 ? '&' : '?'}</span>
             <span className="k">{name}=</span>
             {renderValue(value, `${name}-${index}`)}
-          </Fragment>
+          </span>
         )
       })}
     </div>

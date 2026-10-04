@@ -22,6 +22,7 @@ import { PixelIcon, type IconName } from './PixelIcon'
 import { useAccount } from '../lib/account'
 import { setAssistantOpen, useAssistantOpen } from '../lib/assistant-open'
 import { MASCOT_ANIM } from '../lib/mascot-anim'
+import { useTapRings } from '../lib/tap-rings'
 import { useSkin, useSkinChosen, useTheme } from '../lib/theme'
 import { backend, NavLink, track, useNav } from '../shell'
 
@@ -112,6 +113,7 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
      («Фраза при вас»); в шапке остаётся лишь приглашение для гостя. Кнопка
      вида выделена в обоих оформлениях: о втором виде человек иначе не узнает. */
   const dots = skin === 'dots'
+  useTapRings(dots)
 
   const themeButton = (
     <button
@@ -149,7 +151,7 @@ export function DeviceFrame({ children, extras, titleBar }: DeviceFrameProps) {
           {/* Знак виден только в «Точках»: в «ПРОНИН-ОС» имя стоит в строке
               состояния, а шапка целиком отдана разделам. */}
           <NavLink to="/" className="topbar__sign" aria-label="UTMka — на главную">
-            UTMka
+            UTM<span>ka</span>
           </NavLink>
           {/* На мобилке этот блок скрыт — разделы уезжают в нижний док. */}
           <nav className="nav" aria-label="Разделы">
