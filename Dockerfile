@@ -4,7 +4,7 @@
 # @utmka/core исходниками (transpilePackages), и без пакета сборка не пройдёт.
 # По той же причине standalone-выход лежит в .next/standalone/apps/web.
 
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 
 FROM base AS deps
 # dl-cdn.alpinelinux.org режется DPI на RU-VPS — берём пакеты с зеркала Яндекса.

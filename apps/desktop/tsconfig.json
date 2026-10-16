@@ -20,7 +20,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "baseUrl": ".",
     "paths": {
       "#shell": ["./src/lib/shell.tsx"],
       "@utmka/core": ["../../packages/core/src/index.ts"],
