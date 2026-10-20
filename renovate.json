@@ -1,0 +1,67 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Правила Renovate целиком: репозиторий публичный (автообновление десктопа), приватный пресет Goryuchnick/renovate-config он не видит. Источник — .claude/knowledge/templates/renovate-default.json воркспейса; менять вместе с ним.",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "Europe/Madrid",
+  "schedule": [
+    "before 9am on monday"
+  ],
+  "automerge": false,
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 0,
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "description": "Минорные и патчи — одним PR в неделю",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "минорные и патчи"
+    },
+    {
+      "description": "Next и React обновляются вместе",
+      "matchPackageNames": [
+        "next",
+        "react",
+        "react-dom",
+        "eslint-config-next",
+        "@next/**",
+        "@types/react",
+        "@types/react-dom"
+      ],
+      "groupName": "next и react"
+    },
+    {
+      "description": "Prisma: клиент и CLI одной версии",
+      "matchPackageNames": [
+        "prisma",
+        "@prisma/**"
+      ],
+      "groupName": "prisma"
+    },
+    {
+      "description": "Зависимость typescript держим на 6.0.x, пока typescript-eslint не поддержит 7 (ждём 7.1). Алиас @typescript/native (TS 7 для проверки типов) под правило не попадает",
+      "matchDepNames": [
+        "typescript"
+      ],
+      "allowedVersions": "<6.1.0"
+    },
+    {
+      "description": "Мажоры Node в Docker-образах — руками, по STACK.md",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "node",
+        "**/node"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    }
+  ]
+}
