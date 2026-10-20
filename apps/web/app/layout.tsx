@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Press_Start_2P } from 'next/font/google'
+import localFont from 'next/font/local'
 
 import { DeviceFrame, DRAFT_BOOTSTRAP, THEME_BOOTSTRAP } from '@utmka/ui'
 
@@ -11,10 +11,13 @@ import '@utmka/ui/styles.css'
 /* Пиксельный акцентный шрифт — тот же, что на сайте (`--font-pixel` в
    pronin-alex). Кириллица обязательна: интерфейс русский, а Karmatic Arcade
    объявляет кириллические коды пустыми глифами — текст просто исчезал. */
-const pixelFont = Press_Start_2P({
+const pixelFont = localFont({
+  // Файл лежит в репозитории (подмножества latin + cyrillic), сборка не ходит
+  // в Google Fonts. Лицензия OFL — рядом, в ./fonts/OFL-PressStart2P.txt.
+  src: './fonts/PressStart2P-latin-cyrillic-400.woff2',
   variable: '--font-pixel',
-  subsets: ['latin', 'cyrillic'],
   weight: '400',
+  style: 'normal',
   display: 'swap',
 })
 
