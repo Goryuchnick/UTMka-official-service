@@ -16,7 +16,7 @@
   },
   "peerDependencies": {
     "@utmka/core": "*",
-    "motion": "^13.1.0",
+    "motion": "^13.5.1",
     "qrcode.react": "^4.2.0",
     "react": "^19",
     "react-dom": "^19"
@@ -24,6 +24,6 @@
   "devDependencies": {
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   }
 }
