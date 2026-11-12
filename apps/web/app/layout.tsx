@@ -24,7 +24,7 @@ const pixelFont = localFont({
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://utmka.alex-pronin.ru'
 
 const DESCRIPTION =
-  'Собирает корректные UTM-ссылки и объясняет, что сломается в отчёте: регистр, пробелы, кириллица, подмена типа трафика. Пакетный режим, разбор чужой ссылки, QR и справочник значений. Бесплатно, без регистрации.'
+  'Генератор UTM-меток, который объясняет, что сломается в отчёте: регистр, пробелы, кириллица, тип трафика. Пакетный режим, разбор ссылки, QR. Бесплатно.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
